@@ -1,0 +1,86 @@
+.device-node {
+  min-width: 168px;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  box-shadow:
+    0 1px 2px rgba(15, 23, 42, 0.08),
+    0 2px 6px rgba(15, 23, 42, 0.06);
+  font-size: 12px;
+  color: #1e293b;
+  overflow: hidden;
+}
+
+.device-node__header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 10px;
+  background: #1e293b;
+  color: #f8fafc;
+}
+
+.device-node__name {
+  font-weight: 600;
+}
+
+.device-node__category {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  opacity: 0.7;
+}
+
+.device-node__body {
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 8px 0;
+}
+
+.device-node__col {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.port {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 16px;
+}
+
+.port--in {
+  padding-left: 6px;
+}
+
+.port--out {
+  padding-right: 6px;
+  justify-content: flex-end;
+}
+
+.port__label {
+  white-space: nowrap;
+}
+
+/*
+ * By default React Flow positions handles absolutely (centered on the node edge).
+ * For a variable list of ports we instead let each handle flow inline with its
+ * row; React Flow reads the handle's DOM rect for connections, so inline works.
+ */
+.device-node .port__handle.react-flow__handle {
+  position: relative;
+  top: auto;
+  left: auto;
+  right: auto;
+  transform: none;
+  width: 9px;
+  height: 9px;
+  border: 1px solid rgba(15, 23, 42, 0.55);
+  border-radius: 50%;
+}

@@ -1,0 +1,377 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>sigpath — Product Roadmap</title>
+    <style>
+      :root {
+        --bg: #f6f8fb;
+        --panel: #ffffff;
+        --ink: #0f172a;
+        --muted: #64748b;
+        --line: #e2e8f0;
+        --accent: #2563eb;
+        --accent-soft: #dbeafe;
+        --done: #16a34a;
+        --next: #d97706;
+        --planned: #94a3b8;
+        --shadow: 0 1px 2px rgba(15, 23, 42, 0.06), 0 8px 24px rgba(15, 23, 42, 0.06);
+        /* signal palette — mirrors the app */
+        --video: #3b82f6;
+        --audio: #22c55e;
+        --av: #8b5cf6;
+        --network: #06b6d4;
+        --control: #f59e0b;
+        --power: #ef4444;
+        --radius: 12px;
+        --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica,
+          Arial, sans-serif;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #0b1120;
+          --panel: #131c2e;
+          --ink: #e2e8f0;
+          --muted: #94a3b8;
+          --line: #25304a;
+          --accent: #60a5fa;
+          --accent-soft: #1e293b;
+          --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 10px 30px rgba(0, 0, 0, 0.35);
+        }
+      }
+      * { box-sizing: border-box; }
+      html { scroll-behavior: smooth; }
+      body {
+        margin: 0;
+        font-family: var(--font);
+        color: var(--ink);
+        background: var(--bg);
+        line-height: 1.55;
+        -webkit-font-smoothing: antialiased;
+      }
+      .wrap { max-width: 980px; margin: 0 auto; padding: 0 20px 80px; }
+
+      header.hero {
+        background:
+          radial-gradient(1200px 240px at 15% -40%, var(--accent-soft), transparent),
+          var(--panel);
+        border-bottom: 1px solid var(--line);
+        padding: 40px 0 28px;
+        margin-bottom: 28px;
+      }
+      .hero-inner { max-width: 980px; margin: 0 auto; padding: 0 20px; }
+      .wordmark { display: flex; align-items: center; gap: 12px; }
+      .wordmark .logo {
+        display: inline-flex; gap: 4px; align-items: center;
+        padding: 6px 8px; border-radius: 8px; background: var(--ink);
+      }
+      .wordmark .logo span { width: 8px; height: 18px; border-radius: 2px; display: block; }
+      .wordmark h1 { font-size: 26px; margin: 0; letter-spacing: -0.02em; }
+      .hero p.tagline { color: var(--muted); margin: 6px 0 0; font-size: 15px; }
+      .meta { margin-top: 14px; font-size: 13px; color: var(--muted); }
+
+      .legend { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 16px; font-size: 12.5px; }
+      .legend .item { display: inline-flex; align-items: center; gap: 6px; color: var(--muted); }
+      .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+
+      h2.section { font-size: 19px; margin: 38px 0 14px; letter-spacing: -0.01em; }
+      h2.section .num {
+        display: inline-grid; place-items: center; width: 24px; height: 24px;
+        font-size: 13px; border-radius: 7px; background: var(--accent-soft);
+        color: var(--accent); margin-right: 9px; vertical-align: 2px;
+      }
+      p.lead { color: var(--muted); margin: 0 0 18px; }
+
+      /* status chips */
+      .chip {
+        font-size: 11px; font-weight: 600; text-transform: uppercase;
+        letter-spacing: 0.04em; padding: 2px 8px; border-radius: 999px;
+        border: 1px solid var(--line); color: var(--muted); white-space: nowrap;
+      }
+      .chip.done { color: var(--done); border-color: color-mix(in srgb, var(--done) 35%, var(--line)); }
+      .chip.next { color: var(--next); border-color: color-mix(in srgb, var(--next) 35%, var(--line)); }
+      .chip.planned { color: var(--planned); }
+
+      /* phase cards */
+      .phase {
+        background: var(--panel); border: 1px solid var(--line);
+        border-radius: var(--radius); box-shadow: var(--shadow);
+        padding: 18px 20px; margin-bottom: 16px;
+      }
+      .phase > summary { list-style: none; cursor: pointer; }
+      .phase > summary::-webkit-details-marker { display: none; }
+      .phase-head { display: flex; align-items: center; gap: 12px; }
+      .phase-head .ph-title { font-size: 16px; font-weight: 650; margin: 0; flex: 1; }
+      .phase-head .ph-kicker { font-size: 12px; color: var(--muted); font-weight: 600;
+        text-transform: uppercase; letter-spacing: 0.05em; }
+      .progress { height: 7px; background: var(--line); border-radius: 999px; overflow: hidden; margin: 12px 0 4px; }
+      .progress > i { display: block; height: 100%; width: 0; background: var(--done); transition: width 0.25s ease; }
+      .progress-label { font-size: 12px; color: var(--muted); }
+
+      ul.items { list-style: none; padding: 0; margin: 14px 0 2px; }
+      ul.items li { display: flex; align-items: flex-start; gap: 10px; padding: 7px 0; border-top: 1px dashed var(--line); }
+      ul.items li:first-child { border-top: none; }
+      ul.items input[type="checkbox"] { margin-top: 3px; width: 16px; height: 16px; accent-color: var(--accent); cursor: pointer; }
+      .item-body { flex: 1; }
+      .item-title { font-weight: 550; }
+      .item-note { font-size: 13px; color: var(--muted); }
+      .tag { font-size: 11px; padding: 1px 7px; border-radius: 6px; background: var(--accent-soft); color: var(--accent); margin-left: 6px; white-space: nowrap; }
+      .tag.free { background: color-mix(in srgb, var(--done) 18%, transparent); color: var(--done); }
+      .tag.new { background: color-mix(in srgb, var(--next) 18%, transparent); color: var(--next); }
+      li.checked .item-title { text-decoration: line-through; color: var(--muted); }
+
+      /* table */
+      .table-scroll { overflow-x: auto; border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); }
+      table { border-collapse: collapse; width: 100%; font-size: 13.5px; background: var(--panel); }
+      th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+      th { background: color-mix(in srgb, var(--accent-soft) 50%, var(--panel)); font-size: 12px; text-transform: uppercase; letter-spacing: 0.03em; color: var(--muted); }
+      tr:last-child td { border-bottom: none; }
+      td strong { color: var(--ink); }
+
+      /* differentiators */
+      .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; }
+      .card { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px 16px; box-shadow: var(--shadow); }
+      .card h4 { margin: 0 0 4px; font-size: 14.5px; }
+      .card p { margin: 0; font-size: 13px; color: var(--muted); }
+      .card .gap { display: inline-block; margin-top: 8px; font-size: 11.5px; color: var(--accent); }
+      .rank { display: inline-grid; place-items: center; width: 20px; height: 20px; border-radius: 6px; background: var(--ink); color: var(--bg); font-size: 12px; font-weight: 700; margin-right: 7px; }
+
+      .principles { background: var(--accent-soft); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px 20px; }
+      .principles ul { margin: 8px 0 0; padding-left: 18px; }
+      .principles li { margin: 4px 0; }
+
+      footer { margin-top: 40px; padding-top: 18px; border-top: 1px solid var(--line); font-size: 12.5px; color: var(--muted); }
+      footer a { color: var(--accent); }
+      .src { display: flex; flex-wrap: wrap; gap: 8px 16px; margin-top: 6px; }
+    </style>
+  </head>
+  <body>
+    <header class="hero">
+      <div class="hero-inner">
+        <div class="wordmark">
+          <span class="logo" aria-hidden="true">
+            <span style="background: var(--video)"></span>
+            <span style="background: var(--audio)"></span>
+            <span style="background: var(--av)"></span>
+          </span>
+          <h1>sigpath</h1>
+        </div>
+        <p class="tagline">
+          A free, local-first AV signal-flow &amp; system-design app — Tauri + React.
+          This is the living product roadmap.
+        </p>
+        <div class="meta">Last updated June 17, 2026 · status persists in your browser (localStorage)</div>
+        <div class="legend">
+          <span class="item"><span class="dot" style="background: var(--video)"></span>Video</span>
+          <span class="item"><span class="dot" style="background: var(--audio)"></span>Audio</span>
+          <span class="item"><span class="dot" style="background: var(--av)"></span>A/V (embedded)</span>
+          <span class="item"><span class="dot" style="background: var(--network)"></span>Network</span>
+          <span class="item"><span class="dot" style="background: var(--control)"></span>Control</span>
+          <span class="item"><span class="dot" style="background: var(--power)"></span>Power</span>
+        </div>
+      </div>
+    </header>
+
+    <div class="wrap">
+      <!-- PRINCIPLES -->
+      <h2 class="section">Guiding principles</h2>
+      <div class="principles">
+        <ul>
+          <li><strong>Local-first &amp; free.</strong> Every competitor is cloud-only or locked to a Windows/Visio/SQL stack. Native, offline, files-you-own is the wedge.</li>
+          <li><strong>Don't fight the catalog moat.</strong> The incumbents license 1.5M-product databases. We win on a great custom-device builder + a community library + import — not catalog scale.</li>
+          <li><strong>Port-first &amp; "smart."</strong> Connections attach to typed ports, so the app can validate signal flow — the payoff the big tools charge thousands for.</li>
+          <li><strong>Export is the field's soft spot.</strong> No indie tool generates a real BOM or cable schedule. Make rich auto-docs free.</li>
+        </ul>
+      </div>
+
+      <!-- LANDSCAPE -->
+      <h2 class="section">Competitive landscape</h2>
+      <p class="lead">Why the order below looks the way it does. (Researched June 2026.)</p>
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr><th>Tool</th><th>Who / price</th><th>Platform</th><th>Killer feature</th><th>Weak spot we exploit</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><strong>H2R Gear</strong></td><td>Live-production AV · $0–15/mo</td><td>Cloud-only</td><td>Auto packlist w/ live check-off; custom-item builder</td><td>Plan caps; export = PNG/JPG/CSV only; patch lists Pro-gated</td></tr>
+            <tr><td><strong>SimpleWires</strong></td><td>Pro integration · $30–240/mo</td><td>Cloud-only</td><td>DWG export + BOM; 100k community lib</td><td>1-project free tier; custom-port modeling unclear</td></tr>
+            <tr><td><strong>ConnectCAD</strong></td><td>Pro AV · ~$3.4k/yr</td><td>Vectorworks-locked</td><td>Cable auto-numbering rules; live Circuit Check</td><td>Expensive, complex, VW-locked</td></tr>
+            <tr><td><strong>WireCAD</strong></td><td>Broadcast · $2.5–4k</td><td>Windows</td><td>"Sticky Wires"; move-device-updates-all-drawings</td><td>Dated, pricey, Windows</td></tr>
+            <tr><td><strong>Stardraw</strong></td><td>SMB AV · $550+/yr</td><td>Windows</td><td>One project → many views (schematic/rack/pictorial)</td><td>Library paywalled by manufacturer count</td></tr>
+            <tr><td><strong>XTEN-AV</strong></td><td>Enterprise · $139–149/user/mo</td><td>Cloud-only</td><td>XAVIA AI: prompt → BOM from 1.5M DB</td><td>No offline; CAD-precision gaps; library accuracy</td></tr>
+            <tr><td><strong>D-Tools</strong></td><td>Enterprise · $1.8k/user/yr</td><td>Win+SQL+Visio</td><td>1.6M licensed library, updated daily</td><td>Heavy MS stack; won't run on Apple Silicon</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- ROADMAP -->
+      <h2 class="section">Roadmap</h2>
+      <p class="lead">
+        Governing logic: you can't place gear without gear; you can't auto-generate docs without a complete model;
+        and undo/persistence are miserable to retrofit — so they go early.
+        <span class="tag free">free</span> = nearly free from React Flow · <span class="tag new">new</span> = added beyond the original list.
+      </p>
+
+      <details class="phase" open>
+        <summary>
+          <div class="phase-head">
+            <span class="ph-kicker">Phase 0</span>
+            <p class="ph-title">Canvas foundation</p>
+            <span class="chip done">Done</span>
+          </div>
+        </summary>
+        <div class="progress"><i></i></div>
+        <div class="progress-label"></div>
+        <ul class="items">
+          <li><input type="checkbox" data-id="p0-scaffold" checked /><div class="item-body"><span class="item-title">Tauri v2 + React + TS scaffold</span><div class="item-note">Native Apple Silicon; public repo; verified build.</div></div></li>
+          <li><input type="checkbox" data-id="p0-canvas" checked /><div class="item-body"><span class="item-title">React Flow canvas with port-based device nodes</span><div class="item-note">Ports as typed handles; sample signal chain renders.</div></div></li>
+        </ul>
+      </details>
+
+      <details class="phase" open>
+        <summary>
+          <div class="phase-head">
+            <span class="ph-kicker">Phase 1</span>
+            <p class="ph-title">Make the editor real — build a diagram and keep it</p>
+            <span class="chip next">In progress</span>
+          </div>
+        </summary>
+        <div class="progress"><i></i></div>
+        <div class="progress-label"></div>
+        <ul class="items">
+          <li><input type="checkbox" data-id="p1-schema" /><div class="item-body"><span class="item-title">Device / port / cable schema <span class="tag new">new</span></span><div class="item-note">The spine: controlled vocabularies (signals, connectors, cable types), device model vs. placed instance, compatibility primitive. <em>Building now.</em></div></div></li>
+          <li><input type="checkbox" data-id="p1-persist" /><div class="item-body"><span class="item-title">Local persistence — save/load diagrams to disk <span class="tag new">new</span></span><div class="item-note">Nothing is real until diagrams survive a restart. Files you own.</div></div></li>
+          <li><input type="checkbox" data-id="p1-builder" /><div class="item-body"><span class="item-title">Custom item builder</span><div class="item-note">Define a device + inputs/outputs/labels. The on-ramp before the community DB exists.</div></div></li>
+          <li><input type="checkbox" data-id="p1-cabletypes" /><div class="item-body"><span class="item-title">Cable types + colors</span><div class="item-note">Typed, colored cables — the model everything downstream needs.</div></div></li>
+          <li><input type="checkbox" data-id="p1-undo" /><div class="item-body"><span class="item-title">Undo / redo</span><div class="item-note">Build the history layer early or suffer later.</div></div></li>
+          <li><input type="checkbox" data-id="p1-canvasaffordances" /><div class="item-body"><span class="item-title">Snap-to-grid · multi-select · drag-and-drop <span class="tag free">free</span></span><div class="item-note">Mostly React Flow props/built-ins.</div></div></li>
+        </ul>
+      </details>
+
+      <details class="phase" open>
+        <summary>
+          <div class="phase-head">
+            <span class="ph-kicker">Phase 2</span>
+            <p class="ph-title">Organize &amp; navigate</p>
+            <span class="chip planned">Planned</span>
+          </div>
+        </summary>
+        <div class="progress"><i></i></div>
+        <div class="progress-label"></div>
+        <ul class="items">
+          <li><input type="checkbox" data-id="p2-projects" /><div class="item-body"><span class="item-title">Folders / projects</span><div class="item-note">A project holds multiple diagrams. Builds on persistence.</div></div></li>
+          <li><input type="checkbox" data-id="p2-zones" /><div class="item-body"><span class="item-title">Zones + labels</span><div class="item-note">Color-coded, labeled regions (stage, rack, control room).</div></div></li>
+          <li><input type="checkbox" data-id="p2-annotations" /><div class="item-body"><span class="item-title">Headings / lists / formatted-text annotations</span></div></li>
+          <li><input type="checkbox" data-id="p2-legend" /><div class="item-body"><span class="item-title">Legend (cable-type color key)</span><div class="item-note">Trivial once cable types exist.</div></div></li>
+          <li><input type="checkbox" data-id="p2-lr" /><div class="item-body"><span class="item-title">Left-to-right mode · zoom-to-fit <span class="tag free">free</span> · zoom-to-zone</span><div class="item-note">fit is free via fitView; zoom-to-zone needs zones.</div></div></li>
+          <li><input type="checkbox" data-id="p2-theme" /><div class="item-body"><span class="item-title">Light / dark mode <span class="tag free">free</span></span><div class="item-note">React Flow colorMode; can slide earlier anytime.</div></div></li>
+        </ul>
+      </details>
+
+      <details class="phase" open>
+        <summary>
+          <div class="phase-head">
+            <span class="ph-kicker">Phase 3</span>
+            <p class="ph-title">Documentation &amp; export — the payoff</p>
+            <span class="chip planned">Planned</span>
+          </div>
+        </summary>
+        <div class="progress"><i></i></div>
+        <div class="progress-label"></div>
+        <ul class="items">
+          <li><input type="checkbox" data-id="p3-packlist" /><div class="item-body"><span class="item-title">Auto packlists &amp; patch lists</span><div class="item-note">Derive from the complete model. Make patch lists free (H2R gates them).</div></div></li>
+          <li><input type="checkbox" data-id="p3-export" /><div class="item-body"><span class="item-title">Export — diagram → PNG/JPG/PDF · lists → CSV/structured</span></div></li>
+        </ul>
+      </details>
+
+      <details class="phase" open>
+        <summary>
+          <div class="phase-head">
+            <span class="ph-kicker">Phase 4</span>
+            <p class="ph-title">Community equipment database</p>
+            <span class="chip planned">Planned</span>
+          </div>
+        </summary>
+        <div class="progress"><i></i></div>
+        <div class="progress-label"></div>
+        <ul class="items">
+          <li><input type="checkbox" data-id="p4-library" /><div class="item-body"><span class="item-title">Grab from community library</span><div class="item-note">Bundled SQLite snapshot synced from a zero-egress CDN.</div></div></li>
+          <li><input type="checkbox" data-id="p4-contrib" /><div class="item-body"><span class="item-title">Community-updatable (contribution workflow)</span><div class="item-note">Low-volume write path (PR-against-data-repo or moderation queue). Schema designed for this in Phase 1.</div></div></li>
+        </ul>
+      </details>
+
+      <!-- DIFFERENTIATORS -->
+      <h2 class="section">Differentiators to add</h2>
+      <p class="lead">Beyond the original list — each hits a competitor weakness. Rough priority order.</p>
+      <div class="grid">
+        <div class="card"><h4><span class="rank">1</span>Live signal validation</h4><p>Warn on incompatible types (HDMI-out → SDI-in), dangling ports, over-subscribed outputs, duplicate cable IDs.</p><span class="gap">↳ ConnectCAD's $3.4k/yr Circuit Check — our moat, free</span></div>
+        <div class="card"><h4><span class="rank">2</span>Cable schedule + BOM export</h4><p>Port-to-port table (ID, type, length, from→to) and equipment-quantity list.</p><span class="gap">↳ No indie tool has this</span></div>
+        <div class="card"><h4><span class="rank">3</span>Cable IDs + lengths + auto-numbering</h4><p>ConnectCAD-style rules (prefix/source/dest). Lengths feed packlists &amp; schedules.</p><span class="gap">↳ Table stakes for pros</span></div>
+        <div class="card"><h4><span class="rank">4</span>Rack elevation view</h4><p>A second view (19" front/rear) from the same devices.</p><span class="gap">↳ Stardraw's "one model → many views"</span></div>
+        <div class="card"><h4><span class="rank">5</span>Room templates</h4><p>Huddle room, classroom, streaming rig — fast starts.</p></div>
+        <div class="card"><h4><span class="rank">6</span>Printable cable labels</h4><p>Brother/Dymo-style label sheets.</p><span class="gap">↳ Indie tools lack it</span></div>
+        <div class="card"><h4><span class="rank">7</span>Revision history</h4><p>Natural with local files; SimpleWires charges for it.</p></div>
+        <div class="card"><h4><span class="rank">8</span>North-star: "describe a room → starter diagram"</h4><p>XTEN-AV's AI frontier. Later, atop the community DB — but don't preclude it in the data model.</p></div>
+      </div>
+
+      <footer>
+        <div><strong>sigpath</strong> · <a href="https://github.com/patricktr/sigpath">github.com/patricktr/sigpath</a></div>
+        <div class="src">
+          <span>Sources:</span>
+          <a href="https://h2rgear.com/pricing/">H2R Gear</a>
+          <a href="https://simplewires.com/">SimpleWires</a>
+          <a href="https://www.vectorworks.net/en-US/connectcad">ConnectCAD</a>
+          <a href="https://www.wirecad.com/">WireCAD</a>
+          <a href="https://www.stardraw.com/sd7">Stardraw</a>
+          <a href="https://xtenav.com/xavia/">XTEN-AV</a>
+          <a href="https://d-tools.com/">D-Tools</a>
+        </div>
+      </footer>
+    </div>
+
+    <script>
+      (function () {
+        var KEY = "sigpath.roadmap.v1";
+        var state = {};
+        try { state = JSON.parse(localStorage.getItem(KEY) || "{}"); } catch (e) { state = {}; }
+
+        var boxes = Array.prototype.slice.call(document.querySelectorAll('input[type="checkbox"][data-id]'));
+
+        function persist() {
+          try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {}
+        }
+        function syncLi(box) {
+          var li = box.closest("li");
+          if (li) li.classList.toggle("checked", box.checked);
+        }
+        function updatePhase(phase) {
+          var phaseBoxes = phase.querySelectorAll('input[type="checkbox"][data-id]');
+          var total = phaseBoxes.length, done = 0;
+          phaseBoxes.forEach(function (b) { if (b.checked) done++; });
+          var pct = total ? Math.round((done / total) * 100) : 0;
+          var bar = phase.querySelector(".progress > i");
+          var label = phase.querySelector(".progress-label");
+          if (bar) bar.style.width = pct + "%";
+          if (label) label.textContent = done + " / " + total + " complete";
+        }
+        function updateAll() {
+          document.querySelectorAll("details.phase").forEach(updatePhase);
+        }
+
+        boxes.forEach(function (box) {
+          var id = box.getAttribute("data-id");
+          if (Object.prototype.hasOwnProperty.call(state, id)) box.checked = !!state[id];
+          syncLi(box);
+          box.addEventListener("change", function () {
+            state[id] = box.checked;
+            persist();
+            syncLi(box);
+            updatePhase(box.closest("details.phase"));
+          });
+        });
+        updateAll();
+      })();
+    </script>
+  </body>
+</html>
