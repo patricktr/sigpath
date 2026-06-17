@@ -18,7 +18,64 @@ body,
   padding: 0;
 }
 
-.flow-wrap {
-  width: 100vw;
+.app {
+  display: flex;
+  flex-direction: column;
   height: 100vh;
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex: 0 0 auto;
+  height: 46px;
+  padding: 0 14px;
+  background: #ffffff;
+  border-bottom: 1px solid #e2e8f0;
+  font-size: 13px;
+}
+
+.toolbar__brand {
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.toolbar__actions {
+  display: flex;
+  gap: 6px;
+}
+
+.toolbar button {
+  font: inherit;
+  padding: 5px 12px;
+  border-radius: 7px;
+  border: 1px solid #cbd5e1;
+  background: #f8fafc;
+  color: #0f172a;
+  cursor: pointer;
+}
+
+.toolbar button:hover {
+  background: #eef2f7;
+  border-color: #94a3b8;
+}
+
+.toolbar__doc {
+  color: #475569;
+}
+
+.toolbar__status {
+  margin-left: auto;
+  color: #64748b;
+  font-size: 12px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 45%;
+}
+
+.flow-wrap {
+  flex: 1 1 auto;
+  min-height: 0;
 }
