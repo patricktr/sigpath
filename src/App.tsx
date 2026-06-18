@@ -31,6 +31,9 @@ import "./App.css";
 /** Registered once at module scope so the reference stays stable across renders. */
 const nodeTypes = { device: DeviceNode };
 
+/** Grid size (px) for snap-to-grid and the background dots. */
+const GRID = 16;
+
 function App() {
   const [nodes, setNodes, onNodesChange] = useNodesState<DeviceNodeType>(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState<CableEdgeType>(initialEdges);
@@ -46,6 +49,7 @@ function App() {
   const [docName, setDocName] = useState("Untitled");
   const [status, setStatus] = useState("");
   const [paletteOpen, setPaletteOpen] = useState(false);
+  const [snap, setSnap] = useState(true);
   const ids = useRef<{ projectId: string; diagramId: string }>({
     projectId: crypto.randomUUID(),
     diagramId: crypto.randomUUID(),
@@ -190,6 +194,15 @@ function App() {
           <button type="button" onClick={() => void handleSave()}>Save</button>
           <button
             type="button"
+            className={snap ? "toolbar__toggle toolbar__toggle--on" : "toolbar__toggle"}
+            onClick={() => setSnap((v) => !v)}
+            aria-pressed={snap}
+            title="Snap to grid"
+          >
+            Snap
+          </button>
+          <button
+            type="button"
             className="toolbar__primary"
             onClick={() => setPaletteOpen((v) => !v)}
           >
@@ -214,10 +227,12 @@ function App() {
           onNodeDragStart={onNodeDragStart}
           onSelectionDragStart={onNodeDragStart}
           onBeforeDelete={onBeforeDelete}
+          snapToGrid={snap}
+          snapGrid={[GRID, GRID]}
           defaultEdgeOptions={{ type: "smoothstep" }}
           fitView
         >
-          <Background />
+          <Background gap={GRID} />
           <MiniMap pannable zoomable />
           <Controls />
         </ReactFlow>

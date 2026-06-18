@@ -59,6 +59,12 @@ body,
   cursor: default;
 }
 
+.toolbar button.toolbar__toggle--on {
+  background: #dbeafe;
+  border-color: #93c5fd;
+  color: #1d4ed8;
+}
+
 .toolbar button {
   font: inherit;
   padding: 5px 12px;
