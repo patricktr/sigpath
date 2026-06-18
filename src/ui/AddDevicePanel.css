@@ -1,0 +1,239 @@
+.add-panel {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 320px;
+  display: flex;
+  flex-direction: column;
+  background: #ffffff;
+  border-left: 1px solid #e2e8f0;
+  box-shadow: -8px 0 24px rgba(15, 23, 42, 0.08);
+  z-index: 10;
+  font-size: 13px;
+}
+
+.add-panel__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  border-bottom: 1px solid #e2e8f0;
+}
+.add-panel__head h2 {
+  margin: 0;
+  font-size: 15px;
+}
+.add-panel__close {
+  border: none;
+  background: none;
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+  color: #64748b;
+}
+
+.add-panel__body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px 14px;
+}
+.add-panel__section {
+  margin-bottom: 18px;
+}
+.add-panel__section h3 {
+  margin: 0 0 8px;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #64748b;
+}
+.add-panel__subhead {
+  margin: 12px 0 6px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #94a3b8;
+}
+
+.lib-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.lib-chip {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1px;
+  padding: 5px 9px;
+  border: 1px solid #cbd5e1;
+  border-radius: 7px;
+  background: #f8fafc;
+  cursor: pointer;
+  font: inherit;
+  font-size: 12px;
+  color: #0f172a;
+}
+.lib-chip:hover {
+  background: #eef2f7;
+  border-color: #94a3b8;
+}
+.lib-chip__cat {
+  font-size: 10px;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+.lib-chip--custom {
+  flex-direction: row;
+  align-items: stretch;
+  padding: 0;
+  overflow: hidden;
+}
+.lib-chip__add {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font: inherit;
+  font-size: 12px;
+  color: #0f172a;
+  padding: 5px 6px 5px 9px;
+}
+.lib-chip__del {
+  border: none;
+  border-left: 1px solid #e2e8f0;
+  background: none;
+  cursor: pointer;
+  color: #94a3b8;
+  padding: 0 8px;
+  font-size: 14px;
+}
+.lib-chip__del:hover {
+  color: #ef4444;
+  background: #fef2f2;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin-bottom: 8px;
+}
+.field > span {
+  font-size: 11px;
+  color: #64748b;
+}
+.field input,
+.field select,
+.port-row input,
+.port-row select {
+  font: inherit;
+  font-size: 12px;
+  padding: 5px 7px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  background: #fff;
+  color: #0f172a;
+}
+.field-row {
+  display: flex;
+  gap: 8px;
+}
+.field-row .field {
+  flex: 1;
+}
+
+.ports-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 6px 0;
+}
+.ports-head > span {
+  font-size: 11px;
+  color: #64748b;
+}
+.btn-small {
+  font: inherit;
+  font-size: 11px;
+  padding: 3px 8px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  background: #f8fafc;
+  cursor: pointer;
+}
+.btn-small:hover {
+  background: #eef2f7;
+}
+
+.ports-list {
+  list-style: none;
+  margin: 0 0 10px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.port-row {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 7px;
+  border: 1px solid #eef2f7;
+  border-radius: 7px;
+  background: #fbfcfe;
+}
+.port-row__top {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.port-row__dot {
+  flex: 0 0 auto;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+}
+.port-row__name {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.port-row__del {
+  flex: 0 0 auto;
+  border: none;
+  background: none;
+  cursor: pointer;
+  color: #94a3b8;
+  font-size: 14px;
+  padding: 0 2px;
+}
+.port-row__del:hover {
+  color: #ef4444;
+}
+.port-row__selects {
+  display: flex;
+  gap: 5px;
+}
+.port-row__selects select {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.btn-primary {
+  width: 100%;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 8px;
+  border: none;
+  border-radius: 7px;
+  background: #2563eb;
+  color: #fff;
+  cursor: pointer;
+}
+.btn-primary:hover {
+  background: #1d4ed8;
+}

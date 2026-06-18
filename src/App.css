@@ -43,7 +43,20 @@ body,
 
 .toolbar__actions {
   display: flex;
+  align-items: center;
   gap: 6px;
+}
+
+.toolbar__sep {
+  width: 1px;
+  height: 20px;
+  background: #e2e8f0;
+  margin: 0 2px;
+}
+
+.toolbar button:disabled {
+  opacity: 0.4;
+  cursor: default;
 }
 
 .toolbar button {
@@ -61,6 +74,18 @@ body,
   border-color: #94a3b8;
 }
 
+.toolbar button.toolbar__primary {
+  margin-left: 6px;
+  background: #2563eb;
+  border-color: #2563eb;
+  color: #ffffff;
+}
+
+.toolbar button.toolbar__primary:hover {
+  background: #1d4ed8;
+  border-color: #1d4ed8;
+}
+
 .toolbar__doc {
   color: #475569;
 }
@@ -76,6 +101,7 @@ body,
 }
 
 .flow-wrap {
+  position: relative;
   flex: 1 1 auto;
   min-height: 0;
 }

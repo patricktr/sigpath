@@ -29,6 +29,22 @@ export type DeviceCategory =
   | "power"
   | "other";
 
+/** All device categories, in display order — for builder dropdowns. */
+export const DEVICE_CATEGORIES: DeviceCategory[] = [
+  "source",
+  "display",
+  "switcher",
+  "matrix",
+  "amplifier",
+  "audio",
+  "recorder",
+  "converter",
+  "network",
+  "control",
+  "power",
+  "other",
+];
+
 /**
  * A reusable device definition — a "model" in the library. This is what the
  * equipment database stores and the custom item builder produces. It is the

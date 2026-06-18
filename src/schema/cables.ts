@@ -26,14 +26,26 @@ export const CABLE_TYPES: Record<CableTypeId, CableTypeDef> = {
   xlr: { id: "xlr", label: "XLR (analog)", color: "#22c55e", signal: "audio", connectors: ["xlr3"] },
   trs: { id: "trs", label: "TRS", color: "#16a34a", signal: "audio", connectors: ["trs-6.35", "trs-3.5"] },
   toslink: { id: "toslink", label: "Optical (TOSLINK)", color: "#14b8a6", signal: "audio", connectors: ["toslink"] },
-  dante: { id: "dante", label: "Dante", color: "#a855f7", signal: "network", connectors: ["rj45"] },
   cat6: { id: "cat6", label: "Cat6 / Network", color: "#8b5cf6", signal: "network", connectors: ["rj45"] },
+  dante: { id: "dante", label: "Dante", color: "#a855f7", signal: "network", connectors: ["rj45"] },
   rs232: { id: "rs232", label: "RS-232", color: "#f59e0b", signal: "control", connectors: ["rs232"] },
   power: { id: "power", label: "Power (IEC)", color: "#ef4444", signal: "power", connectors: ["iec"] },
 };
 
 export function getCableType(id: CableTypeId): CableTypeDef | undefined {
   return CABLE_TYPES[id];
+}
+
+/**
+ * Best cable type for a port, used to auto-pick the cable when a connection is
+ * drawn from it. Prefers an exact signal+connector match, then any cable that
+ * mates with the connector. Returns undefined if nothing fits (e.g. USB-C).
+ */
+export function cableTypeForPort(connector: ConnectorId, signal: SignalKind): CableTypeId | undefined {
+  const types = Object.values(CABLE_TYPES);
+  const exact = types.find((c) => c.signal === signal && c.connectors.includes(connector));
+  if (exact) return exact.id;
+  return types.find((c) => c.connectors.includes(connector))?.id;
 }
 
 /** Default cable color when a type is unknown or unset. */
