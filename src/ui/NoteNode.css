@@ -1,0 +1,78 @@
+.note {
+  width: 240px;
+  padding: 8px 12px;
+  background: #fffdf2;
+  border: 1px solid #e7e0c4;
+  border-radius: 8px;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
+  font-size: 13px;
+  line-height: 1.45;
+  color: #1e293b;
+}
+
+.note--selected {
+  border-color: #f59e0b;
+  box-shadow: 0 0 0 1px #f59e0b;
+}
+
+.note__placeholder {
+  color: #b0a98c;
+  font-style: italic;
+}
+
+.note__body > :first-child {
+  margin-top: 0;
+}
+.note__body > :last-child {
+  margin-bottom: 0;
+}
+.note__body h1 {
+  font-size: 18px;
+  margin: 6px 0;
+}
+.note__body h2 {
+  font-size: 16px;
+  margin: 6px 0;
+}
+.note__body h3 {
+  font-size: 14px;
+  margin: 6px 0;
+}
+.note__body p {
+  margin: 5px 0;
+}
+.note__body ul,
+.note__body ol {
+  margin: 5px 0;
+  padding-left: 20px;
+}
+.note__body li {
+  margin: 2px 0;
+}
+.note__body a {
+  color: #2563eb;
+}
+.note__body code {
+  background: #f1f5f9;
+  padding: 1px 4px;
+  border-radius: 4px;
+  font-size: 12px;
+}
+.note__body blockquote {
+  margin: 5px 0;
+  padding-left: 10px;
+  border-left: 3px solid #e2e8f0;
+  color: #475569;
+}
+
+.note__edit {
+  width: 240px;
+  min-height: 110px;
+  padding: 8px 12px;
+  font: inherit;
+  font-size: 13px;
+  border: 1px solid #f59e0b;
+  border-radius: 8px;
+  background: #ffffff;
+  resize: vertical;
+}

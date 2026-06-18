@@ -22,8 +22,15 @@ export type ZoneData = {
 
 export type ZoneNodeType = Node<ZoneData, "zone">;
 
-/** Any node on the canvas — a device or a zone. */
-export type SigNode = DeviceNodeType | ZoneNodeType;
+/** A free-floating Markdown text annotation on the canvas. */
+export type NoteData = {
+  text: string;
+};
+
+export type NoteNodeType = Node<NoteData, "note">;
+
+/** Any node on the canvas — a device, a zone, or a note. */
+export type SigNode = DeviceNodeType | ZoneNodeType | NoteNodeType;
 
 export type CableEdgeData = {
   cableTypeId: CableTypeId;

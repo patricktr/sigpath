@@ -14,7 +14,14 @@ import {
 import "@xyflow/react/dist/style.css";
 
 import { DeviceNode } from "./flow/DeviceNode";
-import type { DeviceNodeType, CableEdgeType, EditorDiagram, SigNode, ZoneNodeType } from "./flow/types";
+import type {
+  DeviceNodeType,
+  CableEdgeType,
+  EditorDiagram,
+  SigNode,
+  ZoneNodeType,
+  NoteNodeType,
+} from "./flow/types";
 import { CABLE_TYPES, DEFAULT_CABLE_COLOR, cableTypeForPort } from "./schema";
 import type { DeviceModel } from "./schema";
 import { useProject } from "./project/useProject";
@@ -30,10 +37,11 @@ import {
 import { AddDevicePanel } from "./ui/AddDevicePanel";
 import { DiagramTabs } from "./ui/DiagramTabs";
 import { ZoneNode, ZoneActionsContext, ZONE_COLORS } from "./ui/ZoneNode";
+import { NoteNode, NoteActionsContext } from "./ui/NoteNode";
 import "./App.css";
 
 /** Registered once at module scope so the reference stays stable across renders. */
-const nodeTypes = { device: DeviceNode, zone: ZoneNode };
+const nodeTypes = { device: DeviceNode, zone: ZoneNode, note: NoteNode };
 
 /** Grid size (px) for snap-to-grid and the background dots. */
 const GRID = 16;
@@ -76,6 +84,7 @@ function App() {
   const [snap, setSnap] = useState(true);
   const addCount = useRef(0);
   const zoneCount = useRef(0);
+  const noteCount = useRef(0);
 
   // Drawing a connection auto-types the cable from the source port's connector.
   const onConnect = useCallback(
@@ -138,6 +147,19 @@ function App() {
     setStatus("Added zone");
   }, [setNodes, takeSnapshot]);
 
+  const addNoteToCanvas = useCallback(() => {
+    takeSnapshot();
+    const i = noteCount.current++;
+    const note: NoteNodeType = {
+      id: crypto.randomUUID(),
+      type: "note",
+      position: { x: 120 + (i % 5) * 36, y: 120 + (i % 5) * 36 },
+      data: { text: "" },
+    };
+    setNodes((nds) => [...nds, note]);
+    setStatus("Added note");
+  }, [setNodes, takeSnapshot]);
+
   const renameZone = useCallback(
     (id: string, label: string) => {
       takeSnapshot();
@@ -162,6 +184,18 @@ function App() {
     () => ({ rename: renameZone, recolor: recolorZone, beginChange: takeSnapshot }),
     [renameZone, recolorZone, takeSnapshot],
   );
+
+  const setNoteText = useCallback(
+    (id: string, text: string) => {
+      takeSnapshot();
+      setNodes((nds) =>
+        nds.map((n) => (n.id === id && n.type === "note" ? { ...n, data: { ...n.data, text } } : n)),
+      );
+    },
+    [setNodes, takeSnapshot],
+  );
+
+  const noteActions = useMemo(() => ({ setText: setNoteText }), [setNoteText]);
 
   // Snapshot before drags and deletions so they can be undone as single steps.
   const onNodeDragStart = useCallback(() => takeSnapshot(), [takeSnapshot]);
@@ -337,6 +371,7 @@ function App() {
           </button>
           <span className="toolbar__sep" />
           <button type="button" onClick={addZoneToCanvas} title="Add a zone">Add zone</button>
+          <button type="button" onClick={addNoteToCanvas} title="Add a note">Add note</button>
           <button
             type="button"
             className="toolbar__primary"
@@ -354,6 +389,7 @@ function App() {
 
       <div className="flow-wrap">
         <ZoneActionsContext.Provider value={zoneActions}>
+          <NoteActionsContext.Provider value={noteActions}>
           <ReactFlow
             nodes={nodes}
             edges={edges}
@@ -373,6 +409,7 @@ function App() {
             <MiniMap pannable zoomable />
             <Controls />
           </ReactFlow>
+          </NoteActionsContext.Provider>
         </ZoneActionsContext.Provider>
         {paletteOpen && (
           <AddDevicePanel onAddModel={addModelToCanvas} onClose={() => setPaletteOpen(false)} />

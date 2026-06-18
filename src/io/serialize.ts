@@ -1,9 +1,18 @@
 import { CABLE_TYPES, DEFAULT_CABLE_COLOR, SIGPATH_SCHEMA_VERSION, emptyDiagram } from "../schema";
-import type { Connection, DeviceInstance, Diagram, Project, SigpathDocument, Zone } from "../schema";
+import type {
+  Annotation,
+  Connection,
+  DeviceInstance,
+  Diagram,
+  Project,
+  SigpathDocument,
+  Zone,
+} from "../schema";
 import type {
   CableEdgeType,
   DeviceNodeType,
   EditorDiagram,
+  NoteNodeType,
   SigNode,
   ZoneNodeType,
 } from "../flow/types";
@@ -22,6 +31,7 @@ function numberOr(value: number | string | undefined, fallback: number): number 
 function editorToDiagram(d: EditorDiagram): Diagram {
   const deviceNodes = d.nodes.filter((n): n is DeviceNodeType => n.type === "device");
   const zoneNodes = d.nodes.filter((n): n is ZoneNodeType => n.type === "zone");
+  const noteNodes = d.nodes.filter((n): n is NoteNodeType => n.type === "note");
 
   const devices: DeviceInstance[] = deviceNodes.map((n) => ({
     id: n.id,
@@ -53,7 +63,13 @@ function editorToDiagram(d: EditorDiagram): Diagram {
     },
   }));
 
-  return { ...emptyDiagram(d.id, d.name), devices, connections, zones };
+  const annotations: Annotation[] = noteNodes.map((n) => ({
+    id: n.id,
+    text: n.data.text,
+    position: n.position,
+  }));
+
+  return { ...emptyDiagram(d.id, d.name), devices, connections, zones, annotations };
 }
 
 function diagramToEditor(d: Diagram): EditorDiagram {
@@ -64,7 +80,7 @@ function diagramToEditor(d: Diagram): EditorDiagram {
     data: { model: dev.model, label: dev.label },
   }));
 
-  const zoneNodes: SigNode[] = d.zones.map((z) => ({
+  const zoneNodes: SigNode[] = (d.zones ?? []).map((z) => ({
     id: z.id,
     type: "zone",
     position: { x: z.rect.x, y: z.rect.y },
@@ -73,6 +89,13 @@ function diagramToEditor(d: Diagram): EditorDiagram {
     style: { width: z.rect.width, height: z.rect.height },
     zIndex: -1,
     data: { label: z.label, color: z.color },
+  }));
+
+  const noteNodes: SigNode[] = (d.annotations ?? []).map((a) => ({
+    id: a.id,
+    type: "note",
+    position: { x: a.position.x, y: a.position.y },
+    data: { text: a.text },
   }));
 
   const edges: CableEdgeType[] = d.connections.map((c) => ({
@@ -87,7 +110,7 @@ function diagramToEditor(d: Diagram): EditorDiagram {
   }));
 
   // Zones first so they sit behind devices in the array (zIndex enforces it too).
-  return { id: d.id, name: d.name, nodes: [...zoneNodes, ...deviceNodes], edges };
+  return { id: d.id, name: d.name, nodes: [...zoneNodes, ...deviceNodes, ...noteNodes], edges };
 }
 
 /** A fresh, empty editor diagram. */
