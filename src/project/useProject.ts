@@ -1,14 +1,14 @@
 import { useCallback, useRef, useState } from "react";
 import type { MutableRefObject } from "react";
-import type { CableEdgeType, DeviceNodeType, EditorDiagram } from "../flow/types";
+import type { CableEdgeType, SigNode, EditorDiagram } from "../flow/types";
 import { emptyEditorDiagram, fromDocument, toDocument } from "../io/serialize";
 import type { SigpathDocument } from "../schema";
 
 type Options = {
-  setNodes: (nodes: DeviceNodeType[]) => void;
+  setNodes: (nodes: SigNode[]) => void;
   setEdges: (edges: CableEdgeType[]) => void;
   /** Always-fresh view of the live canvas, so the active diagram can be synced. */
-  nodesRef: MutableRefObject<DeviceNodeType[]>;
+  nodesRef: MutableRefObject<SigNode[]>;
   edgesRef: MutableRefObject<CableEdgeType[]>;
 };
 

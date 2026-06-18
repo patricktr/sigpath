@@ -1,16 +1,29 @@
 import { CABLE_TYPES, DEFAULT_CABLE_COLOR, SIGPATH_SCHEMA_VERSION, emptyDiagram } from "../schema";
-import type { Connection, DeviceInstance, Diagram, Project, SigpathDocument } from "../schema";
-import type { CableEdgeType, DeviceNodeType, EditorDiagram } from "../flow/types";
+import type { Connection, DeviceInstance, Diagram, Project, SigpathDocument, Zone } from "../schema";
+import type {
+  CableEdgeType,
+  DeviceNodeType,
+  EditorDiagram,
+  SigNode,
+  ZoneNodeType,
+} from "../flow/types";
 
 /**
  * Maps between the editor's diagrams (React Flow nodes + edges) and the
  * persisted {@link SigpathDocument}. A `.sigpath` file is one project holding
  * one or more diagrams. Presentation-only details (edge stroke color) are NOT
- * stored — they're derived from the cable type on load.
+ * stored — they're derived on load.
  */
 
+function numberOr(value: number | string | undefined, fallback: number): number {
+  return typeof value === "number" ? value : fallback;
+}
+
 function editorToDiagram(d: EditorDiagram): Diagram {
-  const devices: DeviceInstance[] = d.nodes.map((n) => ({
+  const deviceNodes = d.nodes.filter((n): n is DeviceNodeType => n.type === "device");
+  const zoneNodes = d.nodes.filter((n): n is ZoneNodeType => n.type === "zone");
+
+  const devices: DeviceInstance[] = deviceNodes.map((n) => ({
     id: n.id,
     model: n.data.model,
     label: n.data.label,
@@ -26,15 +39,36 @@ function editorToDiagram(d: EditorDiagram): Diagram {
     lengthMeters: e.data?.lengthMeters,
   }));
 
-  return { ...emptyDiagram(d.id, d.name), devices, connections };
+  const zones: Zone[] = zoneNodes.map((z) => ({
+    id: z.id,
+    label: z.data.label,
+    color: z.data.color,
+    rect: {
+      x: z.position.x,
+      y: z.position.y,
+      width: numberOr(z.style?.width, 280),
+      height: numberOr(z.style?.height, 180),
+    },
+  }));
+
+  return { ...emptyDiagram(d.id, d.name), devices, connections, zones };
 }
 
 function diagramToEditor(d: Diagram): EditorDiagram {
-  const nodes: DeviceNodeType[] = d.devices.map((dev) => ({
+  const deviceNodes: SigNode[] = d.devices.map((dev) => ({
     id: dev.id,
     type: "device",
     position: dev.position,
     data: { model: dev.model, label: dev.label },
+  }));
+
+  const zoneNodes: SigNode[] = d.zones.map((z) => ({
+    id: z.id,
+    type: "zone",
+    position: { x: z.rect.x, y: z.rect.y },
+    style: { width: z.rect.width, height: z.rect.height },
+    zIndex: -1,
+    data: { label: z.label, color: z.color },
   }));
 
   const edges: CableEdgeType[] = d.connections.map((c) => ({
@@ -48,7 +82,8 @@ function diagramToEditor(d: Diagram): EditorDiagram {
     data: { cableTypeId: c.cableTypeId, number: c.number, lengthMeters: c.lengthMeters },
   }));
 
-  return { id: d.id, name: d.name, nodes, edges };
+  // Zones first so they sit behind devices in the array (zIndex enforces it too).
+  return { id: d.id, name: d.name, nodes: [...zoneNodes, ...deviceNodes], edges };
 }
 
 /** A fresh, empty editor diagram. */

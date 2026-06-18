@@ -3,8 +3,7 @@ import type { DeviceModel, CableTypeId } from "../schema";
 
 /**
  * React Flow binding types. The domain model lives in `src/schema`; these types
- * map it onto React Flow's node/edge shapes. A node's id and position live on
- * the Node itself, so the data payload only carries the device-specific bits.
+ * map it onto React Flow's node/edge shapes.
  */
 
 export type DeviceNodeData = {
@@ -14,6 +13,17 @@ export type DeviceNodeData = {
 };
 
 export type DeviceNodeType = Node<DeviceNodeData, "device">;
+
+/** A labeled, colored region that groups devices behind the canvas. */
+export type ZoneData = {
+  label: string;
+  color: string;
+};
+
+export type ZoneNodeType = Node<ZoneData, "zone">;
+
+/** Any node on the canvas — a device or a zone. */
+export type SigNode = DeviceNodeType | ZoneNodeType;
 
 export type CableEdgeData = {
   cableTypeId: CableTypeId;
@@ -27,6 +37,6 @@ export type CableEdgeType = Edge<CableEdgeData>;
 export type EditorDiagram = {
   id: string;
   name: string;
-  nodes: DeviceNodeType[];
+  nodes: SigNode[];
   edges: CableEdgeType[];
 };

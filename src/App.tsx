@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ReactFlow,
   Background,
@@ -13,7 +13,7 @@ import "@xyflow/react/dist/style.css";
 
 import { DeviceNode } from "./flow/DeviceNode";
 import { initialNodes, initialEdges } from "./flow/sampleGraph";
-import type { DeviceNodeType, CableEdgeType, EditorDiagram } from "./flow/types";
+import type { DeviceNodeType, CableEdgeType, EditorDiagram, SigNode, ZoneNodeType } from "./flow/types";
 import { CABLE_TYPES, DEFAULT_CABLE_COLOR, cableTypeForPort } from "./schema";
 import type { DeviceModel } from "./schema";
 import { useProject } from "./project/useProject";
@@ -28,16 +28,17 @@ import {
 } from "./io/files";
 import { AddDevicePanel } from "./ui/AddDevicePanel";
 import { DiagramTabs } from "./ui/DiagramTabs";
+import { ZoneNode, ZoneActionsContext, ZONE_COLORS } from "./ui/ZoneNode";
 import "./App.css";
 
 /** Registered once at module scope so the reference stays stable across renders. */
-const nodeTypes = { device: DeviceNode };
+const nodeTypes = { device: DeviceNode, zone: ZoneNode };
 
 /** Grid size (px) for snap-to-grid and the background dots. */
 const GRID = 16;
 
 function App() {
-  const [nodes, setNodes, onNodesChange] = useNodesState<DeviceNodeType>(initialNodes);
+  const [nodes, setNodes, onNodesChange] = useNodesState<SigNode>(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState<CableEdgeType>(initialEdges);
 
   // Always-fresh views of the live canvas for the project hook to snapshot.
@@ -74,13 +75,17 @@ function App() {
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [snap, setSnap] = useState(true);
   const addCount = useRef(0);
+  const zoneCount = useRef(0);
 
   // Drawing a connection auto-types the cable from the source port's connector.
   const onConnect = useCallback(
     (connection: Connection) => {
       takeSnapshot();
       const sourceNode = nodes.find((n) => n.id === connection.source);
-      const port = sourceNode?.data.model.ports.find((p) => p.id === connection.sourceHandle);
+      const port =
+        sourceNode?.type === "device"
+          ? sourceNode.data.model.ports.find((p) => p.id === connection.sourceHandle)
+          : undefined;
       const cableTypeId = port ? cableTypeForPort(port.connector, port.signal) : undefined;
       const color = cableTypeId
         ? CABLE_TYPES[cableTypeId]?.color ?? DEFAULT_CABLE_COLOR
@@ -114,6 +119,46 @@ function App() {
       setStatus(`Added ${model.model}`);
     },
     [setNodes, takeSnapshot],
+  );
+
+  const addZoneToCanvas = useCallback(() => {
+    takeSnapshot();
+    const i = zoneCount.current++;
+    const zone: ZoneNodeType = {
+      id: crypto.randomUUID(),
+      type: "zone",
+      position: { x: 40 + (i % 4) * 48, y: 60 + (i % 4) * 48 },
+      style: { width: 300, height: 200 },
+      zIndex: -1,
+      data: { label: `Zone ${i + 1}`, color: ZONE_COLORS[i % ZONE_COLORS.length] },
+    };
+    setNodes((nds) => [...nds, zone]);
+    setStatus("Added zone");
+  }, [setNodes, takeSnapshot]);
+
+  const renameZone = useCallback(
+    (id: string, label: string) => {
+      takeSnapshot();
+      setNodes((nds) =>
+        nds.map((n) => (n.id === id && n.type === "zone" ? { ...n, data: { ...n.data, label } } : n)),
+      );
+    },
+    [setNodes, takeSnapshot],
+  );
+
+  const recolorZone = useCallback(
+    (id: string, color: string) => {
+      takeSnapshot();
+      setNodes((nds) =>
+        nds.map((n) => (n.id === id && n.type === "zone" ? { ...n, data: { ...n.data, color } } : n)),
+      );
+    },
+    [setNodes, takeSnapshot],
+  );
+
+  const zoneActions = useMemo(
+    () => ({ rename: renameZone, recolor: recolorZone }),
+    [renameZone, recolorZone],
   );
 
   // Snapshot before drags and deletions so they can be undone as single steps.
@@ -210,6 +255,8 @@ function App() {
           >
             Snap
           </button>
+          <span className="toolbar__sep" />
+          <button type="button" onClick={addZoneToCanvas} title="Add a zone">Add zone</button>
           <button
             type="button"
             className="toolbar__primary"
@@ -226,25 +273,27 @@ function App() {
       </header>
 
       <div className="flow-wrap">
-        <ReactFlow
-          nodes={nodes}
-          edges={edges}
-          nodeTypes={nodeTypes}
-          onNodesChange={onNodesChange}
-          onEdgesChange={onEdgesChange}
-          onConnect={onConnect}
-          onNodeDragStart={onNodeDragStart}
-          onSelectionDragStart={onNodeDragStart}
-          onBeforeDelete={onBeforeDelete}
-          snapToGrid={snap}
-          snapGrid={[GRID, GRID]}
-          defaultEdgeOptions={{ type: "smoothstep" }}
-          fitView
-        >
-          <Background gap={GRID} />
-          <MiniMap pannable zoomable />
-          <Controls />
-        </ReactFlow>
+        <ZoneActionsContext.Provider value={zoneActions}>
+          <ReactFlow
+            nodes={nodes}
+            edges={edges}
+            nodeTypes={nodeTypes}
+            onNodesChange={onNodesChange}
+            onEdgesChange={onEdgesChange}
+            onConnect={onConnect}
+            onNodeDragStart={onNodeDragStart}
+            onSelectionDragStart={onNodeDragStart}
+            onBeforeDelete={onBeforeDelete}
+            snapToGrid={snap}
+            snapGrid={[GRID, GRID]}
+            defaultEdgeOptions={{ type: "smoothstep" }}
+            fitView
+          >
+            <Background gap={GRID} />
+            <MiniMap pannable zoomable />
+            <Controls />
+          </ReactFlow>
+        </ZoneActionsContext.Provider>
         {paletteOpen && (
           <AddDevicePanel onAddModel={addModelToCanvas} onClose={() => setPaletteOpen(false)} />
         )}
