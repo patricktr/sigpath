@@ -36,6 +36,8 @@ import {
   writeTextToPath,
   fileStem,
   confirmDeleteDiagram,
+  saveText,
+  saveBinary,
 } from "./io/files";
 import { AddDevicePanel } from "./ui/AddDevicePanel";
 import { DiagramTabs } from "./ui/DiagramTabs";
@@ -44,6 +46,8 @@ import { NoteNode, NoteActionsContext } from "./ui/NoteNode";
 import { Legend } from "./ui/Legend";
 import { ListsPanel } from "./ui/ListsPanel";
 import { deriveLists } from "./lists/derive";
+import { ExportMenu, type ExportKind } from "./ui/ExportMenu";
+import { diagramImageBase64, diagramPdfBase64, listsToCsv } from "./io/export";
 import "./App.css";
 import "./theme-dark.css";
 
@@ -227,6 +231,36 @@ function App() {
   }, []);
 
   const lists = useMemo(() => deriveLists(nodes, edges), [nodes, edges]);
+
+  const handleExport = useCallback(
+    async (kind: ExportKind) => {
+      try {
+        const base = (projectName || "diagram").replace(/\s+/g, "-");
+        if (kind === "csv") {
+          const saved = await saveText(listsToCsv(lists), `${base}-lists.csv`, "csv");
+          if (saved) setStatus(`Exported · ${saved}`);
+          return;
+        }
+        if (!rf.current) return;
+        const dark = theme === "dark";
+        if (kind === "pdf") {
+          const saved = await saveBinary(await diagramPdfBase64(rf.current, dark), `${base}.pdf`, "pdf");
+          if (saved) setStatus(`Exported · ${saved}`);
+        } else {
+          const ext = kind === "png" ? "png" : "jpg";
+          const saved = await saveBinary(
+            await diagramImageBase64(rf.current, kind, dark),
+            `${base}.${ext}`,
+            ext,
+          );
+          if (saved) setStatus(`Exported · ${saved}`);
+        }
+      } catch (err) {
+        setStatus(`Export failed: ${String(err)}`);
+      }
+    },
+    [lists, projectName, theme],
+  );
 
   const renameZone = useCallback(
     (id: string, label: string) => {
@@ -505,6 +539,7 @@ function App() {
           >
             Lists
           </button>
+          <ExportMenu onExport={handleExport} />
           <button
             type="button"
             className="toolbar__primary"

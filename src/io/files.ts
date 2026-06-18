@@ -39,3 +39,19 @@ export async function confirmDeleteDiagram(name: string): Promise<boolean> {
     cancelLabel: "Cancel",
   });
 }
+
+/** Prompt for a path and write a text file (e.g. CSV). Returns the path, or null if cancelled. */
+export async function saveText(text: string, defaultName: string, ext: string): Promise<string | null> {
+  const path = await save({ filters: [{ name: ext.toUpperCase(), extensions: [ext] }], defaultPath: defaultName });
+  if (!path) return null;
+  await invoke("write_file", { path, contents: text });
+  return path;
+}
+
+/** Prompt for a path and write base64-encoded binary (e.g. PNG/JPG/PDF). */
+export async function saveBinary(base64: string, defaultName: string, ext: string): Promise<string | null> {
+  const path = await save({ filters: [{ name: ext.toUpperCase(), extensions: [ext] }], defaultPath: defaultName });
+  if (!path) return null;
+  await invoke("write_file_base64", { path, data: base64 });
+  return path;
+}

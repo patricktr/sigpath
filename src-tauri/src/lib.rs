@@ -3,6 +3,7 @@ use std::fs;
 use std::sync::atomic::{AtomicU32, Ordering};
 use std::sync::Mutex;
 
+use base64::{engine::general_purpose::STANDARD, Engine as _};
 use tauri::menu::{MenuBuilder, MenuItem, SubmenuBuilder};
 use tauri::{AppHandle, Emitter, Manager, State, WebviewUrl, WebviewWindow, WebviewWindowBuilder};
 
@@ -50,6 +51,13 @@ fn read_file(path: String) -> Result<String, String> {
 #[tauri::command]
 fn write_file(path: String, contents: String) -> Result<(), String> {
     fs::write(&path, contents).map_err(|e| e.to_string())
+}
+
+/// Write base64-encoded binary data to a path (used for exporting PNG/JPG/PDF).
+#[tauri::command]
+fn write_file_base64(path: String, data: String) -> Result<(), String> {
+    let bytes = STANDARD.decode(data).map_err(|e| e.to_string())?;
+    fs::write(&path, bytes).map_err(|e| e.to_string())
 }
 
 #[tauri::command]
@@ -131,6 +139,7 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             read_file,
             write_file,
+            write_file_base64,
             new_window,
             open_window,
             take_pending_open
