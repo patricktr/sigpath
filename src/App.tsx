@@ -42,6 +42,8 @@ import { DiagramTabs } from "./ui/DiagramTabs";
 import { ZoneNode, ZoneActionsContext, ZONE_COLORS } from "./ui/ZoneNode";
 import { NoteNode, NoteActionsContext } from "./ui/NoteNode";
 import { Legend } from "./ui/Legend";
+import { ListsPanel } from "./ui/ListsPanel";
+import { deriveLists } from "./lists/derive";
 import "./App.css";
 import "./theme-dark.css";
 
@@ -86,6 +88,7 @@ function App() {
   const [currentPath, setCurrentPath] = useState<string | null>(null);
   const [status, setStatus] = useState("");
   const [paletteOpen, setPaletteOpen] = useState(false);
+  const [listsOpen, setListsOpen] = useState(false);
   const [snap, setSnap] = useState(true);
   const [legendOn, setLegendOn] = useState(true);
   const [themeMode, setThemeMode] = useState<"system" | "light" | "dark">(() => {
@@ -222,6 +225,8 @@ function App() {
       return next;
     });
   }, []);
+
+  const lists = useMemo(() => deriveLists(nodes, edges), [nodes, edges]);
 
   const renameZone = useCallback(
     (id: string, label: string) => {
@@ -490,8 +495,23 @@ function App() {
           <button type="button" onClick={addNoteToCanvas} title="Add a note">Add note</button>
           <button
             type="button"
+            className={listsOpen ? "toolbar__toggle toolbar__toggle--on" : "toolbar__toggle"}
+            onClick={() => {
+              setListsOpen((v) => !v);
+              setPaletteOpen(false);
+            }}
+            aria-pressed={listsOpen}
+            title="Pack list & patch list"
+          >
+            Lists
+          </button>
+          <button
+            type="button"
             className="toolbar__primary"
-            onClick={() => setPaletteOpen((v) => !v)}
+            onClick={() => {
+              setPaletteOpen((v) => !v);
+              setListsOpen(false);
+            }}
           >
             {paletteOpen ? "Close panel" : "Add device"}
           </button>
@@ -539,6 +559,7 @@ function App() {
         {paletteOpen && (
           <AddDevicePanel onAddModel={addModelToCanvas} onClose={() => setPaletteOpen(false)} />
         )}
+        {listsOpen && <ListsPanel lists={lists} onClose={() => setListsOpen(false)} />}
       </div>
 
       <DiagramTabs
