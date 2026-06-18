@@ -11,10 +11,12 @@ import {
   useNodesState,
   useEdgesState,
   type Connection,
+  type ReactFlowInstance,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 
 import { DeviceNode } from "./flow/DeviceNode";
+import { arrangeLeftToRight } from "./flow/autoLayout";
 import type {
   DeviceNodeType,
   CableEdgeType,
@@ -88,6 +90,7 @@ function App() {
   const addCount = useRef(0);
   const zoneCount = useRef(0);
   const noteCount = useRef(0);
+  const rf = useRef<ReactFlowInstance<SigNode, CableEdgeType> | null>(null);
 
   // Drawing a connection auto-types the cable from the source port's connector.
   const onConnect = useCallback(
@@ -163,6 +166,26 @@ function App() {
     setStatus("Added note");
   }, [setNodes, takeSnapshot]);
 
+  const handleArrange = useCallback(() => {
+    takeSnapshot();
+    setNodes((nds) => arrangeLeftToRight(nds, edgesRef.current));
+    window.setTimeout(() => rf.current?.fitView({ duration: 400, padding: 0.2 }), 50);
+    setStatus("Arranged left-to-right");
+  }, [setNodes, takeSnapshot]);
+
+  const handleZoomToZone = useCallback(() => {
+    const zone = nodesRef.current.find((n) => n.type === "zone" && n.selected);
+    if (!zone || !rf.current) return;
+    const width =
+      zone.measured?.width ?? (typeof zone.style?.width === "number" ? zone.style.width : 280);
+    const height =
+      zone.measured?.height ?? (typeof zone.style?.height === "number" ? zone.style.height : 180);
+    rf.current.fitBounds(
+      { x: zone.position.x, y: zone.position.y, width, height },
+      { duration: 400, padding: 0.15 },
+    );
+  }, []);
+
   const renameZone = useCallback(
     (id: string, label: string) => {
       takeSnapshot();
@@ -215,6 +238,11 @@ function App() {
     items.sort((a, b) => a.type.label.localeCompare(b.type.label));
     return items;
   }, [edges]);
+
+  const hasSelectedZone = useMemo(
+    () => nodes.some((n) => n.type === "zone" && n.selected),
+    [nodes],
+  );
 
   // Snapshot before drags and deletions so they can be undone as single steps.
   const onNodeDragStart = useCallback(() => takeSnapshot(), [takeSnapshot]);
@@ -398,6 +426,22 @@ function App() {
             Legend
           </button>
           <span className="toolbar__sep" />
+          <button
+            type="button"
+            onClick={handleArrange}
+            title="Arrange devices left-to-right by signal flow"
+          >
+            Arrange ↦
+          </button>
+          <button
+            type="button"
+            onClick={handleZoomToZone}
+            disabled={!hasSelectedZone}
+            title="Zoom to the selected zone"
+          >
+            Zoom to zone
+          </button>
+          <span className="toolbar__sep" />
           <button type="button" onClick={addZoneToCanvas} title="Add a zone">Add zone</button>
           <button type="button" onClick={addNoteToCanvas} title="Add a note">Add note</button>
           <button
@@ -428,6 +472,9 @@ function App() {
             onNodeDragStart={onNodeDragStart}
             onSelectionDragStart={onNodeDragStart}
             onBeforeDelete={onBeforeDelete}
+            onInit={(inst) => {
+              rf.current = inst;
+            }}
             snapToGrid={snap}
             snapGrid={[GRID, GRID]}
             defaultEdgeOptions={{ type: "smoothstep" }}
