@@ -1,30 +1,23 @@
 import { CABLE_TYPES, DEFAULT_CABLE_COLOR, SIGPATH_SCHEMA_VERSION, emptyDiagram } from "../schema";
 import type { Connection, DeviceInstance, Diagram, Project, SigpathDocument } from "../schema";
-import type { DeviceNodeType, CableEdgeType } from "../flow/types";
+import type { CableEdgeType, DeviceNodeType, EditorDiagram } from "../flow/types";
 
 /**
- * Maps between the React Flow canvas (nodes + edges) and the persisted
- * {@link SigpathDocument}. Presentation-only details (edge stroke color) are
- * NOT stored — they're derived from the cable type on load — so the saved file
- * stays a clean domain document.
+ * Maps between the editor's diagrams (React Flow nodes + edges) and the
+ * persisted {@link SigpathDocument}. A `.sigpath` file is one project holding
+ * one or more diagrams. Presentation-only details (edge stroke color) are NOT
+ * stored — they're derived from the cable type on load.
  */
 
-type DocMeta = {
-  projectId: string;
-  projectName: string;
-  diagramId: string;
-  diagramName: string;
-};
-
-function toDiagram(nodes: DeviceNodeType[], edges: CableEdgeType[], id: string, name: string): Diagram {
-  const devices: DeviceInstance[] = nodes.map((n) => ({
+function editorToDiagram(d: EditorDiagram): Diagram {
+  const devices: DeviceInstance[] = d.nodes.map((n) => ({
     id: n.id,
     model: n.data.model,
     label: n.data.label,
     position: n.position,
   }));
 
-  const connections: Connection[] = edges.map((e) => ({
+  const connections: Connection[] = d.edges.map((e) => ({
     id: e.id,
     from: { instanceId: e.source, portId: e.sourceHandle ?? "" },
     to: { instanceId: e.target, portId: e.targetHandle ?? "" },
@@ -33,33 +26,18 @@ function toDiagram(nodes: DeviceNodeType[], edges: CableEdgeType[], id: string, 
     lengthMeters: e.data?.lengthMeters,
   }));
 
-  return { ...emptyDiagram(id, name), devices, connections };
+  return { ...emptyDiagram(d.id, d.name), devices, connections };
 }
 
-/** Wrap the current canvas in a complete, versioned document for saving. */
-export function toDocument(nodes: DeviceNodeType[], edges: CableEdgeType[], meta: DocMeta): SigpathDocument {
-  const diagram = toDiagram(nodes, edges, meta.diagramId, meta.diagramName);
-  const project: Project = { id: meta.projectId, name: meta.projectName, diagrams: [diagram] };
-  return { schemaVersion: SIGPATH_SCHEMA_VERSION, project };
-}
-
-/** Reconstruct canvas nodes/edges from a loaded document's first diagram. */
-export function fromDocument(doc: SigpathDocument): {
-  nodes: DeviceNodeType[];
-  edges: CableEdgeType[];
-  diagram: Diagram | null;
-} {
-  const diagram = doc.project?.diagrams?.[0] ?? null;
-  if (!diagram) return { nodes: [], edges: [], diagram: null };
-
-  const nodes: DeviceNodeType[] = diagram.devices.map((d) => ({
-    id: d.id,
+function diagramToEditor(d: Diagram): EditorDiagram {
+  const nodes: DeviceNodeType[] = d.devices.map((dev) => ({
+    id: dev.id,
     type: "device",
-    position: d.position,
-    data: { model: d.model, label: d.label },
+    position: dev.position,
+    data: { model: dev.model, label: dev.label },
   }));
 
-  const edges: CableEdgeType[] = diagram.connections.map((c) => ({
+  const edges: CableEdgeType[] = d.connections.map((c) => ({
     id: c.id,
     source: c.from.instanceId,
     target: c.to.instanceId,
@@ -70,7 +48,40 @@ export function fromDocument(doc: SigpathDocument): {
     data: { cableTypeId: c.cableTypeId, number: c.number, lengthMeters: c.lengthMeters },
   }));
 
-  return { nodes, edges, diagram };
+  return { id: d.id, name: d.name, nodes, edges };
+}
+
+/** A fresh, empty editor diagram. */
+export function emptyEditorDiagram(name = "Diagram 1"): EditorDiagram {
+  return { id: crypto.randomUUID(), name, nodes: [], edges: [] };
+}
+
+/** Wrap all of the project's diagrams in a versioned document for saving. */
+export function toDocument(
+  diagrams: EditorDiagram[],
+  meta: { projectId: string; projectName: string },
+): SigpathDocument {
+  const project: Project = {
+    id: meta.projectId,
+    name: meta.projectName,
+    diagrams: diagrams.map(editorToDiagram),
+  };
+  return { schemaVersion: SIGPATH_SCHEMA_VERSION, project };
+}
+
+/** Reconstruct the project (name + all diagrams) from a loaded document. */
+export function fromDocument(doc: SigpathDocument): {
+  projectId: string;
+  projectName: string;
+  diagrams: EditorDiagram[];
+} {
+  const project = doc.project;
+  const diagrams = (project?.diagrams ?? []).map(diagramToEditor);
+  return {
+    projectId: project?.id ?? crypto.randomUUID(),
+    projectName: project?.name ?? "Untitled",
+    diagrams: diagrams.length > 0 ? diagrams : [emptyEditorDiagram()],
+  };
 }
 
 /** Parse + minimally validate a loaded JSON string into a document. */

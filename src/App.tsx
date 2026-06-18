@@ -13,19 +13,21 @@ import "@xyflow/react/dist/style.css";
 
 import { DeviceNode } from "./flow/DeviceNode";
 import { initialNodes, initialEdges } from "./flow/sampleGraph";
-import { useUndoRedo } from "./flow/useUndoRedo";
-import type { DeviceNodeType, CableEdgeType } from "./flow/types";
+import type { DeviceNodeType, CableEdgeType, EditorDiagram } from "./flow/types";
 import { CABLE_TYPES, DEFAULT_CABLE_COLOR, cableTypeForPort } from "./schema";
 import type { DeviceModel } from "./schema";
-import { toDocument, fromDocument, parseDocument } from "./io/serialize";
+import { useProject } from "./project/useProject";
+import { parseDocument } from "./io/serialize";
 import {
   promptSavePath,
   promptOpenPath,
   readTextFromPath,
   writeTextToPath,
   fileStem,
+  confirmDeleteDiagram,
 } from "./io/files";
 import { AddDevicePanel } from "./ui/AddDevicePanel";
+import { DiagramTabs } from "./ui/DiagramTabs";
 import "./App.css";
 
 /** Registered once at module scope so the reference stays stable across renders. */
@@ -38,22 +40,39 @@ function App() {
   const [nodes, setNodes, onNodesChange] = useNodesState<DeviceNodeType>(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState<CableEdgeType>(initialEdges);
 
-  const { takeSnapshot, undo, redo, clearHistory, canUndo, canRedo } = useUndoRedo(
-    nodes,
-    edges,
-    setNodes,
-    setEdges,
-  );
+  // Always-fresh views of the live canvas for the project hook to snapshot.
+  const nodesRef = useRef(nodes);
+  nodesRef.current = nodes;
+  const edgesRef = useRef(edges);
+  edgesRef.current = edges;
+
+  const initialDiagrams = useRef<EditorDiagram[]>([
+    { id: crypto.randomUUID(), name: "Diagram 1", nodes: initialNodes, edges: initialEdges },
+  ]);
+
+  const {
+    projectName,
+    setProjectName,
+    diagrams,
+    activeId,
+    switchDiagram,
+    addDiagram,
+    renameDiagram,
+    deleteDiagram,
+    getDocument,
+    loadProject,
+    newProject,
+    takeSnapshot,
+    undo,
+    redo,
+    canUndo,
+    canRedo,
+  } = useProject(initialDiagrams.current, { setNodes, setEdges, nodesRef, edgesRef });
 
   const [currentPath, setCurrentPath] = useState<string | null>(null);
-  const [docName, setDocName] = useState("Untitled");
   const [status, setStatus] = useState("");
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [snap, setSnap] = useState(true);
-  const ids = useRef<{ projectId: string; diagramId: string }>({
-    projectId: crypto.randomUUID(),
-    diagramId: crypto.randomUUID(),
-  });
   const addCount = useRef(0);
 
   // Drawing a connection auto-types the cable from the source port's connector.
@@ -104,58 +123,48 @@ function App() {
     return true;
   }, [takeSnapshot]);
 
+  const handleDeleteDiagram = useCallback(
+    async (id: string) => {
+      const name = diagrams.find((d) => d.id === id)?.name ?? "this diagram";
+      if (await confirmDeleteDiagram(name)) deleteDiagram(id);
+    },
+    [diagrams, deleteDiagram],
+  );
+
   const handleNew = useCallback(() => {
-    setNodes([]);
-    setEdges([]);
+    newProject();
     setCurrentPath(null);
-    setDocName("Untitled");
-    ids.current = { projectId: crypto.randomUUID(), diagramId: crypto.randomUUID() };
-    clearHistory();
-    setStatus("New diagram");
-  }, [setNodes, setEdges, clearHistory]);
+    setStatus("New project");
+  }, [newProject]);
 
   const handleSave = useCallback(async () => {
     try {
       let path = currentPath;
       if (!path) {
-        path = await promptSavePath(`${docName}.sigpath`);
+        path = await promptSavePath(`${projectName}.sigpath`);
         if (!path) return; // cancelled
       }
-      const doc = toDocument(nodes, edges, {
-        projectId: ids.current.projectId,
-        projectName: docName,
-        diagramId: ids.current.diagramId,
-        diagramName: docName,
-      });
-      await writeTextToPath(path, JSON.stringify(doc, null, 2));
+      await writeTextToPath(path, JSON.stringify(getDocument(), null, 2));
       setCurrentPath(path);
-      setDocName(fileStem(path));
+      setProjectName(fileStem(path));
       setStatus(`Saved · ${path}`);
     } catch (err) {
       setStatus(`Save failed: ${String(err)}`);
     }
-  }, [currentPath, docName, nodes, edges]);
+  }, [currentPath, projectName, getDocument, setProjectName]);
 
   const handleOpen = useCallback(async () => {
     try {
       const path = await promptOpenPath();
       if (!path) return; // cancelled
-      const doc = parseDocument(await readTextFromPath(path));
-      const restored = fromDocument(doc);
-      setNodes(restored.nodes);
-      setEdges(restored.edges);
+      loadProject(parseDocument(await readTextFromPath(path)));
       setCurrentPath(path);
-      setDocName(fileStem(path));
-      ids.current = {
-        projectId: doc.project.id,
-        diagramId: restored.diagram?.id ?? crypto.randomUUID(),
-      };
-      clearHistory();
+      setProjectName(fileStem(path));
       setStatus(`Opened · ${path}`);
     } catch (err) {
       setStatus(`Open failed: ${String(err)}`);
     }
-  }, [setNodes, setEdges, clearHistory]);
+  }, [loadProject, setProjectName]);
 
   // Keyboard shortcuts: ⌘S save, ⌘O open, ⌘Z undo, ⌘⇧Z / ⌘Y redo.
   useEffect(() => {
@@ -210,7 +219,7 @@ function App() {
           </button>
         </div>
         <span className="toolbar__doc">
-          {docName}
+          {projectName}
           {currentPath ? "" : " · unsaved"}
         </span>
         <span className="toolbar__status" title={status}>{status}</span>
@@ -240,6 +249,15 @@ function App() {
           <AddDevicePanel onAddModel={addModelToCanvas} onClose={() => setPaletteOpen(false)} />
         )}
       </div>
+
+      <DiagramTabs
+        diagrams={diagrams.map((d) => ({ id: d.id, name: d.name }))}
+        activeId={activeId}
+        onSwitch={switchDiagram}
+        onAdd={addDiagram}
+        onRename={renameDiagram}
+        onDelete={handleDeleteDiagram}
+      />
     </div>
   );
 }

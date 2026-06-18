@@ -22,3 +22,11 @@ export type CableEdgeData = {
 };
 
 export type CableEdgeType = Edge<CableEdgeData>;
+
+/** A diagram as held in the editor: React Flow content plus identity. */
+export type EditorDiagram = {
+  id: string;
+  name: string;
+  nodes: DeviceNodeType[];
+  edges: CableEdgeType[];
+};

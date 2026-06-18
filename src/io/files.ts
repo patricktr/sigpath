@@ -1,4 +1,4 @@
-import { save, open } from "@tauri-apps/plugin-dialog";
+import { save, open, confirm } from "@tauri-apps/plugin-dialog";
 import { invoke } from "@tauri-apps/api/core";
 
 const FILTERS = [{ name: "sigpath diagram", extensions: ["sigpath", "json"] }];
@@ -28,4 +28,14 @@ export async function readTextFromPath(path: string): Promise<string> {
 export function fileStem(path: string): string {
   const base = path.split(/[\\/]/).pop() ?? path;
   return base.replace(/\.[^.]+$/, "");
+}
+
+/** Native confirm dialog before deleting an entire diagram. Returns true to proceed. */
+export async function confirmDeleteDiagram(name: string): Promise<boolean> {
+  return await confirm(`Delete "${name}"? This removes the diagram and everything in it.`, {
+    title: "Delete diagram",
+    kind: "warning",
+    okLabel: "Delete",
+    cancelLabel: "Cancel",
+  });
 }
