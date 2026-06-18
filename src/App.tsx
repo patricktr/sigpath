@@ -43,6 +43,7 @@ import { ZoneNode, ZoneActionsContext, ZONE_COLORS } from "./ui/ZoneNode";
 import { NoteNode, NoteActionsContext } from "./ui/NoteNode";
 import { Legend } from "./ui/Legend";
 import "./App.css";
+import "./theme-dark.css";
 
 /** Registered once at module scope so the reference stays stable across renders. */
 const nodeTypes = { device: DeviceNode, zone: ZoneNode, note: NoteNode };
@@ -87,6 +88,30 @@ function App() {
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [snap, setSnap] = useState(true);
   const [legendOn, setLegendOn] = useState(true);
+  const [themeMode, setThemeMode] = useState<"system" | "light" | "dark">(() => {
+    try {
+      const v = localStorage.getItem("sigpath.theme");
+      return v === "light" || v === "dark" || v === "system" ? v : "system";
+    } catch {
+      return "system";
+    }
+  });
+  const [systemDark, setSystemDark] = useState(() => {
+    try {
+      return window.matchMedia("(prefers-color-scheme: dark)").matches;
+    } catch {
+      return false;
+    }
+  });
+  const theme = themeMode === "system" ? (systemDark ? "dark" : "light") : themeMode;
+
+  // While following the system, update live as the OS appearance changes.
+  useEffect(() => {
+    const mq = window.matchMedia("(prefers-color-scheme: dark)");
+    const onChange = (e: MediaQueryListEvent) => setSystemDark(e.matches);
+    mq.addEventListener("change", onChange);
+    return () => mq.removeEventListener("change", onChange);
+  }, []);
   const addCount = useRef(0);
   const zoneCount = useRef(0);
   const noteCount = useRef(0);
@@ -184,6 +209,18 @@ function App() {
       { x: zone.position.x, y: zone.position.y, width, height },
       { duration: 400, padding: 0.15 },
     );
+  }, []);
+
+  const cycleTheme = useCallback(() => {
+    setThemeMode((m) => {
+      const next = m === "system" ? "light" : m === "light" ? "dark" : "system";
+      try {
+        localStorage.setItem("sigpath.theme", next);
+      } catch {
+        /* ignore storage errors */
+      }
+      return next;
+    });
   }, []);
 
   const renameZone = useCallback(
@@ -397,7 +434,7 @@ function App() {
   }, [setNodes, takeSnapshot]);
 
   return (
-    <div className="app">
+    <div className={theme === "dark" ? "app app--dark" : "app"}>
       <header className="toolbar">
         <span className="toolbar__brand">sigpath</span>
         <div className="toolbar__actions">
@@ -424,6 +461,13 @@ function App() {
             title="Show cable-type legend"
           >
             Legend
+          </button>
+          <button
+            type="button"
+            onClick={cycleTheme}
+            title="Theme — click to cycle System / Light / Dark"
+          >
+            {themeMode === "system" ? "Theme: Auto" : themeMode === "light" ? "Theme: Light" : "Theme: Dark"}
           </button>
           <span className="toolbar__sep" />
           <button
@@ -478,6 +522,7 @@ function App() {
             snapToGrid={snap}
             snapGrid={[GRID, GRID]}
             defaultEdgeOptions={{ type: "smoothstep" }}
+            colorMode={theme}
             fitView
           >
             <Background gap={GRID} />

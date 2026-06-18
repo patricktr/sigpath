@@ -1,0 +1,162 @@
+/* Dark-theme overrides, applied when the root .app carries .app--dark.
+   React Flow's own surfaces (canvas, background, controls, minimap, edges) are
+   themed by its colorMode prop; this file themes sigpath's custom surfaces. */
+
+.app--dark {
+  background: #0b1120;
+  color: #e2e8f0;
+}
+
+/* Toolbar */
+.app--dark .toolbar {
+  background: #131c2e;
+  border-bottom-color: #25304a;
+}
+.app--dark .toolbar__brand {
+  color: #f1f5f9;
+}
+.app--dark .toolbar__doc,
+.app--dark .toolbar__status {
+  color: #94a3b8;
+}
+.app--dark .toolbar__sep {
+  background: #25304a;
+}
+.app--dark .toolbar button {
+  background: #1e293b;
+  border-color: #334155;
+  color: #e2e8f0;
+}
+.app--dark .toolbar button:hover {
+  background: #25304a;
+  border-color: #475569;
+}
+.app--dark .toolbar button.toolbar__toggle--on {
+  background: #1d4ed8;
+  border-color: #1d4ed8;
+  color: #ffffff;
+}
+.app--dark .toolbar button.toolbar__primary {
+  background: #2563eb;
+  border-color: #2563eb;
+  color: #ffffff;
+}
+
+/* Diagram tabs */
+.app--dark .tabs {
+  background: #0f1626;
+  border-top-color: #25304a;
+}
+.app--dark .tab {
+  color: #94a3b8;
+}
+.app--dark .tab:hover {
+  background: #1e293b;
+}
+.app--dark .tab--active {
+  background: #131c2e;
+  border-color: #25304a;
+  color: #f1f5f9;
+}
+.app--dark .tab-add {
+  background: #1e293b;
+  border-color: #334155;
+  color: #cbd5e1;
+}
+.app--dark .tab-add:hover {
+  background: #25304a;
+}
+
+/* Device nodes (header is already dark) */
+.app--dark .device-node {
+  background: #1e293b;
+  border-color: #334155;
+  color: #e2e8f0;
+}
+.app--dark .device-node__header {
+  background: #0f172a;
+}
+.app--dark .port__label {
+  color: #cbd5e1;
+}
+
+/* Notes */
+.app--dark .note {
+  background: #2a2410;
+  border-color: #4d4422;
+  color: #f1e9d0;
+}
+.app--dark .note__placeholder {
+  color: #8a7e55;
+}
+.app--dark .note__edit {
+  background: #1e293b;
+  border-color: #f59e0b;
+  color: #e2e8f0;
+}
+
+/* Legend */
+.app--dark .legend {
+  background: rgba(19, 28, 46, 0.95);
+  border-color: #25304a;
+}
+.app--dark .legend__label {
+  color: #e2e8f0;
+}
+
+/* Add-device panel */
+.app--dark .add-panel {
+  background: #131c2e;
+  border-left-color: #25304a;
+}
+.app--dark .add-panel__head {
+  border-bottom-color: #25304a;
+}
+.app--dark .add-panel__head h2 {
+  color: #f1f5f9;
+}
+.app--dark .add-panel input,
+.app--dark .add-panel select,
+.app--dark .lib-chip {
+  background: #1e293b;
+  border-color: #334155;
+  color: #e2e8f0;
+}
+.app--dark .lib-chip:hover {
+  background: #25304a;
+}
+.app--dark .lib-chip__cat {
+  color: #64748b;
+}
+.app--dark .port-row {
+  background: #182235;
+  border-color: #25304a;
+}
+.app--dark .btn-primary {
+  background: #2563eb;
+}
+
+/* Unsaved-changes modal */
+.app--dark .modal {
+  background: #1e293b;
+  color: #e2e8f0;
+}
+.app--dark .modal__title {
+  color: #f1f5f9;
+}
+.app--dark .modal__body {
+  color: #cbd5e1;
+}
+.app--dark .modal__actions button {
+  background: #0f1729;
+  border-color: #334155;
+  color: #e2e8f0;
+}
+.app--dark .modal__actions button:hover {
+  background: #25304a;
+}
+.app--dark .modal__actions button.modal__primary {
+  background: #2563eb;
+  border-color: #2563eb;
+  color: #ffffff;
+}
