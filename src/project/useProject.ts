@@ -10,6 +10,8 @@ type Options = {
   /** Always-fresh view of the live canvas, so the active diagram can be synced. */
   nodesRef: MutableRefObject<SigNode[]>;
   edgesRef: MutableRefObject<CableEdgeType[]>;
+  /** Called whenever project content changes (edit / undo / redo), to flag "unsaved". */
+  onChange?: () => void;
 };
 
 /** Undo unit = the whole project: every diagram plus which one is active. */
@@ -25,7 +27,7 @@ const MAX_HISTORY = 100;
  * `diagrams` entry is synced on demand (snapshot / switch / save).
  */
 export function useProject(initial: EditorDiagram[], opts: Options) {
-  const { setNodes, setEdges, nodesRef, edgesRef } = opts;
+  const { setNodes, setEdges, nodesRef, edgesRef, onChange } = opts;
 
   const projectId = useRef<string>(crypto.randomUUID());
   const [projectName, setProjectName] = useState("Untitled");
@@ -61,8 +63,9 @@ export function useProject(initial: EditorDiagram[], opts: Options) {
   const takeSnapshot = useCallback(() => {
     past.current = [...past.current, { diagrams: synced(), activeId }].slice(-MAX_HISTORY);
     future.current = [];
+    onChange?.();
     rerender();
-  }, [synced, activeId, rerender]);
+  }, [synced, activeId, onChange, rerender]);
 
   const clearHistory = useCallback(() => {
     past.current = [];
@@ -85,8 +88,9 @@ export function useProject(initial: EditorDiagram[], opts: Options) {
     past.current = past.current.slice(0, -1);
     future.current = [{ diagrams: synced(), activeId }, ...future.current];
     apply(previous);
+    onChange?.();
     rerender();
-  }, [synced, activeId, apply, rerender]);
+  }, [synced, activeId, apply, onChange, rerender]);
 
   const redo = useCallback(() => {
     const next = future.current[0];
@@ -94,8 +98,9 @@ export function useProject(initial: EditorDiagram[], opts: Options) {
     future.current = future.current.slice(1);
     past.current = [...past.current, { diagrams: synced(), activeId }];
     apply(next);
+    onChange?.();
     rerender();
-  }, [synced, activeId, apply, rerender]);
+  }, [synced, activeId, apply, onChange, rerender]);
 
   // Switching is navigation, not an edit: no snapshot, history preserved.
   const switchDiagram = useCallback(

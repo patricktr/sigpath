@@ -110,6 +110,10 @@ pub fn run() {
             let app_menu = SubmenuBuilder::new(app, "sigpath")
                 .about(None)
                 .separator()
+                .hide()
+                .hide_others()
+                .show_all()
+                .separator()
                 .item(&quit_item)
                 .build()?;
             let file_menu = SubmenuBuilder::new(app, "File")
@@ -117,6 +121,8 @@ pub fn run() {
                 .item(&open_item)
                 .separator()
                 .item(&save_item)
+                .separator()
+                .close_window()
                 .build()?;
             // Text editing items for inputs. Undo/Redo stay off so Cmd+Z is canvas undo.
             let edit_menu = SubmenuBuilder::new(app, "Edit")

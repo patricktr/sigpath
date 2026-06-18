@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { listen } from "@tauri-apps/api/event";
 import { invoke } from "@tauri-apps/api/core";
+import { getCurrentWindow } from "@tauri-apps/api/window";
 import {
   ReactFlow,
   Background,
@@ -71,6 +72,12 @@ function App() {
     { id: crypto.randomUUID(), name: "Diagram 1", nodes: [], edges: [] },
   ]);
 
+  // "Unsaved changes" flag: set on any edit (useProject.onChange), cleared on save/open.
+  const [dirty, setDirty] = useState(false);
+  const dirtyRef = useRef(false);
+  dirtyRef.current = dirty;
+  const markDirty = useCallback(() => setDirty(true), []);
+
   const {
     projectName,
     setProjectName,
@@ -87,12 +94,19 @@ function App() {
     redo,
     canUndo,
     canRedo,
-  } = useProject(initialDiagrams.current, { setNodes, setEdges, nodesRef, edgesRef });
+  } = useProject(initialDiagrams.current, {
+    setNodes,
+    setEdges,
+    nodesRef,
+    edgesRef,
+    onChange: markDirty,
+  });
 
   const [currentPath, setCurrentPath] = useState<string | null>(null);
   const [status, setStatus] = useState("");
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [listsOpen, setListsOpen] = useState(false);
+  const [closePrompt, setClosePrompt] = useState(false);
   const [snap, setSnap] = useState(true);
   const [legendOn, setLegendOn] = useState(true);
   const [themeMode, setThemeMode] = useState<"system" | "light" | "dark">(() => {
@@ -339,19 +353,22 @@ function App() {
     void invoke("new_window");
   }, []);
 
-  const handleSave = useCallback(async () => {
+  const handleSave = useCallback(async (): Promise<boolean> => {
     try {
       let path = currentPath;
       if (!path) {
         path = await promptSavePath(`${projectName}.sigpath`);
-        if (!path) return; // cancelled
+        if (!path) return false; // cancelled
       }
       await writeTextToPath(path, JSON.stringify(getDocument(), null, 2));
       setCurrentPath(path);
       setProjectName(fileStem(path));
+      setDirty(false);
       setStatus(`Saved · ${path}`);
+      return true;
     } catch (err) {
       setStatus(`Save failed: ${String(err)}`);
+      return false;
     }
   }, [currentPath, projectName, getDocument, setProjectName]);
 
@@ -366,6 +383,7 @@ function App() {
         loadProject(parseDocument(await readTextFromPath(path)));
         setCurrentPath(path);
         setProjectName(fileStem(path));
+        setDirty(false);
         setStatus(`Opened · ${path}`);
       } else {
         // This window has work in it — open the file in a new window instead.
@@ -376,6 +394,34 @@ function App() {
       setStatus(`Open failed: ${String(err)}`);
     }
   }, [currentPath, loadProject, setProjectName]);
+
+  // ⌘W / red-button close: if there are unsaved changes, intercept and prompt.
+  const closeWindowNow = useCallback(() => {
+    void getCurrentWindow().destroy();
+  }, []);
+  const onCloseSave = useCallback(async () => {
+    setClosePrompt(false);
+    if (await handleSave()) closeWindowNow();
+  }, [handleSave, closeWindowNow]);
+  const onCloseDiscard = useCallback(() => {
+    setClosePrompt(false);
+    closeWindowNow();
+  }, [closeWindowNow]);
+  const onCloseCancel = useCallback(() => setClosePrompt(false), []);
+
+  useEffect(() => {
+    let unlisten: (() => void) | undefined;
+    void getCurrentWindow()
+      .onCloseRequested((event) => {
+        if (!dirtyRef.current) return; // clean — let it close
+        event.preventDefault();
+        setClosePrompt(true);
+      })
+      .then((un) => {
+        unlisten = un;
+      });
+    return () => unlisten?.();
+  }, []);
 
   // Undo/redo shortcuts (New/Open/Save are owned by the native menu accelerators).
   useEffect(() => {
@@ -417,6 +463,7 @@ function App() {
           loadProject(parseDocument(await readTextFromPath(pending.path)));
           setCurrentPath(pending.path);
           setProjectName(fileStem(pending.path));
+          setDirty(false);
           setStatus(`Opened · ${pending.path}`);
         } else if (pending.kind === "openDialog") {
           await handleOpen();
@@ -553,7 +600,7 @@ function App() {
         </div>
         <span className="toolbar__doc">
           {projectName}
-          {currentPath ? "" : " · unsaved"}
+          {dirty ? " · unsaved" : ""}
         </span>
         <span className="toolbar__status" title={status}>{status}</span>
       </header>
@@ -605,6 +652,29 @@ function App() {
         onRename={renameDiagram}
         onDelete={handleDeleteDiagram}
       />
+
+      {closePrompt && (
+        <div className="modal-backdrop" onClick={onCloseCancel}>
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
+            <h2 className="modal__title">Unsaved changes</h2>
+            <p className="modal__body">
+              Do you want to save the changes to “{projectName}” before closing?
+            </p>
+            <div className="modal__actions">
+              <button type="button" onClick={onCloseDiscard}>
+                Don&rsquo;t Save
+              </button>
+              <span className="modal__spacer" />
+              <button type="button" onClick={onCloseCancel}>
+                Cancel
+              </button>
+              <button type="button" className="modal__primary" onClick={() => void onCloseSave()}>
+                Save
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
