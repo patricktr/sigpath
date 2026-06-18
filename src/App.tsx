@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { listen } from "@tauri-apps/api/event";
+import { invoke } from "@tauri-apps/api/core";
 import {
   ReactFlow,
   Background,
@@ -13,7 +14,6 @@ import {
 import "@xyflow/react/dist/style.css";
 
 import { DeviceNode } from "./flow/DeviceNode";
-import { initialNodes, initialEdges } from "./flow/sampleGraph";
 import type { DeviceNodeType, CableEdgeType, EditorDiagram, SigNode, ZoneNodeType } from "./flow/types";
 import { CABLE_TYPES, DEFAULT_CABLE_COLOR, cableTypeForPort } from "./schema";
 import type { DeviceModel } from "./schema";
@@ -39,8 +39,8 @@ const nodeTypes = { device: DeviceNode, zone: ZoneNode };
 const GRID = 16;
 
 function App() {
-  const [nodes, setNodes, onNodesChange] = useNodesState<SigNode>(initialNodes);
-  const [edges, setEdges, onEdgesChange] = useEdgesState<CableEdgeType>(initialEdges);
+  const [nodes, setNodes, onNodesChange] = useNodesState<SigNode>([]);
+  const [edges, setEdges, onEdgesChange] = useEdgesState<CableEdgeType>([]);
 
   // Always-fresh views of the live canvas for the project hook to snapshot.
   const nodesRef = useRef(nodes);
@@ -49,7 +49,7 @@ function App() {
   edgesRef.current = edges;
 
   const initialDiagrams = useRef<EditorDiagram[]>([
-    { id: crypto.randomUUID(), name: "Diagram 1", nodes: initialNodes, edges: initialEdges },
+    { id: crypto.randomUUID(), name: "Diagram 1", nodes: [], edges: [] },
   ]);
 
   const {
@@ -63,7 +63,6 @@ function App() {
     deleteDiagram,
     getDocument,
     loadProject,
-    newProject,
     takeSnapshot,
     undo,
     redo,
@@ -180,10 +179,8 @@ function App() {
   );
 
   const handleNew = useCallback(() => {
-    newProject();
-    setCurrentPath(null);
-    setStatus("New project");
-  }, [newProject]);
+    void invoke("new_window");
+  }, []);
 
   const handleSave = useCallback(async () => {
     try {
@@ -205,14 +202,23 @@ function App() {
     try {
       const path = await promptOpenPath();
       if (!path) return; // cancelled
-      loadProject(parseDocument(await readTextFromPath(path)));
-      setCurrentPath(path);
-      setProjectName(fileStem(path));
-      setStatus(`Opened · ${path}`);
+      const isBlank =
+        currentPath === null && nodesRef.current.length === 0 && edgesRef.current.length === 0;
+      if (isBlank) {
+        // This window is an untouched blank document — open into it.
+        loadProject(parseDocument(await readTextFromPath(path)));
+        setCurrentPath(path);
+        setProjectName(fileStem(path));
+        setStatus(`Opened · ${path}`);
+      } else {
+        // This window has work in it — open the file in a new window instead.
+        await invoke("open_window", { path });
+        setStatus(`Opening ${fileStem(path)}…`);
+      }
     } catch (err) {
       setStatus(`Open failed: ${String(err)}`);
     }
-  }, [loadProject, setProjectName]);
+  }, [currentPath, loadProject, setProjectName]);
 
   // Undo/redo shortcuts (New/Open/Save are owned by the native menu accelerators).
   useEffect(() => {
@@ -232,17 +238,37 @@ function App() {
     return () => window.removeEventListener("keydown", onKey);
   }, [undo, redo]);
 
-  // Native File-menu items (New / Open / Save) arrive as events emitted from Rust.
+  // File-menu Open/Save arrive as events emitted to this (focused) window from Rust.
   useEffect(() => {
     const unlisteners = [
-      listen("menu:new", () => handleNew()),
       listen("menu:open", () => void handleOpen()),
       listen("menu:save", () => void handleSave()),
     ];
     return () => {
       unlisteners.forEach((p) => p.then((un) => un()));
     };
-  }, [handleNew, handleOpen, handleSave]);
+  }, [handleOpen, handleSave]);
+
+  // On launch, do what this window was created for: load a file, or (the
+  // no-windows ⌘O case) show the open dialog and load into this same window.
+  useEffect(() => {
+    void (async () => {
+      try {
+        const pending = await invoke<{ kind: string; path?: string } | null>("take_pending_open");
+        if (!pending) return;
+        if (pending.kind === "file" && pending.path) {
+          loadProject(parseDocument(await readTextFromPath(pending.path)));
+          setCurrentPath(pending.path);
+          setProjectName(fileStem(pending.path));
+          setStatus(`Opened · ${pending.path}`);
+        } else if (pending.kind === "openDialog") {
+          await handleOpen();
+        }
+      } catch (err) {
+        setStatus(`Open failed: ${String(err)}`);
+      }
+    })();
+  }, []);
 
   // Copy/paste of selected device nodes. Uses the DOM clipboard events so it
   // coexists with the Edit menu's text copy/paste: when a text field is focused
