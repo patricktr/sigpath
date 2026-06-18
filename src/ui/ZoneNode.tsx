@@ -7,11 +7,14 @@ import "./ZoneNode.css";
 export type ZoneActions = {
   rename: (id: string, label: string) => void;
   recolor: (id: string, color: string) => void;
+  /** Snapshot before a resize so it's its own undo step. */
+  beginChange: () => void;
 };
 
 export const ZoneActionsContext = createContext<ZoneActions>({
   rename: () => {},
   recolor: () => {},
+  beginChange: () => {},
 });
 
 export const ZONE_COLORS = [
@@ -37,7 +40,7 @@ function withAlpha(hex: string, alpha: number): string {
  * NodeResizer; double-click the label to rename; pick a color when selected.
  */
 export function ZoneNode({ id, data, selected }: NodeProps<ZoneNodeType>) {
-  const { rename, recolor } = useContext(ZoneActionsContext);
+  const { rename, recolor, beginChange } = useContext(ZoneActionsContext);
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(data.label);
 
@@ -48,7 +51,13 @@ export function ZoneNode({ id, data, selected }: NodeProps<ZoneNodeType>) {
 
   return (
     <>
-      <NodeResizer color={data.color} isVisible={!!selected} minWidth={120} minHeight={80} />
+      <NodeResizer
+        color={data.color}
+        isVisible={!!selected}
+        minWidth={120}
+        minHeight={80}
+        onResizeStart={beginChange}
+      />
       <div className="zone" style={{ background: withAlpha(data.color, 0.08), borderColor: data.color }}>
         <div className="zone__header">
           {editing ? (

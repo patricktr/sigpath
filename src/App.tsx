@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { listen } from "@tauri-apps/api/event";
 import {
   ReactFlow,
   Background,
@@ -128,6 +129,8 @@ function App() {
       id: crypto.randomUUID(),
       type: "zone",
       position: { x: 40 + (i % 4) * 48, y: 60 + (i % 4) * 48 },
+      width: 300,
+      height: 200,
       style: { width: 300, height: 200 },
       zIndex: -1,
       data: { label: `Zone ${i + 1}`, color: ZONE_COLORS[i % ZONE_COLORS.length] },
@@ -157,8 +160,8 @@ function App() {
   );
 
   const zoneActions = useMemo(
-    () => ({ rename: renameZone, recolor: recolorZone }),
-    [renameZone, recolorZone],
+    () => ({ rename: renameZone, recolor: recolorZone, beginChange: takeSnapshot }),
+    [renameZone, recolorZone, takeSnapshot],
   );
 
   // Snapshot before drags and deletions so they can be undone as single steps.
@@ -211,18 +214,12 @@ function App() {
     }
   }, [loadProject, setProjectName]);
 
-  // Keyboard shortcuts: ⌘S save, ⌘O open, ⌘Z undo, ⌘⇧Z / ⌘Y redo.
+  // Undo/redo shortcuts (New/Open/Save are owned by the native menu accelerators).
   useEffect(() => {
     const onKey = (ev: KeyboardEvent) => {
       if (!(ev.metaKey || ev.ctrlKey)) return;
       const key = ev.key.toLowerCase();
-      if (key === "s") {
-        ev.preventDefault();
-        void handleSave();
-      } else if (key === "o") {
-        ev.preventDefault();
-        void handleOpen();
-      } else if (key === "z") {
+      if (key === "z") {
         ev.preventDefault();
         if (ev.shiftKey) redo();
         else undo();
@@ -233,7 +230,64 @@ function App() {
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [handleSave, handleOpen, undo, redo]);
+  }, [undo, redo]);
+
+  // Native File-menu items (New / Open / Save) arrive as events emitted from Rust.
+  useEffect(() => {
+    const unlisteners = [
+      listen("menu:new", () => handleNew()),
+      listen("menu:open", () => void handleOpen()),
+      listen("menu:save", () => void handleSave()),
+    ];
+    return () => {
+      unlisteners.forEach((p) => p.then((un) => un()));
+    };
+  }, [handleNew, handleOpen, handleSave]);
+
+  // Copy/paste of selected device nodes. Uses the DOM clipboard events so it
+  // coexists with the Edit menu's text copy/paste: when a text field is focused
+  // we let the default happen; on the canvas we copy/paste devices instead.
+  useEffect(() => {
+    const isTextTarget = (t: EventTarget | null) => {
+      const el = t as HTMLElement | null;
+      return !!el && (el.tagName === "INPUT" || el.tagName === "TEXTAREA" || el.isContentEditable);
+    };
+    const onCopy = (e: ClipboardEvent) => {
+      if (isTextTarget(e.target)) return;
+      const selected = nodesRef.current.filter((n) => n.selected && n.type === "device");
+      if (selected.length === 0) return;
+      e.preventDefault();
+      e.clipboardData?.setData("text/plain", JSON.stringify({ __sigpath: "devices", nodes: selected }));
+    };
+    const onPaste = (e: ClipboardEvent) => {
+      if (isTextTarget(e.target)) return;
+      const text = e.clipboardData?.getData("text/plain");
+      if (!text) return;
+      let data: { __sigpath?: string; nodes?: SigNode[] };
+      try {
+        data = JSON.parse(text);
+      } catch {
+        return;
+      }
+      if (data?.__sigpath !== "devices" || !Array.isArray(data.nodes) || data.nodes.length === 0) return;
+      e.preventDefault();
+      takeSnapshot();
+      const clones: SigNode[] = data.nodes.map((n) => ({
+        ...n,
+        id: crypto.randomUUID(),
+        position: { x: n.position.x + 28, y: n.position.y + 28 },
+        selected: false,
+      }));
+      setNodes((nds) => [...nds, ...clones]);
+      setStatus(`Pasted ${clones.length} device${clones.length === 1 ? "" : "s"}`);
+    };
+    document.addEventListener("copy", onCopy);
+    document.addEventListener("paste", onPaste);
+    return () => {
+      document.removeEventListener("copy", onCopy);
+      document.removeEventListener("paste", onPaste);
+    };
+  }, [setNodes, takeSnapshot]);
 
   return (
     <div className="app">

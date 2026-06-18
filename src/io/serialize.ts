@@ -46,8 +46,10 @@ function editorToDiagram(d: EditorDiagram): Diagram {
     rect: {
       x: z.position.x,
       y: z.position.y,
-      width: numberOr(z.style?.width, 280),
-      height: numberOr(z.style?.height, 180),
+      // NodeResizer writes the live size to `measured`, not `style`, so read that
+      // first (falling back to width/height, then the initial style).
+      width: z.measured?.width ?? z.width ?? numberOr(z.style?.width, 280),
+      height: z.measured?.height ?? z.height ?? numberOr(z.style?.height, 180),
     },
   }));
 
@@ -66,6 +68,8 @@ function diagramToEditor(d: Diagram): EditorDiagram {
     id: z.id,
     type: "zone",
     position: { x: z.rect.x, y: z.rect.y },
+    width: z.rect.width,
+    height: z.rect.height,
     style: { width: z.rect.width, height: z.rect.height },
     zIndex: -1,
     data: { label: z.label, color: z.color },
