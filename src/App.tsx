@@ -6,6 +6,7 @@ import {
   Background,
   Controls,
   MiniMap,
+  Panel,
   addEdge,
   useNodesState,
   useEdgesState,
@@ -23,7 +24,7 @@ import type {
   NoteNodeType,
 } from "./flow/types";
 import { CABLE_TYPES, DEFAULT_CABLE_COLOR, cableTypeForPort } from "./schema";
-import type { DeviceModel } from "./schema";
+import type { DeviceModel, CableTypeDef } from "./schema";
 import { useProject } from "./project/useProject";
 import { parseDocument } from "./io/serialize";
 import {
@@ -38,6 +39,7 @@ import { AddDevicePanel } from "./ui/AddDevicePanel";
 import { DiagramTabs } from "./ui/DiagramTabs";
 import { ZoneNode, ZoneActionsContext, ZONE_COLORS } from "./ui/ZoneNode";
 import { NoteNode, NoteActionsContext } from "./ui/NoteNode";
+import { Legend } from "./ui/Legend";
 import "./App.css";
 
 /** Registered once at module scope so the reference stays stable across renders. */
@@ -82,6 +84,7 @@ function App() {
   const [status, setStatus] = useState("");
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [snap, setSnap] = useState(true);
+  const [legendOn, setLegendOn] = useState(true);
   const addCount = useRef(0);
   const zoneCount = useRef(0);
   const noteCount = useRef(0);
@@ -196,6 +199,22 @@ function App() {
   );
 
   const noteActions = useMemo(() => ({ setText: setNoteText }), [setNoteText]);
+
+  // Cable types actually used in the current diagram, for the legend.
+  const usedCableTypes = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const e of edges) {
+      const id = e.data?.cableTypeId;
+      if (id) counts.set(id, (counts.get(id) ?? 0) + 1);
+    }
+    const items: { type: CableTypeDef; count: number }[] = [];
+    for (const [id, count] of counts) {
+      const type = CABLE_TYPES[id];
+      if (type) items.push({ type, count });
+    }
+    items.sort((a, b) => a.type.label.localeCompare(b.type.label));
+    return items;
+  }, [edges]);
 
   // Snapshot before drags and deletions so they can be undone as single steps.
   const onNodeDragStart = useCallback(() => takeSnapshot(), [takeSnapshot]);
@@ -369,6 +388,15 @@ function App() {
           >
             Snap
           </button>
+          <button
+            type="button"
+            className={legendOn ? "toolbar__toggle toolbar__toggle--on" : "toolbar__toggle"}
+            onClick={() => setLegendOn((v) => !v)}
+            aria-pressed={legendOn}
+            title="Show cable-type legend"
+          >
+            Legend
+          </button>
           <span className="toolbar__sep" />
           <button type="button" onClick={addZoneToCanvas} title="Add a zone">Add zone</button>
           <button type="button" onClick={addNoteToCanvas} title="Add a note">Add note</button>
@@ -408,6 +436,11 @@ function App() {
             <Background gap={GRID} />
             <MiniMap pannable zoomable />
             <Controls />
+            {legendOn && usedCableTypes.length > 0 && (
+              <Panel position="top-right">
+                <Legend items={usedCableTypes} />
+              </Panel>
+            )}
           </ReactFlow>
           </NoteActionsContext.Provider>
         </ZoneActionsContext.Provider>
