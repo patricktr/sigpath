@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { listen } from "@tauri-apps/api/event";
 import { invoke } from "@tauri-apps/api/core";
 import { getCurrentWindow } from "@tauri-apps/api/window";
@@ -9,6 +9,7 @@ import {
   MiniMap,
   Panel,
   addEdge,
+  reconnectEdge,
   useNodesState,
   useEdgesState,
   type Connection,
@@ -49,6 +50,8 @@ import { ListsPanel } from "./ui/ListsPanel";
 import { deriveLists } from "./lists/derive";
 import { ExportMenu, type ExportKind } from "./ui/ExportMenu";
 import { diagramImageBase64, diagramPdfBase64, listsToCsv } from "./io/export";
+import { ValidationPanel } from "./ui/ValidationPanel";
+import { validate, type ValidationIssue } from "./validation/validate";
 import "./App.css";
 import "./theme-dark.css";
 
@@ -107,6 +110,7 @@ function App() {
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [listsOpen, setListsOpen] = useState(false);
   const [closePrompt, setClosePrompt] = useState(false);
+  const [validationOpen, setValidationOpen] = useState(false);
   const [snap, setSnap] = useState(true);
   const [legendOn, setLegendOn] = useState(true);
   const [themeMode, setThemeMode] = useState<"system" | "light" | "dark">(() => {
@@ -162,6 +166,32 @@ function App() {
         data: { cableTypeId: cableTypeId ?? "" },
       };
       setEdges((eds) => addEdge(edge, eds));
+    },
+    [nodes, setEdges, takeSnapshot],
+  );
+
+  // Grab either end of an existing cable and drop it on another port to re-patch
+  // it. The cable type/color is re-derived from the (possibly new) source port,
+  // so moving the source end re-types the cable exactly like drawing a fresh one;
+  // moving only the target end re-reads the same source, leaving the color intact.
+  const onReconnect = useCallback(
+    (oldEdge: CableEdgeType, newConnection: Connection) => {
+      takeSnapshot();
+      const sourceNode = nodes.find((n) => n.id === newConnection.source);
+      const port =
+        sourceNode?.type === "device"
+          ? sourceNode.data.model.ports.find((p) => p.id === newConnection.sourceHandle)
+          : undefined;
+      const cableTypeId = port ? cableTypeForPort(port.connector, port.signal) : undefined;
+      const color = cableTypeId
+        ? CABLE_TYPES[cableTypeId]?.color ?? DEFAULT_CABLE_COLOR
+        : DEFAULT_CABLE_COLOR;
+      const refreshed: CableEdgeType = {
+        ...oldEdge,
+        style: { ...oldEdge.style, stroke: color, strokeWidth: 2 },
+        data: { ...oldEdge.data, cableTypeId: cableTypeId ?? "" },
+      };
+      setEdges((els) => reconnectEdge(refreshed, newConnection, els));
     },
     [nodes, setEdges, takeSnapshot],
   );
@@ -245,6 +275,57 @@ function App() {
   }, []);
 
   const lists = useMemo(() => deriveLists(nodes, edges), [nodes, edges]);
+  const validation = useMemo(() => validate(nodes, edges), [nodes, edges]);
+
+  // Overlay validation styling onto the live edges without mutating state:
+  // errors are solid red + animated, warnings are dashed amber. A selected edge
+  // is then thickened and given a glow halo on top, so a selected error edge
+  // still reads as red AND clearly looks selected.
+  const displayEdges = useMemo(() => {
+    const { errorEdges, warnEdges } = validation;
+    if (errorEdges.size === 0 && warnEdges.size === 0 && !edges.some((e) => e.selected)) {
+      return edges;
+    }
+    return edges.map((e) => {
+      let style: CSSProperties;
+      let animated = e.animated;
+      if (errorEdges.has(e.id)) {
+        style = { ...e.style, stroke: "#ef4444", strokeWidth: 2.5 };
+        animated = true;
+      } else if (warnEdges.has(e.id)) {
+        style = { ...e.style, stroke: "#f59e0b", strokeWidth: 2, strokeDasharray: "6 4" };
+      } else {
+        style = { ...e.style };
+      }
+      if (e.selected) {
+        const base = typeof style.strokeWidth === "number" ? style.strokeWidth : 2;
+        const glow = style.stroke ?? "#3b82f6";
+        style = {
+          ...style,
+          strokeWidth: base + 2,
+          filter: `drop-shadow(0 0 2px ${glow}) drop-shadow(0 0 6px ${glow})`,
+        };
+      }
+      return { ...e, style, animated };
+    });
+  }, [edges, validation]);
+
+  const focusIssue = useCallback(
+    (issue: ValidationIssue) => {
+      if (issue.edgeId) {
+        setEdges((es) => es.map((e) => ({ ...e, selected: e.id === issue.edgeId })));
+      }
+      if (issue.focusNodeIds.length && rf.current) {
+        rf.current.fitView({
+          nodes: issue.focusNodeIds.map((id) => ({ id })),
+          duration: 400,
+          padding: 0.4,
+          maxZoom: 1.4,
+        });
+      }
+    },
+    [setEdges],
+  );
 
   const handleExport = useCallback(
     async (kind: ExportKind) => {
@@ -580,11 +661,38 @@ function App() {
             onClick={() => {
               setListsOpen((v) => !v);
               setPaletteOpen(false);
+              setValidationOpen(false);
             }}
             aria-pressed={listsOpen}
             title="Pack list & patch list"
           >
             Lists
+          </button>
+          <button
+            type="button"
+            className={
+              validation.errorCount > 0
+                ? "validation-pill--error"
+                : validation.warningCount > 0
+                  ? "validation-pill--warn"
+                  : "validation-pill--ok"
+            }
+            onClick={() => {
+              setValidationOpen((v) => !v);
+              setPaletteOpen(false);
+              setListsOpen(false);
+            }}
+            aria-pressed={validationOpen}
+            title="Live signal validation"
+          >
+            {validation.errorCount === 0 && validation.warningCount === 0
+              ? "✓ Valid"
+              : [
+                  validation.errorCount > 0 ? `✕ ${validation.errorCount}` : null,
+                  validation.warningCount > 0 ? `⚠ ${validation.warningCount}` : null,
+                ]
+                  .filter(Boolean)
+                  .join("  ")}
           </button>
           <ExportMenu onExport={handleExport} />
           <button
@@ -593,6 +701,7 @@ function App() {
             onClick={() => {
               setPaletteOpen((v) => !v);
               setListsOpen(false);
+              setValidationOpen(false);
             }}
           >
             {paletteOpen ? "Close panel" : "Add device"}
@@ -610,11 +719,13 @@ function App() {
           <NoteActionsContext.Provider value={noteActions}>
           <ReactFlow
             nodes={nodes}
-            edges={edges}
+            edges={displayEdges}
             nodeTypes={nodeTypes}
             onNodesChange={onNodesChange}
             onEdgesChange={onEdgesChange}
             onConnect={onConnect}
+            onReconnect={onReconnect}
+            reconnectRadius={20}
             onNodeDragStart={onNodeDragStart}
             onSelectionDragStart={onNodeDragStart}
             onBeforeDelete={onBeforeDelete}
@@ -624,6 +735,8 @@ function App() {
             snapToGrid={snap}
             snapGrid={[GRID, GRID]}
             defaultEdgeOptions={{ type: "smoothstep" }}
+            minZoom={0.1}
+            maxZoom={4}
             colorMode={theme}
             fitView
           >
@@ -642,6 +755,13 @@ function App() {
           <AddDevicePanel onAddModel={addModelToCanvas} onClose={() => setPaletteOpen(false)} />
         )}
         {listsOpen && <ListsPanel lists={lists} onClose={() => setListsOpen(false)} />}
+        {validationOpen && (
+          <ValidationPanel
+            result={validation}
+            onFocus={focusIssue}
+            onClose={() => setValidationOpen(false)}
+          />
+        )}
       </div>
 
       <DiagramTabs

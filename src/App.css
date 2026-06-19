@@ -178,3 +178,26 @@ body,
   background: #1d4ed8;
   border-color: #1d4ed8;
 }
+
+/* Cable selection: the highlight (thicker stroke + glow) is applied inline in
+   displayEdges so it wins over the inline cable color. Here we just stop React
+   Flow's default grey "selected" stroke and focus outline from interfering. */
+.react-flow__edge.selected .react-flow__edge-path,
+.react-flow__edge.selectable:focus .react-flow__edge-path,
+.react-flow__edge.selectable:focus-visible .react-flow__edge-path {
+  stroke: inherit;
+}
+.react-flow__edge:focus,
+.react-flow__edge:focus-visible {
+  outline: none;
+}
+
+/* Reconnect: hint the grab handles at each cable end on hover. */
+.react-flow__edgeupdater {
+  cursor: grab;
+}
+.react-flow__edge:hover .react-flow__edgeupdater-source,
+.react-flow__edge:hover .react-flow__edgeupdater-target {
+  fill: var(--xy-edge-stroke, #b1b1b7);
+  fill-opacity: 0.25;
+}

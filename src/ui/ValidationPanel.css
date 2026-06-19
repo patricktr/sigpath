@@ -1,0 +1,162 @@
+.validation-panel {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 340px;
+  display: flex;
+  flex-direction: column;
+  background: #ffffff;
+  border-left: 1px solid #e2e8f0;
+  box-shadow: -8px 0 24px rgba(15, 23, 42, 0.08);
+  z-index: 10;
+  font-size: 13px;
+}
+
+.validation-panel__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  border-bottom: 1px solid #e2e8f0;
+}
+.validation-panel__head h2 {
+  margin: 0;
+  font-size: 15px;
+}
+.validation-panel__close {
+  border: none;
+  background: none;
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+  color: #64748b;
+}
+
+.validation-panel__body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px 14px;
+}
+
+.validation-ok {
+  margin: 0;
+  color: #16a34a;
+  font-weight: 600;
+}
+
+.validation-summary {
+  display: flex;
+  gap: 10px;
+  margin: 0 0 12px;
+}
+.sev {
+  font-weight: 600;
+}
+.sev--error {
+  color: #dc2626;
+}
+.sev--warn {
+  color: #d97706;
+}
+
+.validation-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.validation-item {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+  text-align: left;
+  padding: 8px 10px;
+  border: 1px solid #e2e8f0;
+  border-left-width: 3px;
+  border-radius: 8px;
+  background: #f8fafc;
+  cursor: pointer;
+  font: inherit;
+}
+.validation-item:hover {
+  background: #f1f5f9;
+}
+.validation-item--error {
+  border-left-color: #dc2626;
+}
+.validation-item--warning {
+  border-left-color: #d97706;
+}
+.validation-item__icon {
+  flex: 0 0 auto;
+  font-weight: 700;
+}
+.validation-item--error .validation-item__icon {
+  color: #dc2626;
+}
+.validation-item--warning .validation-item__icon {
+  color: #d97706;
+}
+.validation-item__text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.validation-item__title {
+  font-weight: 600;
+  color: #0f172a;
+}
+.validation-item__detail {
+  color: #475569;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+/* Toolbar status pill */
+.validation-pill--ok {
+  color: #16a34a;
+}
+.validation-pill--error {
+  color: #dc2626;
+  font-weight: 600;
+}
+.validation-pill--warn {
+  color: #d97706;
+  font-weight: 600;
+}
+
+/* Dark theme */
+.app--dark .validation-panel {
+  background: #131c2e;
+  border-left-color: #25304a;
+}
+.app--dark .validation-panel__head {
+  border-bottom-color: #25304a;
+}
+.app--dark .validation-panel__head h2 {
+  color: #f1f5f9;
+}
+.app--dark .validation-item {
+  background: #182235;
+  border-color: #25304a;
+}
+.app--dark .validation-item:hover {
+  background: #1f2c44;
+}
+.app--dark .validation-item--error {
+  border-left-color: #ef4444;
+}
+.app--dark .validation-item--warning {
+  border-left-color: #f59e0b;
+}
+.app--dark .validation-item__title {
+  color: #e2e8f0;
+}
+.app--dark .validation-item__detail {
+  color: #94a3b8;
+}
