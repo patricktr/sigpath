@@ -1,5 +1,5 @@
 import { Handle, Position, type NodeProps } from "@xyflow/react";
-import { SIGNAL_META, inputPorts, outputPorts, deviceTitle } from "../schema";
+import { cableColor, inputPorts, outputPorts, deviceTitle } from "../schema";
 import type { DeviceNodeType } from "./types";
 import "./DeviceNode.css";
 
@@ -18,7 +18,7 @@ export function DeviceNode({ data }: NodeProps<DeviceNodeType>) {
     <div className="device-node">
       <header className="device-node__header">
         <span className="device-node__name">{deviceTitle(model, label)}</span>
-        <span className="device-node__category">{model.category}</span>
+        <span className="device-node__category">{model.type ?? model.category}</span>
       </header>
 
       <div className="device-node__body">
@@ -30,7 +30,7 @@ export function DeviceNode({ data }: NodeProps<DeviceNodeType>) {
                 type="target"
                 position={Position.Left}
                 className="port__handle"
-                style={{ background: SIGNAL_META[port.signal].color }}
+                style={{ background: cableColor(port.connector) }}
               />
               <span className="port__label">{port.name}</span>
             </li>
@@ -46,7 +46,7 @@ export function DeviceNode({ data }: NodeProps<DeviceNodeType>) {
                 type="source"
                 position={Position.Right}
                 className="port__handle"
-                style={{ background: SIGNAL_META[port.signal].color }}
+                style={{ background: cableColor(port.connector) }}
               />
             </li>
           ))}

@@ -1,4 +1,4 @@
-import { CABLE_TYPES, DEFAULT_CABLE_COLOR, SIGPATH_SCHEMA_VERSION, emptyDiagram } from "../schema";
+import { cableColor, SIGPATH_SCHEMA_VERSION, emptyDiagram } from "../schema";
 import type {
   Annotation,
   Connection,
@@ -105,7 +105,7 @@ function diagramToEditor(d: Diagram): EditorDiagram {
     sourceHandle: c.from.portId,
     targetHandle: c.to.portId,
     type: "smoothstep",
-    style: { stroke: CABLE_TYPES[c.cableTypeId]?.color ?? DEFAULT_CABLE_COLOR, strokeWidth: 2 },
+    style: { stroke: cableColor(c.cableTypeId), strokeWidth: 2 },
     data: { cableTypeId: c.cableTypeId, number: c.number, lengthMeters: c.lengthMeters },
   }));
 

@@ -1,4 +1,4 @@
-import { checkPortCompatibility, deviceTitle } from "../schema";
+import { checkPortCompatibility, deviceTitle, groupForConnector } from "../schema";
 import type { SignalKind } from "../schema";
 import type { CableEdgeType, DeviceNodeType, SigNode } from "../flow/types";
 
@@ -118,7 +118,7 @@ export function validate(nodes: SigNode[], edges: CableEdgeType[]): ValidationRe
   // an error; two cables out of one output is an error for point-to-point signals
   // (HDMI/SDI/network) but only a warning for ones that fan out in the field
   // (audio speaker taps, control daisy-chains, parallel power).
-  const POINT_TO_POINT = new Set<SignalKind>(["av", "video", "network"]);
+  const POINT_TO_POINT = new Set<SignalKind>(["av", "video", "data", "network"]);
   for (const [key, edgeIds] of portUsage) {
     if (edgeIds.length < 2) continue;
     const sep = key.lastIndexOf(":");
@@ -129,7 +129,8 @@ export function validate(nodes: SigNode[], edges: CableEdgeType[]): ValidationRe
     if (!port) continue;
 
     const isInput = port.direction === "input";
-    const severity: Severity = isInput || POINT_TO_POINT.has(port.signal) ? "error" : "warning";
+    const severity: Severity =
+      isInput || POINT_TO_POINT.has(groupForConnector(port.connector)) ? "error" : "warning";
     for (const id of edgeIds) {
       if (severity === "error") errorEdges.add(id);
       else if (!errorEdges.has(id)) warnEdges.add(id);

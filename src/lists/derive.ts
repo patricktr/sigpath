@@ -1,4 +1,4 @@
-import { CABLE_TYPES, DEFAULT_CABLE_COLOR, deviceTitle } from "../schema";
+import { cableColor, cableLabel, deviceTitle } from "../schema";
 import type { CableEdgeType, DeviceNodeType, SigNode } from "../flow/types";
 
 /** One device model with how many instances are in the diagram. */
@@ -48,8 +48,8 @@ export function deriveLists(nodes: SigNode[], edges: CableEdgeType[]): DerivedLi
   const cables: PacklistCable[] = [...cableCounts.entries()]
     .map(([id, count]) => ({
       id,
-      label: CABLE_TYPES[id]?.label ?? id,
-      color: CABLE_TYPES[id]?.color ?? DEFAULT_CABLE_COLOR,
+      label: cableLabel(id),
+      color: cableColor(id),
       count,
     }))
     .sort((a, b) => a.label.localeCompare(b.label));
@@ -61,15 +61,15 @@ export function deriveLists(nodes: SigNode[], edges: CableEdgeType[]): DerivedLi
     const tgt = deviceById.get(e.target);
     const srcPort = src?.data.model.ports.find((p) => p.id === e.sourceHandle);
     const tgtPort = tgt?.data.model.ports.find((p) => p.id === e.targetHandle);
-    const cable = e.data?.cableTypeId ? CABLE_TYPES[e.data.cableTypeId] : undefined;
+    const cableId = e.data?.cableTypeId;
     return {
       id: e.id,
       fromDevice: src ? deviceTitle(src.data.model, src.data.label) : "—",
       fromPort: srcPort?.name ?? e.sourceHandle ?? "",
       toDevice: tgt ? deviceTitle(tgt.data.model, tgt.data.label) : "—",
       toPort: tgtPort?.name ?? e.targetHandle ?? "",
-      cableType: cable?.label ?? "",
-      cableColor: cable?.color ?? DEFAULT_CABLE_COLOR,
+      cableType: cableId ? cableLabel(cableId) : "",
+      cableColor: cableColor(cableId),
     };
   });
 

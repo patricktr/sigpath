@@ -29,15 +29,20 @@ export type CompatResult = {
   reason?: string;
 };
 
+// Video-only and embedded A/V interconvert (scalers, SDI↔HDMI), so they share a
+// conversion domain; every other group stands alone.
+const DOMAIN: Record<string, string> = { video: "image", av: "image" };
+const domain = (g: string) => DOMAIN[g] ?? g;
+
 /**
- * Pure compatibility check between an output port and an input port. Lives in
- * the schema (not the UI) because compatibility is a property of the connector/
- * signal model. This is the primitive the future "Signal Check" validation and
- * connection-time guards will call.
+ * Compatibility between an output port and an input port, decided by their
+ * connectors — the port type is the source of truth. Lives in the schema
+ * because it's a property of the connector model.
  *
  *  - ok:    same connector — a straight cable works.
- *  - warn:  same signal kind, different connector — needs an adapter/converter.
- *  - error: different signal kind — physically/electrically incompatible.
+ *  - warn:  same family (passive adapter) or same coarse group, different
+ *           family (active converter).
+ *  - error: different group — physically/electrically incompatible.
  */
 export function checkPortCompatibility(output: Port, input: Port): CompatResult {
   if (output.connector === input.connector) {
@@ -50,12 +55,17 @@ export function checkPortCompatibility(output: Port, input: Port): CompatResult 
     return { status: "warn", reason: "Unknown connector type" };
   }
 
-  if (output.signal === input.signal) {
+  // Same family (HDMI ↔ Mini HDMI) → a passive adapter mates them.
+  if (a.family && a.family === b.family) {
     return { status: "warn", reason: `${a.label} → ${b.label} needs an adapter` };
+  }
+  // Same conversion domain, different family → an active converter is needed.
+  if (domain(a.group) === domain(b.group)) {
+    return { status: "warn", reason: `${a.label} → ${b.label} needs a converter` };
   }
 
   return {
     status: "error",
-    reason: `${a.label} (${output.signal}) is incompatible with ${b.label} (${input.signal})`,
+    reason: `${a.label} (${a.group}) is incompatible with ${b.label} (${b.group})`,
   };
 }

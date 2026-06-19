@@ -10,8 +10,10 @@ export type Port = {
   /** Human label shown next to the port, e.g. "HDMI 1", "Mic In 3", "eARC". */
   name: string;
   direction: PortDirection;
+  /** The port type — the source of truth for color, cabling, and validation. */
   connector: ConnectorId;
-  signal: SignalKind;
+  /** Legacy/derived coarse group; the connector is authoritative. Optional. */
+  signal?: SignalKind;
   note?: string;
 };
 
@@ -46,6 +48,58 @@ export const DEVICE_CATEGORIES: DeviceCategory[] = [
 ];
 
 /**
+ * Friendly, user-facing device types — finer than DeviceCategory. Drives the
+ * Add-Device browser's Type facet/column and the create wizard's Type select.
+ */
+export const DEVICE_TYPES = [
+  "Media source",
+  "Camera",
+  "Computer",
+  "Video switcher",
+  "Matrix router",
+  "Converter",
+  "Scaler",
+  "Extender",
+  "AV receiver",
+  "Audio mixer",
+  "Amplifier",
+  "Speaker",
+  "Display",
+  "Projector",
+  "Network switch",
+  "Control processor",
+  "Recorder",
+  "Other",
+] as const;
+
+const TYPE_TO_CATEGORY: Record<string, DeviceCategory> = {
+  "Media source": "source",
+  Camera: "source",
+  Computer: "source",
+  "Video switcher": "switcher",
+  "AV receiver": "switcher",
+  "Matrix router": "matrix",
+  Converter: "converter",
+  Scaler: "converter",
+  Extender: "converter",
+  "Audio mixer": "audio",
+  Amplifier: "amplifier",
+  Speaker: "audio",
+  Display: "display",
+  Projector: "display",
+  "Network switch": "network",
+  "Control processor": "control",
+  Recorder: "recorder",
+  Other: "other",
+};
+
+/** Coarse category for a friendly type — keeps `category` populated for devices
+ *  created via the wizard, which only collects the finer type. */
+export function categoryForType(type: string): DeviceCategory {
+  return TYPE_TO_CATEGORY[type] ?? "other";
+}
+
+/**
  * A reusable device definition — a "model" in the library. This is what the
  * equipment database stores and the custom item builder produces. It is the
  * unit that gets shared/community-contributed.
@@ -57,6 +111,9 @@ export type DeviceModel = {
   /** Model name, e.g. "BRAVIA X90L". */
   model: string;
   category: DeviceCategory;
+  /** Finer, user-facing type (e.g. "Video switcher", "Camera"). Optional;
+   *  `category` remains the coarse grouping used internally. */
+  type?: string;
   ports: Port[];
   /** Height in 19" rack units — for the future rack-elevation view. */
   rackUnits?: number;
