@@ -5,6 +5,9 @@ import { jsPDF } from "jspdf";
 import type { CableEdgeType, SigNode } from "../flow/types";
 import type { DerivedLists } from "../lists/derive";
 
+/** Export formats offered in the File ▸ Export menu. */
+export type ExportKind = "png" | "jpeg" | "pdf" | "csv";
+
 type Rf = ReactFlowInstance<SigNode, CableEdgeType>;
 
 /** Render the whole graph (not just the visible viewport) to a data URL. */
