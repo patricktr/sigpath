@@ -160,3 +160,70 @@
   border-color: #2563eb;
   color: #ffffff;
 }
+
+/* Grouped toolbar */
+.app--dark .tgroup__label {
+  color: #64748b;
+}
+.app--dark .tgroup__seg button {
+  background: #1e293b;
+  border-color: #334155;
+  color: #e2e8f0;
+}
+.app--dark .tgroup__seg button:hover {
+  background: #25304a;
+  border-color: #475569;
+}
+.app--dark .tgroup__icon {
+  color: #94a3b8;
+}
+.app--dark .tgroup__seg--toggle button.is-on {
+  background: #1d4ed8;
+  border-color: #1d4ed8;
+  color: #ffffff;
+}
+.app--dark .tgroup__seg--toggle button.is-on .tgroup__icon {
+  color: #ffffff;
+}
+
+/* Contextual action bar */
+.app--dark .contextbar {
+  background: #15233f;
+  border-bottom-color: #1e3a6b;
+  color: #bfdbfe;
+}
+.app--dark .contextbar__sep {
+  background: #1e3a6b;
+}
+.app--dark .contextbar__btn {
+  background: #1e293b;
+  border-color: #1e3a6b;
+  color: #bfdbfe;
+}
+.app--dark .contextbar__btn:hover {
+  background: #25304a;
+  border-color: #2f4d86;
+}
+
+/* Status bar */
+.app--dark .statusbar {
+  background: #131c2e;
+  border-top-color: #25304a;
+  color: #94a3b8;
+}
+.app--dark .statusbar__sep {
+  background: #25304a;
+}
+.app--dark .statusbar__item,
+.app--dark .statusbar__msg {
+  color: #94a3b8;
+}
+.app--dark .statusbar__val--ok {
+  color: #4ade80;
+}
+.app--dark .statusbar__val--warn {
+  color: #fbbf24;
+}
+.app--dark .statusbar__val--error {
+  color: #f87171;
+}

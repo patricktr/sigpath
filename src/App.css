@@ -29,7 +29,7 @@ body,
   align-items: center;
   gap: 14px;
   flex: 0 0 auto;
-  height: 46px;
+  height: 58px;
   padding: 0 14px;
   background: #ffffff;
   border-bottom: 1px solid #e2e8f0;
@@ -81,10 +81,17 @@ body,
 }
 
 .toolbar button.toolbar__primary {
-  margin-left: 6px;
+  margin-left: auto;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  height: 32px;
+  padding: 0 16px;
+  border-radius: 8px;
+  border: 1px solid #2563eb;
   background: #2563eb;
-  border-color: #2563eb;
   color: #ffffff;
+  cursor: pointer;
 }
 
 .toolbar button.toolbar__primary:hover {
@@ -94,6 +101,214 @@ body,
 
 .toolbar__doc {
   color: #475569;
+}
+
+/* ---- Grouped, labeled toolbar (Insert / Layout / View) ---- */
+.toolbar__groups {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.tgroup {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.tgroup__label {
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #94a3b8;
+}
+
+.tgroup__seg {
+  display: flex;
+}
+
+.tgroup__seg button {
+  font: inherit;
+  font-size: 12.5px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 28px;
+  padding: 0 11px;
+  border: 1px solid #cbd5e1;
+  border-left-width: 0;
+  border-radius: 0;
+  background: #f8fafc;
+  color: #0f172a;
+  cursor: pointer;
+}
+
+.tgroup__seg button:first-child {
+  border-left-width: 1px;
+  border-radius: 7px 0 0 7px;
+}
+
+.tgroup__seg button:last-child {
+  border-radius: 0 7px 7px 0;
+}
+
+.tgroup__seg button:hover {
+  background: #eef2f7;
+  border-color: #94a3b8;
+}
+
+.tgroup__icon {
+  font-size: 13px;
+  line-height: 1;
+  color: #64748b;
+}
+
+.tgroup__seg--toggle button.is-on {
+  background: #dbeafe;
+  border-color: #93c5fd;
+  color: #1d4ed8;
+  font-weight: 500;
+}
+
+.tgroup__seg--toggle button.is-on .tgroup__icon {
+  color: #1d4ed8;
+}
+
+/* ---- Contextual action bar (selection-driven) ---- */
+.contextbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 0 0 auto;
+  height: 38px;
+  padding: 0 14px;
+  background: #eff6ff;
+  border-bottom: 1px solid #bfdbfe;
+  font-size: 12.5px;
+  color: #1e3a8a;
+}
+
+.contextbar__title {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+}
+
+.contextbar__dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 2px;
+  display: inline-block;
+}
+
+.contextbar__sep {
+  width: 1px;
+  height: 16px;
+  background: #bfdbfe;
+}
+
+.contextbar__swatches {
+  display: flex;
+  gap: 4px;
+}
+
+.contextbar__swatch {
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
+  border: 1px solid rgba(15, 23, 42, 0.15);
+  padding: 0;
+  cursor: pointer;
+}
+
+.contextbar__swatch.is-active {
+  box-shadow:
+    0 0 0 2px #ffffff,
+    0 0 0 3px currentColor;
+}
+
+.contextbar__btn {
+  font: inherit;
+  font-size: 12.5px;
+  height: 26px;
+  padding: 0 11px;
+  border: 1px solid #bfdbfe;
+  border-radius: 7px;
+  background: #ffffff;
+  color: #1d4ed8;
+  cursor: pointer;
+}
+
+.contextbar__btn:hover {
+  background: #f0f6ff;
+  border-color: #93c5fd;
+}
+
+/* ---- Bottom status bar (validation + counts + messages) ---- */
+.statusbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 0 0 auto;
+  height: 26px;
+  padding: 0 12px;
+  background: #f8fafc;
+  border-top: 1px solid #e2e8f0;
+  font-size: 11px;
+  color: #64748b;
+}
+
+.statusbar__val {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  border: none;
+  background: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+.statusbar__dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  display: inline-block;
+  background: currentColor;
+}
+
+.statusbar__val--ok {
+  color: #16a34a;
+}
+.statusbar__val--warn {
+  color: #d97706;
+}
+.statusbar__val--error {
+  color: #dc2626;
+}
+
+.statusbar__sep {
+  width: 1px;
+  height: 12px;
+  background: #e2e8f0;
+}
+
+.statusbar__item {
+  color: #64748b;
+}
+
+.statusbar__msg {
+  margin-left: auto;
+  color: #64748b;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 45%;
 }
 
 .toolbar__status {

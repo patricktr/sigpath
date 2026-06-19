@@ -82,30 +82,96 @@ pub fn run() {
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_opener::init())
         .manage(PendingOpens::default())
-        // New creates a window; Open/Save route to the focused window; with no
-        // window open, Open spawns a window that opens into itself. Quit exits.
-        .on_menu_event(|app, event| match event.id().0.as_str() {
-            "new" => spawn_window(app, None),
-            "open" => {
+        // New creates a window; everything else routes to the focused window as a
+        // `menu:*` event the frontend listens for. With no window open, Open spawns
+        // a window that opens into itself. Quit exits.
+        .on_menu_event(|app, event| {
+            // Emit a `menu:*` event (optionally with a string payload) to whichever
+            // window currently has focus — the same pattern Open/Save already use.
+            let to_focused = |name: &str, payload: Option<&str>| {
                 if let Some(win) = focused_window(app) {
-                    let _ = win.emit("menu:open", ());
-                } else {
-                    spawn_window(app, Some(Pending::OpenDialog));
+                    match payload {
+                        Some(p) => {
+                            let _ = win.emit(name, p);
+                        }
+                        None => {
+                            let _ = win.emit(name, ());
+                        }
+                    }
                 }
-            }
-            "save" => {
-                if let Some(win) = focused_window(app) {
-                    let _ = win.emit("menu:save", ());
+            };
+            match event.id().0.as_str() {
+                "new" => spawn_window(app, None),
+                "open" => {
+                    if let Some(win) = focused_window(app) {
+                        let _ = win.emit("menu:open", ());
+                    } else {
+                        spawn_window(app, Some(Pending::OpenDialog));
+                    }
                 }
+                "save" => to_focused("menu:save", None),
+                "save_as" => to_focused("menu:saveAs", None),
+                "export_png" => to_focused("menu:export", Some("png")),
+                "export_jpeg" => to_focused("menu:export", Some("jpeg")),
+                "export_pdf" => to_focused("menu:export", Some("pdf")),
+                "export_csv" => to_focused("menu:export", Some("csv")),
+                "undo" => to_focused("menu:undo", None),
+                "redo" => to_focused("menu:redo", None),
+                "insert_device" => to_focused("menu:insertDevice", None),
+                "insert_zone" => to_focused("menu:insertZone", None),
+                "insert_note" => to_focused("menu:insertNote", None),
+                "fit_view" => to_focused("menu:fitView", None),
+                "zoom_zone" => to_focused("menu:zoomZone", None),
+                "theme_system" => to_focused("menu:theme", Some("system")),
+                "theme_light" => to_focused("menu:theme", Some("light")),
+                "theme_dark" => to_focused("menu:theme", Some("dark")),
+                "arrange" => to_focused("menu:arrange", None),
+                "quit" => app.exit(0),
+                _ => {}
             }
-            "quit" => app.exit(0),
-            _ => {}
         })
         .setup(|app| {
             let new_item = MenuItem::with_id(app, "new", "New", true, Some("CmdOrCtrl+N"))?;
             let open_item = MenuItem::with_id(app, "open", "Open…", true, Some("CmdOrCtrl+O"))?;
             let save_item = MenuItem::with_id(app, "save", "Save", true, Some("CmdOrCtrl+S"))?;
+            let save_as_item =
+                MenuItem::with_id(app, "save_as", "Save As…", true, Some("CmdOrCtrl+Shift+S"))?;
+            let export_png = MenuItem::with_id(app, "export_png", "PNG Image", true, None::<&str>)?;
+            let export_jpeg =
+                MenuItem::with_id(app, "export_jpeg", "JPEG Image", true, None::<&str>)?;
+            let export_pdf = MenuItem::with_id(app, "export_pdf", "PDF", true, None::<&str>)?;
+            let export_csv =
+                MenuItem::with_id(app, "export_csv", "Lists (CSV)", true, None::<&str>)?;
             let quit_item = MenuItem::with_id(app, "quit", "Quit sigpath", true, Some("CmdOrCtrl+Q"))?;
+
+            // Edit
+            let undo_item = MenuItem::with_id(app, "undo", "Undo", true, Some("CmdOrCtrl+Z"))?;
+            let redo_item =
+                MenuItem::with_id(app, "redo", "Redo", true, Some("CmdOrCtrl+Shift+Z"))?;
+
+            // Insert
+            let insert_device =
+                MenuItem::with_id(app, "insert_device", "Device…", true, Some("CmdOrCtrl+D"))?;
+            let insert_zone = MenuItem::with_id(app, "insert_zone", "Zone", true, None::<&str>)?;
+            let insert_note = MenuItem::with_id(app, "insert_note", "Note", true, None::<&str>)?;
+
+            // View
+            let fit_view = MenuItem::with_id(app, "fit_view", "Fit View", true, Some("CmdOrCtrl+0"))?;
+            let zoom_zone =
+                MenuItem::with_id(app, "zoom_zone", "Zoom to Selected Zone", true, None::<&str>)?;
+            let theme_system =
+                MenuItem::with_id(app, "theme_system", "Match System", true, None::<&str>)?;
+            let theme_light = MenuItem::with_id(app, "theme_light", "Light", true, None::<&str>)?;
+            let theme_dark = MenuItem::with_id(app, "theme_dark", "Dark", true, None::<&str>)?;
+
+            // Arrange
+            let arrange_item = MenuItem::with_id(
+                app,
+                "arrange",
+                "Auto-Arrange Left → Right",
+                true,
+                Some("CmdOrCtrl+Shift+L"),
+            )?;
 
             let app_menu = SubmenuBuilder::new(app, "sigpath")
                 .about(None)
@@ -116,27 +182,62 @@ pub fn run() {
                 .separator()
                 .item(&quit_item)
                 .build()?;
+            let export_menu = SubmenuBuilder::new(app, "Export")
+                .item(&export_png)
+                .item(&export_jpeg)
+                .item(&export_pdf)
+                .separator()
+                .item(&export_csv)
+                .build()?;
             let file_menu = SubmenuBuilder::new(app, "File")
                 .item(&new_item)
                 .item(&open_item)
                 .separator()
                 .item(&save_item)
+                .item(&save_as_item)
+                .separator()
+                .item(&export_menu)
                 .separator()
                 .close_window()
                 .build()?;
-            // Text editing items for inputs. Undo/Redo stay off so Cmd+Z is canvas undo.
+            // Undo/Redo now drive the canvas history (the frontend handles them); the
+            // predefined cut/copy/paste/select-all still serve focused text inputs.
             let edit_menu = SubmenuBuilder::new(app, "Edit")
+                .item(&undo_item)
+                .item(&redo_item)
+                .separator()
                 .cut()
                 .copy()
                 .paste()
                 .select_all()
                 .build()?;
+            let theme_menu = SubmenuBuilder::new(app, "Theme")
+                .item(&theme_system)
+                .item(&theme_light)
+                .item(&theme_dark)
+                .build()?;
+            let view_menu = SubmenuBuilder::new(app, "View")
+                .item(&theme_menu)
+                .separator()
+                .item(&fit_view)
+                .item(&zoom_zone)
+                .build()?;
+            let insert_menu = SubmenuBuilder::new(app, "Insert")
+                .item(&insert_device)
+                .separator()
+                .item(&insert_zone)
+                .item(&insert_note)
+                .build()?;
+            let arrange_menu = SubmenuBuilder::new(app, "Arrange").item(&arrange_item).build()?;
             let window_menu = SubmenuBuilder::new(app, "Window").minimize().build()?;
 
             let menu = MenuBuilder::new(app)
                 .item(&app_menu)
                 .item(&file_menu)
                 .item(&edit_menu)
+                .item(&view_menu)
+                .item(&insert_menu)
+                .item(&arrange_menu)
                 .item(&window_menu)
                 .build()?;
             app.set_menu(menu)?;

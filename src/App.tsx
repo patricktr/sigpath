@@ -48,7 +48,7 @@ import { NoteNode, NoteActionsContext } from "./ui/NoteNode";
 import { Legend } from "./ui/Legend";
 import { ListsPanel } from "./ui/ListsPanel";
 import { deriveLists } from "./lists/derive";
-import { ExportMenu, type ExportKind } from "./ui/ExportMenu";
+import type { ExportKind } from "./ui/ExportMenu";
 import { diagramImageBase64, diagramPdfBase64, listsToCsv } from "./io/export";
 import { ValidationPanel } from "./ui/ValidationPanel";
 import { validate, type ValidationIssue } from "./validation/validate";
@@ -95,8 +95,6 @@ function App() {
     takeSnapshot,
     undo,
     redo,
-    canUndo,
-    canRedo,
   } = useProject(initialDiagrams.current, {
     setNodes,
     setEdges,
@@ -262,16 +260,18 @@ function App() {
     );
   }, []);
 
-  const cycleTheme = useCallback(() => {
-    setThemeMode((m) => {
-      const next = m === "system" ? "light" : m === "light" ? "dark" : "system";
-      try {
-        localStorage.setItem("sigpath.theme", next);
-      } catch {
-        /* ignore storage errors */
-      }
-      return next;
-    });
+  const handleFit = useCallback(() => {
+    rf.current?.fitView({ duration: 400, padding: 0.2 });
+  }, []);
+
+  // Theme is now chosen from the View ▸ Theme menu (which emits "menu:theme").
+  const applyTheme = useCallback((next: "system" | "light" | "dark") => {
+    setThemeMode(next);
+    try {
+      localStorage.setItem("sigpath.theme", next);
+    } catch {
+      /* ignore storage errors */
+    }
   }, []);
 
   const lists = useMemo(() => deriveLists(nodes, edges), [nodes, edges]);
@@ -410,10 +410,49 @@ function App() {
     return items;
   }, [edges]);
 
-  const hasSelectedZone = useMemo(
-    () => nodes.some((n) => n.type === "zone" && n.selected),
-    [nodes],
-  );
+  // Current selection drives the contextual action bar shown under the toolbar.
+  const selection = useMemo(() => {
+    const zones = nodes.filter((n): n is ZoneNodeType => n.selected === true && n.type === "zone");
+    const devices = nodes.filter(
+      (n): n is DeviceNodeType => n.selected === true && n.type === "device",
+    );
+    const cables = edges.filter((e) => e.selected);
+    return { zones, devices, cables };
+  }, [nodes, edges]);
+
+  const deviceTotal = useMemo(() => nodes.filter((n) => n.type === "device").length, [nodes]);
+
+  const contextKind: "zone" | "device" | "edge" | null =
+    selection.zones.length === 1 && selection.devices.length === 0 && selection.cables.length === 0
+      ? "zone"
+      : selection.devices.length > 0
+        ? "device"
+        : selection.cables.length > 0
+          ? "edge"
+          : null;
+  const activeZone = selection.zones[0];
+
+  const deleteSelection = useCallback(() => {
+    const delNodes = nodesRef.current.filter((n) => n.selected).map((n) => ({ id: n.id }));
+    const delEdges = edgesRef.current.filter((e) => e.selected).map((e) => ({ id: e.id }));
+    if (delNodes.length === 0 && delEdges.length === 0) return;
+    // deleteElements runs onBeforeDelete, which snapshots for undo.
+    void rf.current?.deleteElements({ nodes: delNodes, edges: delEdges });
+  }, []);
+
+  const duplicateSelection = useCallback(() => {
+    const sel = nodesRef.current.filter((n) => n.selected && n.type === "device");
+    if (sel.length === 0) return;
+    takeSnapshot();
+    const clones: SigNode[] = sel.map((n) => ({
+      ...n,
+      id: crypto.randomUUID(),
+      position: { x: n.position.x + 28, y: n.position.y + 28 },
+      selected: false,
+    }));
+    setNodes((nds) => [...nds.map((n) => ({ ...n, selected: false })), ...clones]);
+    setStatus(`Duplicated ${clones.length} device${clones.length === 1 ? "" : "s"}`);
+  }, [setNodes, takeSnapshot]);
 
   // Snapshot before drags and deletions so they can be undone as single steps.
   const onNodeDragStart = useCallback(() => takeSnapshot(), [takeSnapshot]);
@@ -429,10 +468,6 @@ function App() {
     },
     [diagrams, deleteDiagram],
   );
-
-  const handleNew = useCallback(() => {
-    void invoke("new_window");
-  }, []);
 
   const handleSave = useCallback(async (): Promise<boolean> => {
     try {
@@ -452,6 +487,23 @@ function App() {
       return false;
     }
   }, [currentPath, projectName, getDocument, setProjectName]);
+
+  // Save As always prompts for a fresh path (File ▸ Save As).
+  const handleSaveAs = useCallback(async (): Promise<boolean> => {
+    try {
+      const path = await promptSavePath(`${projectName}.sigpath`);
+      if (!path) return false;
+      await writeTextToPath(path, JSON.stringify(getDocument(), null, 2));
+      setCurrentPath(path);
+      setProjectName(fileStem(path));
+      setDirty(false);
+      setStatus(`Saved · ${path}`);
+      return true;
+    } catch (err) {
+      setStatus(`Save failed: ${String(err)}`);
+      return false;
+    }
+  }, [projectName, getDocument, setProjectName]);
 
   const handleOpen = useCallback(async () => {
     try {
@@ -504,34 +556,47 @@ function App() {
     return () => unlisten?.();
   }, []);
 
-  // Undo/redo shortcuts (New/Open/Save are owned by the native menu accelerators).
-  useEffect(() => {
-    const onKey = (ev: KeyboardEvent) => {
-      if (!(ev.metaKey || ev.ctrlKey)) return;
-      const key = ev.key.toLowerCase();
-      if (key === "z") {
-        ev.preventDefault();
-        if (ev.shiftKey) redo();
-        else undo();
-      } else if (key === "y") {
-        ev.preventDefault();
-        redo();
-      }
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [undo, redo]);
+  // Undo/Redo, like New/Open/Save, are owned by the native menu accelerators
+  // (⌘Z / ⌘⇧Z) and arrive as menu:undo / menu:redo events below.
 
-  // File-menu Open/Save arrive as events emitted to this (focused) window from Rust.
+  // Menu commands arrive as events emitted to this (focused) window from Rust.
   useEffect(() => {
     const unlisteners = [
       listen("menu:open", () => void handleOpen()),
       listen("menu:save", () => void handleSave()),
+      listen("menu:saveAs", () => void handleSaveAs()),
+      listen<ExportKind>("menu:export", (e) => void handleExport(e.payload)),
+      listen("menu:undo", () => undo()),
+      listen("menu:redo", () => redo()),
+      listen("menu:insertDevice", () => {
+        setPaletteOpen(true);
+        setListsOpen(false);
+        setValidationOpen(false);
+      }),
+      listen("menu:insertZone", () => addZoneToCanvas()),
+      listen("menu:insertNote", () => addNoteToCanvas()),
+      listen("menu:fitView", () => handleFit()),
+      listen("menu:zoomZone", () => handleZoomToZone()),
+      listen<"system" | "light" | "dark">("menu:theme", (e) => applyTheme(e.payload)),
+      listen("menu:arrange", () => handleArrange()),
     ];
     return () => {
       unlisteners.forEach((p) => p.then((un) => un()));
     };
-  }, [handleOpen, handleSave]);
+  }, [
+    handleOpen,
+    handleSave,
+    handleSaveAs,
+    handleExport,
+    undo,
+    redo,
+    addZoneToCanvas,
+    addNoteToCanvas,
+    handleFit,
+    handleZoomToZone,
+    applyTheme,
+    handleArrange,
+  ]);
 
   // On launch, do what this window was created for: load a file, or (the
   // no-windows ⌘O case) show the open dialog and load into this same window.
@@ -604,115 +669,152 @@ function App() {
     <div className={theme === "dark" ? "app app--dark" : "app"}>
       <header className="toolbar">
         <span className="toolbar__brand">sigpath</span>
-        <div className="toolbar__actions">
-          <button type="button" onClick={undo} disabled={!canUndo} title="Undo (⌘Z)">Undo</button>
-          <button type="button" onClick={redo} disabled={!canRedo} title="Redo (⌘⇧Z)">Redo</button>
-          <span className="toolbar__sep" />
-          <button type="button" onClick={handleNew}>New</button>
-          <button type="button" onClick={() => void handleOpen()}>Open…</button>
-          <button type="button" onClick={() => void handleSave()}>Save</button>
-          <button
-            type="button"
-            className={snap ? "toolbar__toggle toolbar__toggle--on" : "toolbar__toggle"}
-            onClick={() => setSnap((v) => !v)}
-            aria-pressed={snap}
-            title="Snap to grid"
-          >
-            Snap
-          </button>
-          <button
-            type="button"
-            className={legendOn ? "toolbar__toggle toolbar__toggle--on" : "toolbar__toggle"}
-            onClick={() => setLegendOn((v) => !v)}
-            aria-pressed={legendOn}
-            title="Show cable-type legend"
-          >
-            Legend
-          </button>
-          <button
-            type="button"
-            onClick={cycleTheme}
-            title="Theme — click to cycle System / Light / Dark"
-          >
-            {themeMode === "system" ? "Theme: Auto" : themeMode === "light" ? "Theme: Light" : "Theme: Dark"}
-          </button>
-          <span className="toolbar__sep" />
-          <button
-            type="button"
-            onClick={handleArrange}
-            title="Arrange devices left-to-right by signal flow"
-          >
-            Arrange ↦
-          </button>
-          <button
-            type="button"
-            onClick={handleZoomToZone}
-            disabled={!hasSelectedZone}
-            title="Zoom to the selected zone"
-          >
-            Zoom to zone
-          </button>
-          <span className="toolbar__sep" />
-          <button type="button" onClick={addZoneToCanvas} title="Add a zone">Add zone</button>
-          <button type="button" onClick={addNoteToCanvas} title="Add a note">Add note</button>
-          <button
-            type="button"
-            className={listsOpen ? "toolbar__toggle toolbar__toggle--on" : "toolbar__toggle"}
-            onClick={() => {
-              setListsOpen((v) => !v);
-              setPaletteOpen(false);
-              setValidationOpen(false);
-            }}
-            aria-pressed={listsOpen}
-            title="Pack list & patch list"
-          >
-            Lists
-          </button>
-          <button
-            type="button"
-            className={
-              validation.errorCount > 0
-                ? "validation-pill--error"
-                : validation.warningCount > 0
-                  ? "validation-pill--warn"
-                  : "validation-pill--ok"
-            }
-            onClick={() => {
-              setValidationOpen((v) => !v);
-              setPaletteOpen(false);
-              setListsOpen(false);
-            }}
-            aria-pressed={validationOpen}
-            title="Live signal validation"
-          >
-            {validation.errorCount === 0 && validation.warningCount === 0
-              ? "✓ Valid"
-              : [
-                  validation.errorCount > 0 ? `✕ ${validation.errorCount}` : null,
-                  validation.warningCount > 0 ? `⚠ ${validation.warningCount}` : null,
-                ]
-                  .filter(Boolean)
-                  .join("  ")}
-          </button>
-          <ExportMenu onExport={handleExport} />
-          <button
-            type="button"
-            className="toolbar__primary"
-            onClick={() => {
-              setPaletteOpen((v) => !v);
-              setListsOpen(false);
-              setValidationOpen(false);
-            }}
-          >
-            {paletteOpen ? "Close panel" : "Add device"}
-          </button>
+        <div className="toolbar__groups">
+          <div className="tgroup">
+            <div className="tgroup__seg">
+              <button type="button" onClick={addZoneToCanvas} title="Add a zone">
+                <span className="tgroup__icon">▢</span>Zone
+              </button>
+              <button type="button" onClick={addNoteToCanvas} title="Add a note">
+                <span className="tgroup__icon">▭</span>Note
+              </button>
+            </div>
+            <span className="tgroup__label">Insert</span>
+          </div>
+
+          <div className="tgroup">
+            <div className="tgroup__seg">
+              <button
+                type="button"
+                onClick={handleArrange}
+                title="Arrange devices left-to-right by signal flow"
+              >
+                <span className="tgroup__icon">↦</span>Arrange
+              </button>
+              <button type="button" onClick={handleFit} title="Fit the whole diagram to the view">
+                <span className="tgroup__icon">⤢</span>Fit
+              </button>
+            </div>
+            <span className="tgroup__label">Layout</span>
+          </div>
+
+          <div className="tgroup">
+            <div className="tgroup__seg tgroup__seg--toggle">
+              <button
+                type="button"
+                className={snap ? "is-on" : ""}
+                aria-pressed={snap}
+                onClick={() => setSnap((v) => !v)}
+                title="Snap to grid"
+              >
+                Snap
+              </button>
+              <button
+                type="button"
+                className={legendOn ? "is-on" : ""}
+                aria-pressed={legendOn}
+                onClick={() => setLegendOn((v) => !v)}
+                title="Show cable-type legend"
+              >
+                Legend
+              </button>
+              <button
+                type="button"
+                className={listsOpen ? "is-on" : ""}
+                aria-pressed={listsOpen}
+                onClick={() => {
+                  setListsOpen((v) => !v);
+                  setPaletteOpen(false);
+                  setValidationOpen(false);
+                }}
+                title="Pack list & patch list"
+              >
+                Lists
+              </button>
+            </div>
+            <span className="tgroup__label">View</span>
+          </div>
         </div>
+
+        <button
+          type="button"
+          className="toolbar__primary"
+          onClick={() => {
+            setPaletteOpen((v) => !v);
+            setListsOpen(false);
+            setValidationOpen(false);
+          }}
+        >
+          {paletteOpen ? "Close panel" : "+ Add device"}
+        </button>
+
         <span className="toolbar__doc">
           {projectName}
           {dirty ? " · unsaved" : ""}
         </span>
-        <span className="toolbar__status" title={status}>{status}</span>
       </header>
+
+      {contextKind && (
+        <div className="contextbar">
+          {contextKind === "zone" && activeZone && (
+            <>
+              <span className="contextbar__title">
+                <span className="contextbar__dot" style={{ background: activeZone.data.color }} />
+                Zone “{activeZone.data.label}”
+              </span>
+              <span className="contextbar__sep" />
+              <div className="contextbar__swatches">
+                {ZONE_COLORS.map((c) => (
+                  <button
+                    key={c}
+                    type="button"
+                    className={
+                      c === activeZone.data.color
+                        ? "contextbar__swatch is-active"
+                        : "contextbar__swatch"
+                    }
+                    style={{ background: c }}
+                    onClick={() => recolorZone(activeZone.id, c)}
+                    aria-label={`Set zone color ${c}`}
+                  />
+                ))}
+              </div>
+              <span className="contextbar__sep" />
+              <button type="button" className="contextbar__btn" onClick={handleZoomToZone}>
+                ⤢ Zoom to zone
+              </button>
+              <button type="button" className="contextbar__btn" onClick={deleteSelection}>
+                Delete
+              </button>
+            </>
+          )}
+          {contextKind === "device" && (
+            <>
+              <span className="contextbar__title">
+                {selection.devices.length} device{selection.devices.length === 1 ? "" : "s"} selected
+              </span>
+              <span className="contextbar__sep" />
+              <button type="button" className="contextbar__btn" onClick={duplicateSelection}>
+                Duplicate
+              </button>
+              <button type="button" className="contextbar__btn" onClick={deleteSelection}>
+                Delete
+              </button>
+            </>
+          )}
+          {contextKind === "edge" && (
+            <>
+              <span className="contextbar__title">
+                {selection.cables.length} cable{selection.cables.length === 1 ? "" : "s"} selected
+              </span>
+              <span className="contextbar__sep" />
+              <button type="button" className="contextbar__btn" onClick={deleteSelection}>
+                Delete
+              </button>
+            </>
+          )}
+        </div>
+      )}
 
       <div className="flow-wrap">
         <ZoneActionsContext.Provider value={zoneActions}>
@@ -772,6 +874,48 @@ function App() {
         onRename={renameDiagram}
         onDelete={handleDeleteDiagram}
       />
+
+      <footer className="statusbar">
+        <button
+          type="button"
+          className={
+            validation.errorCount > 0
+              ? "statusbar__val statusbar__val--error"
+              : validation.warningCount > 0
+                ? "statusbar__val statusbar__val--warn"
+                : "statusbar__val statusbar__val--ok"
+          }
+          aria-pressed={validationOpen}
+          onClick={() => {
+            setValidationOpen((v) => !v);
+            setPaletteOpen(false);
+            setListsOpen(false);
+          }}
+          title="Live signal validation — click for details"
+        >
+          <span className="statusbar__dot" />
+          {validation.errorCount === 0 && validation.warningCount === 0
+            ? "All signals valid"
+            : [
+                validation.errorCount > 0
+                  ? `✕ ${validation.errorCount} error${validation.errorCount === 1 ? "" : "s"}`
+                  : null,
+                validation.warningCount > 0
+                  ? `⚠ ${validation.warningCount} warning${validation.warningCount === 1 ? "" : "s"}`
+                  : null,
+              ]
+                .filter(Boolean)
+                .join("  ·  ")}
+        </button>
+        <span className="statusbar__sep" />
+        <span className="statusbar__item">
+          {deviceTotal} device{deviceTotal === 1 ? "" : "s"} · {edges.length} cable
+          {edges.length === 1 ? "" : "s"}
+        </span>
+        <span className="statusbar__msg" title={status}>
+          {status}
+        </span>
+      </footer>
 
       {closePrompt && (
         <div className="modal-backdrop" onClick={onCloseCancel}>
