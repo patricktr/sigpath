@@ -27,8 +27,8 @@ import type {
   ZoneNodeType,
   NoteNodeType,
 } from "./flow/types";
-import { CABLE_TYPES, DEFAULT_CABLE_COLOR, cableTypeForPort } from "./schema";
-import type { DeviceModel, CableTypeDef } from "./schema";
+import { cableColor, cableLabel, deviceTitle } from "./schema";
+import type { DeviceModel } from "./schema";
 import { useProject } from "./project/useProject";
 import { parseDocument } from "./io/serialize";
 import {
@@ -41,7 +41,8 @@ import {
   saveText,
   saveBinary,
 } from "./io/files";
-import { AddDevicePanel } from "./ui/AddDevicePanel";
+import { AddDeviceOverlay } from "./ui/AddDevice/AddDeviceOverlay";
+import type { AddSurface } from "./ui/AddDevice/addDevice";
 import { DiagramTabs } from "./ui/DiagramTabs";
 import { ZoneNode, ZoneActionsContext, ZONE_COLORS } from "./ui/ZoneNode";
 import { NoteNode, NoteActionsContext } from "./ui/NoteNode";
@@ -104,7 +105,8 @@ function App() {
 
   const [currentPath, setCurrentPath] = useState<string | null>(null);
   const [status, setStatus] = useState("");
-  const [paletteOpen, setPaletteOpen] = useState(false);
+  const [addSurface, setAddSurface] = useState<AddSurface>("none");
+  const [addToast, setAddToast] = useState<string | null>(null);
   const [listsOpen, setListsOpen] = useState(false);
   const [closePrompt, setClosePrompt] = useState(false);
   const [validationOpen, setValidationOpen] = useState(false);
@@ -148,10 +150,8 @@ function App() {
         sourceNode?.type === "device"
           ? sourceNode.data.model.ports.find((p) => p.id === connection.sourceHandle)
           : undefined;
-      const cableTypeId = port ? cableTypeForPort(port.connector, port.signal) : undefined;
-      const color = cableTypeId
-        ? CABLE_TYPES[cableTypeId]?.color ?? DEFAULT_CABLE_COLOR
-        : DEFAULT_CABLE_COLOR;
+      const cableTypeId = port?.connector;
+      const color = cableColor(cableTypeId);
       const edge: CableEdgeType = {
         id: `cable-${crypto.randomUUID()}`,
         source: connection.source,
@@ -179,10 +179,8 @@ function App() {
         sourceNode?.type === "device"
           ? sourceNode.data.model.ports.find((p) => p.id === newConnection.sourceHandle)
           : undefined;
-      const cableTypeId = port ? cableTypeForPort(port.connector, port.signal) : undefined;
-      const color = cableTypeId
-        ? CABLE_TYPES[cableTypeId]?.color ?? DEFAULT_CABLE_COLOR
-        : DEFAULT_CABLE_COLOR;
+      const cableTypeId = port?.connector;
+      const color = cableColor(cableTypeId);
       const refreshed: CableEdgeType = {
         ...oldEdge,
         style: { ...oldEdge.style, stroke: color, strokeWidth: 2 },
@@ -208,6 +206,33 @@ function App() {
     },
     [setNodes, takeSnapshot],
   );
+
+  // Place a device from the Add-Device flow, then show a toast and close.
+  const placeDevice = useCallback(
+    (model: DeviceModel) => {
+      addModelToCanvas(model);
+      setAddToast(`Placed “${deviceTitle(model)}” on canvas`);
+      setAddSurface("none");
+    },
+    [addModelToCanvas],
+  );
+
+  // ⌘K → Quick Switcher, ⌘⇧K → Equipment Database.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (!(e.metaKey || e.ctrlKey) || e.key.toLowerCase() !== "k") return;
+      e.preventDefault();
+      setAddSurface(e.shiftKey ? "browser" : "palette");
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+
+  useEffect(() => {
+    if (!addToast) return;
+    const t = window.setTimeout(() => setAddToast(null), 1900);
+    return () => window.clearTimeout(t);
+  }, [addToast]);
 
   const addZoneToCanvas = useCallback(() => {
     takeSnapshot();
@@ -400,12 +425,13 @@ function App() {
       const id = e.data?.cableTypeId;
       if (id) counts.set(id, (counts.get(id) ?? 0) + 1);
     }
-    const items: { type: CableTypeDef; count: number }[] = [];
-    for (const [id, count] of counts) {
-      const type = CABLE_TYPES[id];
-      if (type) items.push({ type, count });
-    }
-    items.sort((a, b) => a.type.label.localeCompare(b.type.label));
+    const items = [...counts].map(([id, count]) => ({
+      id,
+      label: cableLabel(id),
+      color: cableColor(id),
+      count,
+    }));
+    items.sort((a, b) => a.label.localeCompare(b.label));
     return items;
   }, [edges]);
 
@@ -567,11 +593,7 @@ function App() {
       listen<ExportKind>("menu:export", (e) => void handleExport(e.payload)),
       listen("menu:undo", () => undo()),
       listen("menu:redo", () => redo()),
-      listen("menu:insertDevice", () => {
-        setPaletteOpen(true);
-        setListsOpen(false);
-        setValidationOpen(false);
-      }),
+      listen("menu:insertDevice", () => setAddSurface("palette")),
       listen("menu:insertZone", () => addZoneToCanvas()),
       listen("menu:insertNote", () => addNoteToCanvas()),
       listen("menu:fitView", () => handleFit()),
@@ -723,7 +745,6 @@ function App() {
                 aria-pressed={listsOpen}
                 onClick={() => {
                   setListsOpen((v) => !v);
-                  setPaletteOpen(false);
                   setValidationOpen(false);
                 }}
                 title="Pack list & patch list"
@@ -738,13 +759,10 @@ function App() {
         <button
           type="button"
           className="toolbar__primary"
-          onClick={() => {
-            setPaletteOpen((v) => !v);
-            setListsOpen(false);
-            setValidationOpen(false);
-          }}
+          onClick={() => setAddSurface("palette")}
+          title="Add device (⌘K)"
         >
-          {paletteOpen ? "Close panel" : "+ Add device"}
+          ＋ Add device
         </button>
 
         <span className="toolbar__doc">
@@ -852,9 +870,6 @@ function App() {
           </ReactFlow>
           </NoteActionsContext.Provider>
         </ZoneActionsContext.Provider>
-        {paletteOpen && (
-          <AddDevicePanel onAddModel={addModelToCanvas} onClose={() => setPaletteOpen(false)} />
-        )}
         {listsOpen && <ListsPanel lists={lists} onClose={() => setListsOpen(false)} />}
         {validationOpen && (
           <ValidationPanel
@@ -887,7 +902,6 @@ function App() {
           aria-pressed={validationOpen}
           onClick={() => {
             setValidationOpen((v) => !v);
-            setPaletteOpen(false);
             setListsOpen(false);
           }}
           title="Live signal validation — click for details"
@@ -915,6 +929,20 @@ function App() {
           {status}
         </span>
       </footer>
+
+      {addSurface !== "none" && (
+        <AddDeviceOverlay
+          surface={addSurface}
+          onSurface={setAddSurface}
+          onPlace={placeDevice}
+          onClose={() => setAddSurface("none")}
+        />
+      )}
+      {addToast && (
+        <div className="adv-toast" role="status">
+          {addToast}
+        </div>
+      )}
 
       {closePrompt && (
         <div className="modal-backdrop" onClick={onCloseCancel}>
