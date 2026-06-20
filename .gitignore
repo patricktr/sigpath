@@ -22,3 +22,7 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Design scratch — keep the brand logos, ignore the handoff bundles
+design/*
+!design/logo/
