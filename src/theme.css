@@ -1,0 +1,135 @@
+/* ============================================================================
+   SigPath "Schematic" theme tokens. Light = :root (default); dark swaps via
+   [data-theme="dark"] on <html>. The six signal colors and the radius are
+   theme-invariant. Components consume these vars — no per-component dark rules.
+   ============================================================================ */
+:root {
+  /* Theme-invariant */
+  --radius: 3px;
+  --font-ui: "Schibsted Grotesk", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    Helvetica, Arial, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+
+  /* Signal-group colors — content, never themed (mirrors SIGNAL_META) */
+  --sig-video: #3b82f6;
+  --sig-audio: #22c55e;
+  --sig-av: #8b5cf6;
+  --sig-data: #ec4899;
+  --sig-network: #06b6d4;
+  --sig-control: #f59e0b;
+  --sig-power: #ef4444;
+
+  /* Surfaces */
+  --app-bg: #edeef2;
+  --panel-bg: #ffffff;
+  --panel-border: #dadce6;
+  --canvas-bg: #f6f7fb;
+  --grid-minor: #e4e6f0;
+  --grid-major: #d3d6e6;
+
+  /* Text */
+  --text: #16161f;
+  --text-muted: #5b5b6b;
+  --text-faint: #9a9aac;
+
+  /* Accent (indigo) */
+  --accent: oklch(0.52 0.16 285);
+  --on-accent: #ffffff;
+  --accent-soft-bg: #ecebfb;
+  --accent-soft-text: #4a3fbf;
+  --accent-soft-border: #d3d0f6;
+
+  /* Device node */
+  --node-bg: #ffffff;
+  --node-border: #d5d6e2;
+  --node-header-bg: #1c1b2e;
+  --node-header-text: #ecebf7;
+  --node-text: #20202c;
+  --node-shadow: 0 1px 2px rgba(22, 22, 31, 0.1), 0 5px 14px rgba(22, 22, 31, 0.07);
+
+  /* Controls */
+  --btn-bg: #ffffff;
+  --btn-border: #d5d6e2;
+  --btn-text: #2b2b3a;
+
+  /* Overlays / misc */
+  --scrim: rgba(22, 22, 31, 0.3);
+  --modal-shadow: 0 24px 60px rgba(22, 22, 31, 0.26);
+  --row-hover: #f4f4f9;
+  --footer-bg: #fafafd;
+  --kbd-bg: #f1f1f6;
+  --toast-bg: #1c1b2e;
+  --toast-text: #ecebf7;
+}
+
+[data-theme="dark"] {
+  --app-bg: #0a0a10;
+  --panel-bg: #100f18;
+  --panel-border: #1f1e2c;
+  --canvas-bg: #0c0b13;
+  --grid-minor: #19182a;
+  --grid-major: #221f3a;
+
+  --text: #e7e6f0;
+  --text-muted: #908fa3;
+  --text-faint: #585769;
+
+  --accent: oklch(0.64 0.17 285);
+  --on-accent: #0c0a1f;
+  --accent-soft-bg: #1a1830;
+  --accent-soft-text: #a99cff;
+  --accent-soft-border: #322c5a;
+
+  --node-bg: #14131f;
+  --node-border: #272539;
+  --node-header-bg: #211f36;
+  --node-header-text: #e4e2f3;
+  --node-text: #c9c7da;
+  --node-shadow: 0 2px 10px rgba(0, 0, 0, 0.55);
+
+  --btn-bg: #131220;
+  --btn-border: #262338;
+  --btn-text: #c9c7da;
+
+  --scrim: rgba(0, 0, 0, 0.55);
+  --modal-shadow: 0 24px 60px rgba(0, 0, 0, 0.6);
+  --row-hover: #181626;
+  --footer-bg: #0c0b15;
+  --kbd-bg: #181626;
+  --toast-bg: #211f36;
+  --toast-text: #e4e2f3;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-ui);
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text);
+  background: var(--app-bg);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+/* Shared keyboard chip (⌘K, esc) */
+.kbd {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  background: var(--kbd-bg);
+  color: var(--text-muted);
+  border-radius: 2px;
+  padding: 2px 5px;
+}

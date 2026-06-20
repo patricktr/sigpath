@@ -1,14 +1,17 @@
 .device-node {
   min-width: 168px;
-  background: #ffffff;
-  border: 1px solid #cbd5e1;
-  border-radius: 8px;
-  box-shadow:
-    0 1px 2px rgba(15, 23, 42, 0.08),
-    0 2px 6px rgba(15, 23, 42, 0.06);
+  background: var(--node-bg);
+  border: 1px solid var(--node-border);
+  border-radius: var(--radius);
+  box-shadow: var(--node-shadow);
   font-size: 12px;
-  color: #1e293b;
+  color: var(--node-text);
   overflow: hidden;
+}
+
+.react-flow__node.selected .device-node {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 
 .device-node__header {
@@ -17,19 +20,24 @@
   justify-content: space-between;
   gap: 8px;
   padding: 6px 10px;
-  background: #1e293b;
-  color: #f8fafc;
+  background: var(--node-header-bg);
+  color: var(--node-header-text);
 }
 
 .device-node__name {
+  font-family: var(--font-mono);
+  font-size: 11px;
   font-weight: 600;
+  white-space: nowrap;
 }
 
 .device-node__category {
-  font-size: 10px;
+  font-family: var(--font-mono);
+  font-size: 8px;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.06em;
   opacity: 0.7;
+  white-space: nowrap;
 }
 
 .device-node__body {
@@ -65,22 +73,27 @@
 }
 
 .port__label {
+  font-size: 10.5px;
   white-space: nowrap;
+  color: var(--node-text);
 }
 
-/*
- * By default React Flow positions handles absolutely (centered on the node edge).
- * For a variable list of ports we instead let each handle flow inline with its
- * row; React Flow reads the handle's DOM rect for connections, so inline works.
- */
+/* Handles flow inline with each port row; React Flow reads the DOM rect, so
+   inline works. Dots bleed 4px past the node edge for the schematic look. */
 .device-node .port__handle.react-flow__handle {
   position: relative;
   top: auto;
   left: auto;
   right: auto;
   transform: none;
-  width: 9px;
-  height: 9px;
-  border: 1px solid rgba(15, 23, 42, 0.55);
+  width: 8px;
+  height: 8px;
+  border: 1px solid rgba(127, 127, 127, 0.45);
   border-radius: 50%;
+}
+.device-node .port--in .port__handle.react-flow__handle {
+  margin-left: -4px;
+}
+.device-node .port--out .port__handle.react-flow__handle {
+  margin-right: -4px;
 }

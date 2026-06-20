@@ -10,6 +10,8 @@
     "tauri": "tauri"
   },
   "dependencies": {
+    "@fontsource/ibm-plex-mono": "^5.2.7",
+    "@fontsource/schibsted-grotesk": "^5.2.8",
     "@tauri-apps/api": "^2",
     "@tauri-apps/plugin-dialog": "~2.7.1",
     "@tauri-apps/plugin-opener": "^2",

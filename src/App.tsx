@@ -5,9 +5,9 @@ import { getCurrentWindow } from "@tauri-apps/api/window";
 import {
   ReactFlow,
   Background,
+  BackgroundVariant,
   Controls,
   MiniMap,
-  Panel,
   addEdge,
   reconnectEdge,
   useNodesState,
@@ -46,20 +46,20 @@ import type { AddSurface } from "./ui/AddDevice/addDevice";
 import { DiagramTabs } from "./ui/DiagramTabs";
 import { ZoneNode, ZoneActionsContext, ZONE_COLORS } from "./ui/ZoneNode";
 import { NoteNode, NoteActionsContext } from "./ui/NoteNode";
-import { Legend } from "./ui/Legend";
 import { ListsPanel } from "./ui/ListsPanel";
 import { deriveLists } from "./lists/derive";
 import { diagramImageBase64, diagramPdfBase64, listsToCsv, type ExportKind } from "./io/export";
 import { ValidationPanel } from "./ui/ValidationPanel";
 import { validate, type ValidationIssue } from "./validation/validate";
+import { LeftRail } from "./ui/LeftRail";
+import { Inspector } from "./ui/Inspector";
 import "./App.css";
-import "./theme-dark.css";
 
 /** Registered once at module scope so the reference stays stable across renders. */
 const nodeTypes = { device: DeviceNode, zone: ZoneNode, note: NoteNode };
 
 /** Grid size (px) for snap-to-grid and the background dots. */
-const GRID = 16;
+const GRID = 24;
 
 function App() {
   const [nodes, setNodes, onNodesChange] = useNodesState<SigNode>([]);
@@ -111,7 +111,6 @@ function App() {
   const [closePrompt, setClosePrompt] = useState(false);
   const [validationOpen, setValidationOpen] = useState(false);
   const [snap, setSnap] = useState(true);
-  const [legendOn, setLegendOn] = useState(true);
   const [themeMode, setThemeMode] = useState<"system" | "light" | "dark">(() => {
     try {
       const v = localStorage.getItem("sigpath.theme");
@@ -447,6 +446,29 @@ function App() {
 
   const deviceTotal = useMemo(() => nodes.filter((n) => n.type === "device").length, [nodes]);
 
+  const railDevices = useMemo(
+    () =>
+      nodes
+        .filter((n): n is DeviceNodeType => n.type === "device")
+        .map((n) => ({
+          id: n.id,
+          title: deviceTitle(n.data.model, n.data.label),
+          tag: (n.data.model.type ?? n.data.model.category).slice(0, 3).toUpperCase(),
+        })),
+    [nodes],
+  );
+  const inspectorDevice = selection.devices.length === 1 ? selection.devices[0] : null;
+  const selectedNodeId = inspectorDevice?.id ?? null;
+  const selectNode = useCallback(
+    (id: string) => setNodes((nds) => nds.map((n) => ({ ...n, selected: n.id === id }))),
+    [setNodes],
+  );
+
+  // Reflect the resolved theme on <html> so the token system swaps.
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme;
+  }, [theme]);
+
   const contextKind: "zone" | "device" | "edge" | null =
     selection.zones.length === 1 && selection.devices.length === 0 && selection.cables.length === 0
       ? "zone"
@@ -687,88 +709,69 @@ function App() {
   }, [setNodes, takeSnapshot]);
 
   return (
-    <div className={theme === "dark" ? "app app--dark" : "app"}>
+    <div className="app">
       <header className="toolbar">
-        <span className="toolbar__brand">sigpath</span>
-        <div className="toolbar__groups">
-          <div className="tgroup">
-            <div className="tgroup__seg">
-              <button type="button" onClick={addZoneToCanvas} title="Add a zone">
-                <span className="tgroup__icon">▢</span>Zone
-              </button>
-              <button type="button" onClick={addNoteToCanvas} title="Add a note">
-                <span className="tgroup__icon">▭</span>Note
-              </button>
-            </div>
-            <span className="tgroup__label">Insert</span>
-          </div>
-
-          <div className="tgroup">
-            <div className="tgroup__seg">
-              <button
-                type="button"
-                onClick={handleArrange}
-                title="Arrange devices left-to-right by signal flow"
-              >
-                <span className="tgroup__icon">↦</span>Arrange
-              </button>
-              <button type="button" onClick={handleFit} title="Fit the whole diagram to the view">
-                <span className="tgroup__icon">⤢</span>Fit
-              </button>
-            </div>
-            <span className="tgroup__label">Layout</span>
-          </div>
-
-          <div className="tgroup">
-            <div className="tgroup__seg tgroup__seg--toggle">
-              <button
-                type="button"
-                className={snap ? "is-on" : ""}
-                aria-pressed={snap}
-                onClick={() => setSnap((v) => !v)}
-                title="Snap to grid"
-              >
-                Snap
-              </button>
-              <button
-                type="button"
-                className={legendOn ? "is-on" : ""}
-                aria-pressed={legendOn}
-                onClick={() => setLegendOn((v) => !v)}
-                title="Show cable-type legend"
-              >
-                Legend
-              </button>
-              <button
-                type="button"
-                className={listsOpen ? "is-on" : ""}
-                aria-pressed={listsOpen}
-                onClick={() => {
-                  setListsOpen((v) => !v);
-                  setValidationOpen(false);
-                }}
-                title="Pack list & patch list"
-              >
-                Lists
-              </button>
-            </div>
-            <span className="tgroup__label">View</span>
-          </div>
+        <div className="brand">
+          <svg className="brand__mark" viewBox="0 0 48 48" aria-hidden="true">
+            <circle cx="19" cy="13" r="4.5" fill="#3b82f6" />
+            <circle cx="33" cy="13" r="4.5" fill="#22c55e" />
+            <circle cx="19" cy="24" r="4.5" fill="#8b5cf6" />
+            <circle cx="33" cy="24" r="4.5" fill="#06b6d4" />
+            <circle cx="19" cy="35" r="4.5" fill="#f59e0b" />
+            <circle cx="33" cy="35" r="4.5" fill="#ef4444" />
+          </svg>
+          <span className="brand__name">SIGPATH</span>
+          <span className="brand__div" />
+          <span className="brand__doc">
+            {projectName}
+            {dirty ? " ·" : ""}
+          </span>
         </div>
-
+        <span className="toolbar__spacer" />
+        <div className="theme-toggle" role="group" aria-label="Theme">
+          <button
+            type="button"
+            className={theme === "light" ? "is-on" : ""}
+            onClick={() => applyTheme("light")}
+          >
+            Light
+          </button>
+          <button
+            type="button"
+            className={theme === "dark" ? "is-on" : ""}
+            onClick={() => applyTheme("dark")}
+          >
+            Dark
+          </button>
+        </div>
         <button
           type="button"
-          className="toolbar__primary"
+          className={validationOpen ? "tbtn is-on" : "tbtn"}
+          onClick={() => {
+            setValidationOpen((v) => !v);
+            setListsOpen(false);
+          }}
+        >
+          Validate
+        </button>
+        <button
+          type="button"
+          className={listsOpen ? "tbtn is-on" : "tbtn"}
+          onClick={() => {
+            setListsOpen((v) => !v);
+            setValidationOpen(false);
+          }}
+        >
+          Lists
+        </button>
+        <button
+          type="button"
+          className="tbtn tbtn--primary"
           onClick={() => setAddSurface("palette")}
           title="Add device (⌘K)"
         >
-          ＋ Add device
+          ＋ Add device <span className="kbd">⌘K</span>
         </button>
-
-        <span className="toolbar__doc">
-          {projectName}
-          {dirty ? " · unsaved" : ""}
-        </span>
       </header>
 
       {contextKind && (
@@ -833,51 +836,69 @@ function App() {
         </div>
       )}
 
-      <div className="flow-wrap">
-        <ZoneActionsContext.Provider value={zoneActions}>
-          <NoteActionsContext.Provider value={noteActions}>
-          <ReactFlow
-            nodes={nodes}
-            edges={displayEdges}
-            nodeTypes={nodeTypes}
-            onNodesChange={onNodesChange}
-            onEdgesChange={onEdgesChange}
-            onConnect={onConnect}
-            onReconnect={onReconnect}
-            reconnectRadius={20}
-            onNodeDragStart={onNodeDragStart}
-            onSelectionDragStart={onNodeDragStart}
-            onBeforeDelete={onBeforeDelete}
-            onInit={(inst) => {
-              rf.current = inst;
-            }}
-            snapToGrid={snap}
-            snapGrid={[GRID, GRID]}
-            defaultEdgeOptions={{ type: "smoothstep" }}
-            minZoom={0.1}
-            maxZoom={4}
-            colorMode={theme}
-            fitView
-          >
-            <Background gap={GRID} />
-            <MiniMap pannable zoomable />
-            <Controls />
-            {legendOn && usedCableTypes.length > 0 && (
-              <Panel position="top-right">
-                <Legend items={usedCableTypes} />
-              </Panel>
-            )}
-          </ReactFlow>
-          </NoteActionsContext.Provider>
-        </ZoneActionsContext.Provider>
-        {listsOpen && <ListsPanel lists={lists} onClose={() => setListsOpen(false)} />}
-        {validationOpen && (
-          <ValidationPanel
-            result={validation}
-            onFocus={focusIssue}
-            onClose={() => setValidationOpen(false)}
-          />
-        )}
+      <div className="workspace">
+        <LeftRail
+          cables={usedCableTypes}
+          devices={railDevices}
+          selectedId={selectedNodeId}
+          onSelect={selectNode}
+        />
+        <div className="canvas-wrap">
+          <ZoneActionsContext.Provider value={zoneActions}>
+            <NoteActionsContext.Provider value={noteActions}>
+              <ReactFlow
+                nodes={nodes}
+                edges={displayEdges}
+                nodeTypes={nodeTypes}
+                onNodesChange={onNodesChange}
+                onEdgesChange={onEdgesChange}
+                onConnect={onConnect}
+                onReconnect={onReconnect}
+                reconnectRadius={20}
+                onNodeDragStart={onNodeDragStart}
+                onSelectionDragStart={onNodeDragStart}
+                onBeforeDelete={onBeforeDelete}
+                onInit={(inst) => {
+                  rf.current = inst;
+                }}
+                snapToGrid={snap}
+                snapGrid={[GRID, GRID]}
+                defaultEdgeOptions={{ type: "smoothstep" }}
+                minZoom={0.1}
+                maxZoom={4}
+                colorMode={theme}
+                fitView
+              >
+                <Background
+                  id="minor"
+                  variant={BackgroundVariant.Lines}
+                  gap={GRID}
+                  color="var(--grid-minor)"
+                />
+                <Background
+                  id="major"
+                  variant={BackgroundVariant.Lines}
+                  gap={GRID * 5}
+                  color="var(--grid-major)"
+                />
+                <MiniMap pannable zoomable />
+                <Controls />
+              </ReactFlow>
+            </NoteActionsContext.Provider>
+          </ZoneActionsContext.Provider>
+          {listsOpen && <ListsPanel lists={lists} onClose={() => setListsOpen(false)} />}
+          {validationOpen && (
+            <ValidationPanel
+              result={validation}
+              onFocus={focusIssue}
+              onClose={() => setValidationOpen(false)}
+            />
+          )}
+        </div>
+        <Inspector
+          model={inspectorDevice?.data.model ?? null}
+          label={inspectorDevice?.data.label}
+        />
       </div>
 
       <DiagramTabs
@@ -899,32 +920,37 @@ function App() {
                 ? "statusbar__val statusbar__val--warn"
                 : "statusbar__val statusbar__val--ok"
           }
-          aria-pressed={validationOpen}
           onClick={() => {
             setValidationOpen((v) => !v);
             setListsOpen(false);
           }}
-          title="Live signal validation — click for details"
+          title="Live signal validation"
         >
           <span className="statusbar__dot" />
           {validation.errorCount === 0 && validation.warningCount === 0
-            ? "All signals valid"
+            ? "0 Errors"
             : [
                 validation.errorCount > 0
-                  ? `✕ ${validation.errorCount} error${validation.errorCount === 1 ? "" : "s"}`
+                  ? `${validation.errorCount} Error${validation.errorCount === 1 ? "" : "s"}`
                   : null,
                 validation.warningCount > 0
-                  ? `⚠ ${validation.warningCount} warning${validation.warningCount === 1 ? "" : "s"}`
+                  ? `${validation.warningCount} Warning${validation.warningCount === 1 ? "" : "s"}`
                   : null,
               ]
                 .filter(Boolean)
-                .join("  ·  ")}
+                .join(" · ")}
         </button>
-        <span className="statusbar__sep" />
-        <span className="statusbar__item">
-          {deviceTotal} device{deviceTotal === 1 ? "" : "s"} · {edges.length} cable
-          {edges.length === 1 ? "" : "s"}
-        </span>
+        <span className="statusbar__item">{deviceTotal} Devices</span>
+        <span className="statusbar__item">{edges.length} Links</span>
+        <span className="statusbar__spacer" />
+        <button
+          type="button"
+          className={snap ? "statusbar__snap is-on" : "statusbar__snap"}
+          onClick={() => setSnap((v) => !v)}
+        >
+          Snap {snap ? "On" : "Off"}
+        </button>
+        <span className="statusbar__item">Grid {GRID}px</span>
         <span className="statusbar__msg" title={status}>
           {status}
         </span>
