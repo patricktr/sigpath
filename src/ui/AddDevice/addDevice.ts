@@ -1,6 +1,7 @@
 import { BUILTIN_MODELS } from "../../library/builtins";
+import { COMMUNITY_MODELS } from "../../library/communityLibrary";
 import { loadPersonalLibrary } from "../../library/personalLibrary";
-import { cableColor, inputPorts, outputPorts } from "../../schema";
+import { cableColor } from "../../schema";
 import type { DeviceModel } from "../../schema";
 
 /** Which surface of the Add-Device flow is open. */
@@ -8,9 +9,21 @@ export type AddSurface = "none" | "palette" | "browser" | "wizard";
 
 export type SortKey = "model" | "mfr" | "type" | "rack";
 
-/** The full catalog the user can place from: built-ins + their personal library. */
+/** Identity key for de-duplication: manufacturer + model, case-insensitive. */
+function modelKey(m: DeviceModel): string {
+  return `${m.manufacturer ?? ""}|${m.model}`.toLowerCase();
+}
+
+/**
+ * The full catalog the user can place from: the bundled community snapshot, the
+ * built-in starters, and their personal library. The community snapshot supersedes
+ * any built-in it overlaps (several built-ins were the seed for community entries),
+ * so built-ins act as an offline fallback when the snapshot lacks an equivalent.
+ */
 export function loadCatalog(): DeviceModel[] {
-  return [...BUILTIN_MODELS, ...loadPersonalLibrary()];
+  const communityKeys = new Set(COMMUNITY_MODELS.map(modelKey));
+  const builtinsKept = BUILTIN_MODELS.filter((m) => !communityKeys.has(modelKey(m)));
+  return [...COMMUNITY_MODELS, ...builtinsKept, ...loadPersonalLibrary()];
 }
 
 /** Friendly type if present, else the coarse category. */
@@ -18,9 +31,16 @@ export function typeLabel(model: DeviceModel): string {
   return model.type ?? model.category;
 }
 
-/** e.g. "4 in · 2 out". */
+/** e.g. "4 in · 2 out · 8 I/O" — pure inputs, pure outputs, then bidirectional. */
 export function ioSummary(model: DeviceModel): string {
-  return `${inputPorts(model).length} in · ${outputPorts(model).length} out`;
+  const inN = model.ports.filter((p) => p.direction === "input").length;
+  const outN = model.ports.filter((p) => p.direction === "output").length;
+  const ioN = model.ports.filter((p) => p.direction === "bidirectional").length;
+  const parts: string[] = [];
+  if (inN) parts.push(`${inN} in`);
+  if (outN) parts.push(`${outN} out`);
+  if (ioN) parts.push(`${ioN} I/O`);
+  return parts.join(" · ") || "no ports";
 }
 
 /** Up to 6 distinct connector colors used by the model, in port order. */

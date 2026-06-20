@@ -3,7 +3,7 @@ import "./ListsPanel.css";
 
 /** Read-only panel showing the auto-generated pack list and patch list. */
 export function ListsPanel({ lists, onClose }: { lists: DerivedLists; onClose: () => void }) {
-  const { devices, cables, patches } = lists;
+  const { devices, cables, adapters, patches } = lists;
 
   return (
     <aside className="lists-panel">
@@ -42,6 +42,37 @@ export function ListsPanel({ lists, onClose }: { lists: DerivedLists; onClose: (
                   <span className="packlist__count">{c.count}×</span>
                   <span className="packlist__swatch" style={{ background: c.color }} />
                   <span className="packlist__name">{c.label}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+
+        <section className="lists-section">
+          <h3>Cables &amp; adapters</h3>
+          {adapters.length === 0 ? (
+            <p className="lists-empty">Every run is like-to-like — no adapters needed.</p>
+          ) : (
+            <ul className="packlist">
+              {adapters.map((a) => (
+                <li className="packlist__row" key={a.key}>
+                  <span className="packlist__count">{a.count}×</span>
+                  <span className="packlist__swatch" style={{ background: a.color }} />
+                  <span className="packlist__name">{a.label}</span>
+                  {a.kind === "converter" && (
+                    <span
+                      style={{ marginLeft: "auto", fontSize: 11, fontWeight: 600, color: "#ef4444" }}
+                    >
+                      converter needed
+                    </span>
+                  )}
+                  {a.kind === "psu" && (
+                    <span
+                      style={{ marginLeft: "auto", fontSize: 11, fontWeight: 600, color: "#94a3b8" }}
+                    >
+                      supplied
+                    </span>
+                  )}
                 </li>
               ))}
             </ul>

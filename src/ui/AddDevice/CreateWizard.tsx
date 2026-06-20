@@ -1,20 +1,27 @@
 import { useMemo, useState } from "react";
 import {
-  CONNECTOR_LIST,
   DEVICE_TYPES,
   cableColor,
   categoryForType,
+  deviceContentHash,
   deviceTitle,
   inputPorts,
   outputPorts,
+  bidirectionalPorts,
 } from "../../schema";
 import type { ConnectorId, DeviceModel, PortDirection } from "../../schema";
 import { addToPersonalLibrary } from "../../library/personalLibrary";
+import { ConnectorPicker } from "./ConnectorPicker";
+import "./AddDevice.css";
 
 type Props = {
   onCancel: () => void;
   onSaved: (model: DeviceModel) => void;
   onPlace: (model: DeviceModel) => void;
+  /** When set, the wizard edits this device instead of creating a new one. */
+  initial?: DeviceModel;
+  /** Edit-mode save handler (receives the edited model). */
+  onSave?: (model: DeviceModel) => void;
 };
 
 type PortDraft = {
@@ -22,6 +29,8 @@ type PortDraft = {
   name: string;
   direction: PortDirection;
   connector: ConnectorId;
+  /** Combo jack: additional connectors this one port also accepts. */
+  accepts: ConnectorId[];
   /** Generate this many numbered copies of the port (e.g. SDI In 1…20). */
   qty: number;
 };
@@ -29,13 +38,14 @@ type PortDraft = {
 const STEPS = ["Identity", "Ports & I/O", "Review"] as const;
 
 function newPort(direction: PortDirection): PortDraft {
-  return { id: crypto.randomUUID(), name: "", direction, connector: "hdmi", qty: 1 };
+  return { id: crypto.randomUUID(), name: "", direction, connector: "hdmi", accepts: [], qty: 1 };
 }
 
 /** Static echo of DeviceNode for the live review preview (no React Flow handles). */
 function DeviceNodePreview({ model }: { model: DeviceModel }) {
   const inputs = inputPorts(model);
   const outputs = outputPorts(model);
+  const bidi = bidirectionalPorts(model);
   return (
     <div className="adv-pnode">
       <div className="adv-pnode__head">
@@ -59,7 +69,29 @@ function DeviceNodePreview({ model }: { model: DeviceModel }) {
             </li>
           ))}
         </ul>
-        {inputs.length === 0 && outputs.length === 0 && (
+        {bidi.length > 0 && (
+          <ul
+            className="adv-pcol"
+            style={{
+              flexBasis: "100%",
+              flexDirection: "row",
+              flexWrap: "wrap",
+              justifyContent: "center",
+              gap: "4px 10px",
+              borderTop: "1px dashed var(--line)",
+              paddingTop: 6,
+              marginTop: 2,
+            }}
+          >
+            {bidi.map((p) => (
+              <li className="adv-pport" key={p.id} style={{ gap: 5 }}>
+                <span className="adv-pdot" style={{ background: cableColor(p.connector) }} />
+                <span className="adv-plabel">{p.name}</span>
+              </li>
+            ))}
+          </ul>
+        )}
+        {inputs.length === 0 && outputs.length === 0 && bidi.length === 0 && (
           <span className="adv-pnode__empty">No ports yet</span>
         )}
       </div>
@@ -67,13 +99,26 @@ function DeviceNodePreview({ model }: { model: DeviceModel }) {
   );
 }
 
-export function CreateWizard({ onCancel, onSaved, onPlace }: Props) {
+export function CreateWizard({ onCancel, onSaved, onPlace, initial, onSave }: Props) {
   const [step, setStep] = useState<0 | 1 | 2>(0);
-  const [manufacturer, setManufacturer] = useState("");
-  const [model, setModel] = useState("");
-  const [type, setType] = useState<string>(DEVICE_TYPES[0]);
-  const [rackUnits, setRackUnits] = useState("");
-  const [ports, setPorts] = useState<PortDraft[]>(() => [newPort("output")]);
+  const [manufacturer, setManufacturer] = useState(initial?.manufacturer ?? "");
+  const [model, setModel] = useState(initial?.model ?? "");
+  const [type, setType] = useState<string>(initial?.type ?? DEVICE_TYPES[0]);
+  const [rackUnits, setRackUnits] = useState(
+    initial?.rackUnits != null ? String(initial.rackUnits) : "",
+  );
+  const [ports, setPorts] = useState<PortDraft[]>(() =>
+    initial
+      ? initial.ports.map((p) => ({
+          id: p.id,
+          name: p.name,
+          direction: p.direction,
+          connector: p.connector,
+          accepts: p.accepts ?? [],
+          qty: 1,
+        }))
+      : [newPort("output")],
+  );
 
   const updatePort = (id: string, patch: Partial<PortDraft>) =>
     setPorts((ps) => ps.map((p) => (p.id === id ? { ...p, ...patch } : p)));
@@ -95,6 +140,7 @@ export function CreateWizard({ onCancel, onSaved, onPlace }: Props) {
           name: n > 1 ? `${base} ${i + 1}` : base,
           direction: p.direction,
           connector: p.connector,
+          ...(p.accepts.length ? { accepts: p.accepts } : {}),
         }));
       }),
     }),
@@ -119,11 +165,33 @@ export function CreateWizard({ onCancel, onSaved, onPlace }: Props) {
     onPlace(m); // places + closes the overlay
   };
 
+  // Edit mode: rebuild preserving identity. A custom device edits in place (same
+  // id); editing a community/built-in forks a personal copy stamped with provenance.
+  const commitEdit = () => {
+    if (!initial) return;
+    const edited: DeviceModel =
+      initial.source === "custom"
+        ? { ...draftModel, id: initial.id, forkedFrom: initial.forkedFrom }
+        : {
+            ...draftModel,
+            id: crypto.randomUUID(),
+            forkedFrom: {
+              id: initial.id,
+              baseRev: initial.rev,
+              baseHash: initial.contentHash ?? deviceContentHash(initial),
+            },
+          };
+    onSave?.(edited);
+  };
+
   return (
     <div className="adv-wizard" role="dialog" aria-label="Create a new device">
       <div className="adv-wizard__head">
         <h2 className="adv-wizard__title">
-          New device <span className="adv-wizard__sub">· add to catalog</span>
+          {initial ? "Edit device" : "New device"}{" "}
+          <span className="adv-wizard__sub">
+            · {initial ? deviceTitle(initial) : "add to catalog"}
+          </span>
         </h2>
         <button type="button" className="adv-db__close" onClick={onCancel} aria-label="Close">
           ×
@@ -217,16 +285,22 @@ export function CreateWizard({ onCancel, onSaved, onPlace }: Props) {
                   <option value="output">Out</option>
                   <option value="bidirectional">Both</option>
                 </select>
-                <select
+                <ConnectorPicker
                   value={p.connector}
-                  onChange={(e) => updatePort(p.id, { connector: e.target.value })}
-                >
-                  {CONNECTOR_LIST.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.label}
-                    </option>
-                  ))}
-                </select>
+                  direction={p.direction}
+                  ariaLabel="Connector (port type)"
+                  onChange={(id) => updatePort(p.id, { connector: id || p.connector })}
+                />
+                <ConnectorPicker
+                  className="cxp-root--sec"
+                  value={p.accepts[0] ?? ""}
+                  direction={p.direction}
+                  exclude={p.connector}
+                  allowEmpty
+                  placeholder="+ combo"
+                  ariaLabel="Combo jack — also accepts this connector"
+                  onChange={(id) => updatePort(p.id, { accepts: id ? [id] : [] })}
+                />
                 <label className="adv-portrow__qty" title="Quantity — generates numbered copies">
                   ×
                   <input
@@ -264,11 +338,21 @@ export function CreateWizard({ onCancel, onSaved, onPlace }: Props) {
           <div className="adv-review">
             <DeviceNodePreview model={draftModel} />
             <div className="adv-review__copy">
-              <h3>Ready to save</h3>
+              <h3>{initial ? "Save your changes" : "Ready to save"}</h3>
               <p>
-                “{deviceTitle(draftModel)}” will be added to your personal library
-                {draftModel.rackUnits ? ` (${draftModel.rackUnits} RU)` : ""} and placed on the
-                canvas. You can reuse it from Quick add or the catalog anytime.
+                {initial ? (
+                  <>
+                    Changes to “{deviceTitle(draftModel)}” will update{" "}
+                    {initial.source === "custom" ? "this device" : "your personal copy of it"} and
+                    its placement on the canvas.
+                  </>
+                ) : (
+                  <>
+                    “{deviceTitle(draftModel)}” will be added to your personal library
+                    {draftModel.rackUnits ? ` (${draftModel.rackUnits} RU)` : ""} and placed on the
+                    canvas. You can reuse it from Quick add or the catalog anytime.
+                  </>
+                )}
               </p>
             </div>
           </div>
@@ -284,21 +368,45 @@ export function CreateWizard({ onCancel, onSaved, onPlace }: Props) {
           {step === 0 ? "Cancel" : "Back"}
         </button>
         <div className="adv-wizard__foot-right">
-          <button type="button" className="adv-btn-soft" onClick={saveToLibrary} disabled={!canSave}>
-            Save to catalog
-          </button>
-          {step < 2 ? (
-            <button
-              type="button"
-              className="adv-btn-primary"
-              onClick={() => setStep((s) => (s + 1) as 0 | 1 | 2)}
-            >
-              Continue
-            </button>
+          {initial ? (
+            <>
+              {step < 2 && (
+                <button
+                  type="button"
+                  className="adv-btn-soft"
+                  onClick={() => setStep((s) => (s + 1) as 0 | 1 | 2)}
+                >
+                  Continue
+                </button>
+              )}
+              <button
+                type="button"
+                className="adv-btn-primary"
+                onClick={commitEdit}
+                disabled={!canSave}
+              >
+                Save changes
+              </button>
+            </>
           ) : (
-            <button type="button" className="adv-btn-primary" onClick={finish} disabled={!canSave}>
-              Save &amp; add to canvas
-            </button>
+            <>
+              <button type="button" className="adv-btn-soft" onClick={saveToLibrary} disabled={!canSave}>
+                Save to catalog
+              </button>
+              {step < 2 ? (
+                <button
+                  type="button"
+                  className="adv-btn-primary"
+                  onClick={() => setStep((s) => (s + 1) as 0 | 1 | 2)}
+                >
+                  Continue
+                </button>
+              ) : (
+                <button type="button" className="adv-btn-primary" onClick={finish} disabled={!canSave}>
+                  Save &amp; add to canvas
+                </button>
+              )}
+            </>
           )}
         </div>
       </div>

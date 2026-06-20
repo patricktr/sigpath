@@ -1,5 +1,5 @@
 import { Handle, Position, type NodeProps } from "@xyflow/react";
-import { cableColor, inputPorts, outputPorts, deviceTitle } from "../schema";
+import { cableColor, inputPorts, outputPorts, bidirectionalPorts, deviceTitle } from "../schema";
 import type { DeviceNodeType } from "./types";
 import "./DeviceNode.css";
 
@@ -13,6 +13,7 @@ export function DeviceNode({ data }: NodeProps<DeviceNodeType>) {
   const { model, label } = data;
   const inputs = inputPorts(model);
   const outputs = outputPorts(model);
+  const bidi = bidirectionalPorts(model);
 
   return (
     <div className="device-node">
@@ -21,37 +22,66 @@ export function DeviceNode({ data }: NodeProps<DeviceNodeType>) {
         <span className="device-node__category">{model.type ?? model.category}</span>
       </header>
 
-      <div className="device-node__body">
-        <ul className="device-node__col device-node__col--in">
-          {inputs.map((port) => (
-            <li className="port port--in" key={port.id}>
-              <Handle
-                id={port.id}
-                type="target"
-                position={Position.Left}
-                className="port__handle"
-                style={{ background: cableColor(port.connector) }}
-              />
-              <span className="port__label">{port.name}</span>
-            </li>
-          ))}
-        </ul>
+      {(inputs.length > 0 || outputs.length > 0) && (
+        <div className="device-node__body">
+          <ul className="device-node__col device-node__col--in">
+            {inputs.map((port) => (
+              <li className="port port--in" key={port.id}>
+                <Handle
+                  id={port.id}
+                  type="target"
+                  position={Position.Left}
+                  className="port__handle"
+                  style={{ background: cableColor(port.connector) }}
+                />
+                <span className="port__label">{port.name}</span>
+              </li>
+            ))}
+          </ul>
 
-        <ul className="device-node__col device-node__col--out">
-          {outputs.map((port) => (
-            <li className="port port--out" key={port.id}>
+          <ul className="device-node__col device-node__col--out">
+            {outputs.map((port) => (
+              <li className="port port--out" key={port.id}>
+                <span className="port__label">{port.name}</span>
+                <Handle
+                  id={port.id}
+                  type="source"
+                  position={Position.Right}
+                  className="port__handle"
+                  style={{ background: cableColor(port.connector) }}
+                />
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {bidi.length > 0 && (
+        <div className="device-node__io">
+          {bidi.map((port) => (
+            <div className="port port--io" key={port.id}>
               <span className="port__label">{port.name}</span>
-              <Handle
-                id={port.id}
-                type="source"
-                position={Position.Right}
-                className="port__handle"
-                style={{ background: cableColor(port.connector) }}
-              />
-            </li>
+              <span className="port__io-anchor">
+                {/* One physical jack, both ways: overlapping target + source handles. */}
+                <Handle
+                  id={port.id}
+                  type="target"
+                  position={Position.Bottom}
+                  className="port__handle"
+                  style={{ background: cableColor(port.connector) }}
+                />
+                <Handle
+                  id={port.id}
+                  type="source"
+                  position={Position.Bottom}
+                  className="port__handle"
+                  style={{ background: cableColor(port.connector) }}
+                />
+              </span>
+            </div>
           ))}
-        </ul>
-      </div>
+        </div>
+      )}
     </div>
   );
 }

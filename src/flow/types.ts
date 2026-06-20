@@ -36,6 +36,9 @@ export type CableEdgeData = {
   cableTypeId: CableTypeId;
   number?: string;
   lengthMeters?: number;
+  /** Derived at render time (not persisted): when a cable's two ends differ in
+   *  connector color, the source→target colors to stroke it with a gradient. */
+  gradient?: { from: string; to: string };
 };
 
 export type CableEdgeType = Edge<CableEdgeData>;

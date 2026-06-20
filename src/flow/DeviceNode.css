@@ -97,3 +97,33 @@
 .device-node .port--out .port__handle.react-flow__handle {
   margin-right: -4px;
 }
+
+/* Bidirectional ports (RJ45 etc.): one jack carrying both ways. Rendered once on a
+   bottom bank instead of mirrored on both sides. Each is a label above two
+   overlapping handles (source + target) anchored on the bottom edge, so a run can
+   attach in either direction. */
+.device-node__io {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px 14px;
+  padding: 6px 10px 9px;
+  border-top: 1px dashed var(--node-border);
+}
+.port--io {
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  height: auto;
+}
+.port__io-anchor {
+  position: relative;
+  width: 8px;
+  height: 8px;
+}
+.device-node .port--io .port__handle.react-flow__handle {
+  position: absolute;
+  left: 0;
+  top: 0;
+  margin: 0;
+}

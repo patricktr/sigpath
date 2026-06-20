@@ -104,7 +104,7 @@ function diagramToEditor(d: Diagram): EditorDiagram {
     target: c.to.instanceId,
     sourceHandle: c.from.portId,
     targetHandle: c.to.portId,
-    type: "smoothstep",
+    type: "cable",
     style: { stroke: cableColor(c.cableTypeId), strokeWidth: 2 },
     data: { cableTypeId: c.cableTypeId, number: c.number, lengthMeters: c.lengthMeters },
   }));

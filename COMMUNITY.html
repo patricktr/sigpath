@@ -1,0 +1,483 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>sigpath — Community Library Architecture</title>
+    <style>
+      :root {
+        --bg: #f6f8fb;
+        --panel: #ffffff;
+        --ink: #0f172a;
+        --muted: #64748b;
+        --line: #e2e8f0;
+        --accent: #2563eb;
+        --accent-soft: #dbeafe;
+        --done: #16a34a;
+        --next: #d97706;
+        --planned: #94a3b8;
+        --code-bg: #0f172a;
+        --code-ink: #e2e8f0;
+        --shadow: 0 1px 2px rgba(15, 23, 42, 0.06), 0 8px 24px rgba(15, 23, 42, 0.06);
+        /* signal palette — mirrors the app */
+        --video: #3b82f6;
+        --audio: #22c55e;
+        --av: #8b5cf6;
+        --network: #06b6d4;
+        --control: #f59e0b;
+        --power: #ef4444;
+        --radius: 12px;
+        --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica,
+          Arial, sans-serif;
+        --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas,
+          "Liberation Mono", monospace;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #0b1120;
+          --panel: #131c2e;
+          --ink: #e2e8f0;
+          --muted: #94a3b8;
+          --line: #25304a;
+          --accent: #60a5fa;
+          --accent-soft: #1e293b;
+          --code-bg: #0a1020;
+          --code-ink: #d8e2f1;
+          --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 10px 30px rgba(0, 0, 0, 0.35);
+        }
+      }
+      * { box-sizing: border-box; }
+      html { scroll-behavior: smooth; }
+      body {
+        margin: 0;
+        font-family: var(--font);
+        color: var(--ink);
+        background: var(--bg);
+        line-height: 1.55;
+        -webkit-font-smoothing: antialiased;
+      }
+      .wrap { max-width: 980px; margin: 0 auto; padding: 0 20px 80px; }
+
+      header.hero {
+        background:
+          radial-gradient(1200px 240px at 15% -40%, var(--accent-soft), transparent),
+          var(--panel);
+        border-bottom: 1px solid var(--line);
+        padding: 40px 0 28px;
+        margin-bottom: 28px;
+      }
+      .hero-inner { max-width: 980px; margin: 0 auto; padding: 0 20px; }
+      .wordmark { display: flex; align-items: center; gap: 12px; }
+      .wordmark .logo {
+        display: inline-flex; gap: 4px; align-items: center;
+        padding: 6px 8px; border-radius: 8px; background: var(--ink);
+      }
+      .wordmark .logo span { width: 8px; height: 18px; border-radius: 2px; display: block; }
+      .wordmark h1 { font-size: 26px; margin: 0; letter-spacing: -0.02em; }
+      .hero p.tagline { color: var(--muted); margin: 6px 0 0; font-size: 15px; max-width: 70ch; }
+      .meta { margin-top: 14px; font-size: 13px; color: var(--muted); }
+      .meta a { color: var(--accent); text-decoration: none; }
+      .meta a:hover { text-decoration: underline; }
+      .crumb { font-size: 12px; color: var(--muted); margin-bottom: 8px; }
+      .crumb a { color: var(--accent); text-decoration: none; }
+
+      h2.section { font-size: 19px; margin: 40px 0 14px; letter-spacing: -0.01em; scroll-margin-top: 16px; }
+      h2.section .num {
+        display: inline-grid; place-items: center; width: 24px; height: 24px;
+        font-size: 13px; border-radius: 7px; background: var(--accent-soft);
+        color: var(--accent); margin-right: 9px; vertical-align: 2px;
+      }
+      h3.sub { font-size: 14.5px; margin: 20px 0 8px; letter-spacing: -0.01em; }
+      p.lead { color: var(--muted); margin: 0 0 18px; max-width: 78ch; }
+      p { max-width: 78ch; }
+
+      /* highlight / principles box */
+      .principles { background: var(--accent-soft); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px 20px; }
+      .principles ul { margin: 8px 0 0; padding-left: 18px; }
+      .principles li { margin: 5px 0; }
+      .principles strong { color: var(--ink); }
+
+      /* tags / pills */
+      .tag { font-size: 11px; padding: 1px 7px; border-radius: 6px; background: var(--accent-soft); color: var(--accent); margin-left: 6px; white-space: nowrap; }
+      .pill {
+        display: inline-block; font-size: 11px; font-weight: 600; letter-spacing: 0.03em;
+        padding: 2px 9px; border-radius: 999px; border: 1px solid var(--line); color: var(--muted);
+      }
+      .pill.read  { color: var(--done); border-color: color-mix(in srgb, var(--done) 40%, var(--line)); }
+      .pill.write { color: var(--next); border-color: color-mix(in srgb, var(--next) 40%, var(--line)); }
+
+      /* TWO-PLANE DIAGRAM */
+      .diagram { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 6px 0 10px; }
+      @media (max-width: 720px) { .diagram { grid-template-columns: 1fr; } }
+      .lane { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); padding: 14px 14px 16px; border-top-width: 3px; }
+      .lane--read  { border-top-color: var(--done); }
+      .lane--write { border-top-color: var(--next); }
+      .lane-head { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+      .node { background: var(--bg); border: 1px solid var(--line); border-radius: 9px; padding: 9px 11px; font-size: 13.5px; font-weight: 600; }
+      .node small { display: block; font-weight: 400; color: var(--muted); font-size: 11.5px; margin-top: 2px; }
+      .node--app { border-style: dashed; border-color: color-mix(in srgb, var(--accent) 45%, var(--line)); }
+      .arrow { text-align: center; color: var(--muted); font-size: 12px; padding: 5px 0; }
+      .diagram-note { font-size: 13px; color: var(--muted); background: var(--accent-soft); border: 1px solid var(--line); border-radius: 9px; padding: 10px 13px; margin: 4px 0 0; }
+      .diagram-note strong { color: var(--ink); }
+
+      /* numbered flow steps */
+      ol.flow { list-style: none; counter-reset: step; padding: 0; margin: 12px 0; }
+      ol.flow > li { position: relative; padding: 4px 0 14px 40px; border-left: 2px solid var(--line); margin-left: 13px; }
+      ol.flow > li:last-child { border-left-color: transparent; padding-bottom: 0; }
+      ol.flow > li::before {
+        counter-increment: step; content: counter(step);
+        position: absolute; left: -14px; top: 0; width: 26px; height: 26px;
+        display: grid; place-items: center; border-radius: 50%;
+        background: var(--accent); color: #fff; font-size: 13px; font-weight: 700;
+      }
+      ol.flow .st { font-weight: 600; }
+      ol.flow .sd { color: var(--muted); font-size: 13.5px; }
+
+      /* code */
+      pre {
+        background: var(--code-bg); color: var(--code-ink); border-radius: 10px;
+        padding: 13px 15px; overflow-x: auto; font-family: var(--mono);
+        font-size: 12.5px; line-height: 1.5; border: 1px solid var(--line); margin: 12px 0;
+      }
+      pre .c { color: #7e8aa3; } /* comment */
+      pre .k { color: #7dd3fc; } /* key */
+      pre .s { color: #86efac; } /* string */
+      code { font-family: var(--mono); font-size: 0.9em; background: color-mix(in srgb, var(--accent-soft) 60%, var(--panel)); padding: 1px 5px; border-radius: 5px; }
+      pre code { background: none; padding: 0; font-size: inherit; }
+
+      /* table */
+      .table-scroll { overflow-x: auto; border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); margin: 8px 0; }
+      table { border-collapse: collapse; width: 100%; font-size: 13.5px; background: var(--panel); }
+      th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+      th { background: color-mix(in srgb, var(--accent-soft) 50%, var(--panel)); font-size: 12px; text-transform: uppercase; letter-spacing: 0.03em; color: var(--muted); }
+      tr:last-child td { border-bottom: none; }
+      td strong { color: var(--ink); }
+      td code { white-space: nowrap; }
+
+      /* cards (open problems) */
+      .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 12px; margin: 8px 0; }
+      .card { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px 16px; box-shadow: var(--shadow); }
+      .card h4 { margin: 0 0 5px; font-size: 14.5px; display: flex; align-items: center; gap: 8px; }
+      .card p { margin: 0; font-size: 13px; color: var(--muted); }
+      .card .rec { display: inline-block; margin-top: 9px; font-size: 11.5px; font-weight: 600; color: var(--done); }
+      .card .risk { color: var(--power); }
+      .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+
+      /* callout */
+      .callout { border-left: 3px solid var(--accent); background: color-mix(in srgb, var(--accent-soft) 55%, var(--panel)); padding: 12px 16px; border-radius: 0 10px 10px 0; margin: 14px 0; font-size: 13.5px; }
+      .callout strong { color: var(--ink); }
+
+      footer { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--line); font-size: 12.5px; color: var(--muted); }
+      footer a { color: var(--accent); }
+    </style>
+  </head>
+  <body>
+    <header class="hero">
+      <div class="hero-inner">
+        <div class="wordmark">
+          <span class="logo" aria-hidden="true">
+            <span style="background: var(--network)"></span>
+            <span style="background: var(--control)"></span>
+            <span style="background: var(--audio)"></span>
+          </span>
+          <h1>sigpath</h1>
+        </div>
+        <p class="tagline">
+          <strong>Community library — architecture.</strong> How the shared equipment
+          database is distributed, contributed to, corrected, and moderated — while keeping
+          hosting near $0 and contributing account-free. The design behind roadmap Phase&nbsp;4.
+        </p>
+        <div class="meta">
+          Last updated June 19, 2026 ·
+          <a href="ROADMAP.html">← Product roadmap</a> ·
+          <a href="https://github.com/patricktr/sigpath">github.com/patricktr/sigpath</a>
+        </div>
+      </div>
+    </header>
+
+    <div class="wrap">
+      <!-- TL;DR -->
+      <h2 class="section">The one idea</h2>
+      <div class="principles">
+        <ul>
+          <li><strong>Two planes that never touch.</strong> Reading the catalog is high-volume, anonymous, cacheable. Writing to it is low-volume, identity-bearing, needs review. Fuse them and you're forced into an always-on server with auth in your read path — the exact cost local-first avoids. So we split them.</li>
+          <li><strong>Git is the database.</strong> The canonical catalog is a git data repo. It already gives versioning, diffs, blame, an audit log, and one-command rollback. No Neon/Postgres mirror — that would be a second copy of the source of truth with no read benefit (clients read static files, never a DB).</li>
+          <li><strong>One small server, and only for friction.</strong> A stateless Cloudflare Worker exists for a single reason: so contributors don't need a GitHub account and we never ship a write token. It turns an in-app "Submit" into a pull request.</li>
+          <li><strong>GitHub is the moderation tool.</strong> Every contribution is a PR. Review is a diff; approval is the merge button; the admin UI, queue, and audit trail are already built and free.</li>
+        </ul>
+      </div>
+
+      <!-- 1. TWO-PLANE MODEL -->
+      <h2 class="section"><span class="num">1</span>The two-plane model</h2>
+      <p class="lead">
+        The <span class="pill read">Read plane</span> ships the catalog to every client as static
+        files. The <span class="pill write">Write plane</span> turns a user's device into a
+        reviewed pull request. They meet in exactly one place: a merge triggers the publish CI,
+        which regenerates the static files the read plane serves.
+      </p>
+
+      <div class="diagram">
+        <div class="lane lane--read">
+          <div class="lane-head"><span class="dot" style="background: var(--done)"></span>Read plane · free &amp; static</div>
+          <div class="node">Git data repo <small>devices/*.json — canonical source of truth</small></div>
+          <div class="arrow">↓ &nbsp;publish CI compiles &amp; uploads</div>
+          <div class="node">CDN — GitHub Releases → R2 <small>snapshot + deltas + manifest.json</small></div>
+          <div class="arrow">↓ &nbsp;background sync · ETag / 304</div>
+          <div class="node node--app">App — local SQLite mirror <small>read-mostly; merged with your library</small></div>
+        </div>
+        <div class="lane lane--write">
+          <div class="lane-head"><span class="dot" style="background: var(--next)"></span>Write plane · low-volume</div>
+          <div class="node node--app">App — “Submit” / “Correct” / “Report” <small>pseudonymous install ID · no account</small></div>
+          <div class="arrow">↓ &nbsp;HTTPS POST (queued, retries offline)</div>
+          <div class="node">Cloudflare Worker <small>validate · rate-limit · blocklist</small></div>
+          <div class="arrow">↓ &nbsp;opens PR via GitHub App token</div>
+          <div class="node">Pull request on data repo <small>review · merge = publish</small></div>
+        </div>
+      </div>
+      <p class="diagram-note">
+        <strong>The loop closes here:</strong> merging a PR runs the publish CI → a new
+        snapshot/delta lands on the CDN → every client picks it up on its next background sync.
+        A bad merge is undone with <code>git revert</code> + republish.
+      </p>
+
+      <!-- 2. DATA REPO -->
+      <h2 class="section"><span class="num">2</span>The catalog data repo</h2>
+      <p class="lead">
+        A <em>separate</em> repo (<code>patricktr/sigpath-catalog</code>) so catalog churn stays
+        out of the app's history and PRs are cleanly scoped. One device per file — so a PR diff
+        is human-readable and dedup is just a path check.
+      </p>
+      <pre><code>sigpath-catalog/
+  devices/
+    sony/bravia-x90l.json        <span class="c"># one DeviceModel per file; path = stable id</span>
+    apple/tv-4k.json
+    ...
+  connectors/connectors.json     <span class="c"># the controlled vocabulary, versioned with the catalog</span>
+  schema/device.schema.json      <span class="c"># JSON Schema the CI validates every submission against</span>
+  LICENSE                        <span class="c"># CC0-1.0 — makes the bundled snapshot redistributable</span></code></pre>
+      <p>
+        The device shape is already designed for this: <code>DeviceModel</code> in
+        <code>src/schema/device.ts</code> is described in-code as “the unit that gets
+        shared/community-contributed,” and connectors are kept as open string ids precisely so
+        they “serialize cleanly into the future community database.”
+      </p>
+
+      <!-- 3. DISTRIBUTION -->
+      <h2 class="section"><span class="num">3</span>Distribution &amp; efficient updates</h2>
+      <p class="lead">
+        The whole catalog is tiny — a <code>DeviceModel</code> is ~300–500 bytes of JSON, so
+        even 5,000 devices is well under 1&nbsp;MB gzipped. That shapes the update strategy:
+        don't over-build diffing before it pays off, but leave the seam for it.
+      </p>
+      <h3 class="sub">v1 — whole snapshot behind an ETag</h3>
+      <p>
+        Fetch the gzipped snapshot with a conditional request. A no-op update costs one cheap
+        <code>304 Not Modified</code> — the CDN's ETag <em>is</em> your free “diff” at this size.
+      </p>
+      <h3 class="sub">Later — static row-level deltas</h3>
+      <p>
+        Give every row a <code>contentHash</code> and the catalog a monotonic <code>rev</code>.
+        A small manifest lets a client jump from its current rev to head by applying upserts and
+        deletes to its local SQLite. <strong>Deltas are static files the publish CI emits — no
+        server computes anything.</strong> Cold installs always have a recent full snapshot.
+      </p>
+      <pre><code><span class="c">// manifest.json — the only file the client polls</span>
+{
+  <span class="k">"rev"</span>: 142,
+  <span class="k">"minAppVersion"</span>: <span class="s">"0.4.0"</span>,        <span class="c">// gate catalogs that need newer connectors</span>
+  <span class="k">"full"</span>:   { <span class="k">"url"</span>: <span class="s">"catalog-142.sqlite.gz"</span>, <span class="k">"sha256"</span>: <span class="s">"…"</span>, <span class="k">"bytes"</span>: 812345 },
+  <span class="k">"deltas"</span>: [ { <span class="k">"from"</span>: 140, <span class="k">"to"</span>: 142, <span class="k">"url"</span>: <span class="s">"delta-140-142.json"</span>, <span class="k">"bytes"</span>: 2310 } ]
+}
+
+<span class="c">// delta-140-142.json</span>
+{ <span class="k">"from"</span>: 140, <span class="k">"to"</span>: 142,
+  <span class="k">"upserts"</span>: [ <span class="c">/* full DeviceModel rows */</span> ],
+  <span class="k">"deletes"</span>: [ <span class="s">"sony/old-model-id"</span> ] }</code></pre>
+      <div class="callout">
+        <strong>New dependencies.</strong> The app has no database or HTTP client today
+        (<code>Cargo.toml</code> carries only dialog + opener). Phase&nbsp;4 adds
+        <code>tauri-plugin-sql</code> (or bundled <code>rusqlite</code>) for the local mirror and
+        <code>tauri-plugin-http</code> for sync. The community catalog becomes a read-mostly
+        SQLite layer, merged in <code>loadCatalog()</code> alongside the built-ins and the
+        user's personal library.
+      </div>
+      <h3 class="sub">Where it's hosted</h3>
+      <p>
+        <strong>GitHub Releases first</strong> (the data repo's CI attaches snapshot + deltas as
+        release assets — zero new infrastructure, genuinely free egress), with
+        <strong>Cloudflare R2</strong> as a drop-in upgrade when a custom domain or finer cache
+        control is wanted. The client hits a constant URL either way; the host is an
+        implementation detail it never sees.
+      </p>
+
+      <!-- 4. CONTRIBUTION -->
+      <h2 class="section"><span class="num">4</span>Contributing a device</h2>
+      <p class="lead">
+        The “Submit to community” button lives at the end of the existing create wizard
+        (<code>CreateWizard.tsx</code>) and on any custom device in the library. The contributor
+        needs no GitHub account; the app holds no secrets.
+      </p>
+      <ol class="flow">
+        <li><span class="st">App builds a submission.</span> <span class="sd">The serialized <code>DeviceModel</code> plus a pseudonymous install ID, app version, and a CC0 license affirmation.</span></li>
+        <li><span class="st">POST to the Worker.</span> <span class="sd">Queued locally and retried if offline — submitting never blocks the user or needs connectivity right then.</span></li>
+        <li><span class="st">Worker gatekeeps.</span> <span class="sd">JSON-Schema validate → size cap → rate-limit per install ID + IP → blocklist check. Garbage and abuse die here, before touching GitHub.</span></li>
+        <li><span class="st">Worker opens a PR.</span> <span class="sd">Using a server-held GitHub App token, it writes <code>devices/&lt;slug&gt;.json</code> on a new branch and labels it <code>new-device</code>.</span></li>
+        <li><span class="st">CI validates the PR.</span> <span class="sd">A GitHub Action re-checks schema, connector vocabulary, size, and the dedup key, then comments a rendered preview.</span></li>
+        <li><span class="st">Human merges.</span> <span class="sd">Merge fires the publish CI → new snapshot/delta → every client syncs it. Done.</span></li>
+      </ol>
+      <pre><code><span class="c">// app → Worker</span>
+{
+  <span class="k">"kind"</span>: <span class="s">"new"</span>,
+  <span class="k">"installId"</span>: <span class="s">"a1b2…"</span>,            <span class="c">// random, first-run; never a real identity</span>
+  <span class="k">"appVersion"</span>: <span class="s">"0.4.0"</span>,
+  <span class="k">"license"</span>: <span class="s">"CC0-1.0"</span>,           <span class="c">// contributor affirms original / permissive</span>
+  <span class="k">"device"</span>: { <span class="c">/* DeviceModel */</span> }
+}</code></pre>
+
+      <!-- 5. CORRECTION -->
+      <h2 class="section"><span class="num">5</span>Correcting &amp; reporting</h2>
+      <p class="lead">
+        This falls out of an existing design choice for free: placed devices embed a
+        <em>snapshot</em> of their model (<code>DeviceInstance.model</code>), so a community
+        correction can never break anyone's saved diagram. The <code>source</code> field
+        (<code>"community" | "custom" | "builtin"</code>) is the seam.
+      </p>
+      <ol class="flow">
+        <li><span class="st">Edit forks the device.</span> <span class="sd">Editing a <code>source:"community"</code> device copies it into the personal library as <code>source:"custom"</code>, stamped with <code>forkedFrom: { id, baseRev, baseHash }</code>. The user's diagrams now use their fork.</span></li>
+        <li><span class="st">“Submit correction” diffs against the base.</span> <span class="sd">Because we recorded what it was forked from, the app sends a <em>field-level diff</em> (“HDMI 2” → “HDMI 2 (eARC)”, +Optical out), not a blind overwrite. The PR shows reviewers exactly what changed.</span></li>
+        <li><span class="st">Same pipeline as a new device.</span> <span class="sd">A correction is just a submission carrying a <code>forkedFrom</code> pointer; the Worker labels it <code>correction</code>.</span></li>
+      </ol>
+      <p>
+        And a lighter escape hatch: <strong>“Report error”</strong> (<code>kind:"report"</code>
+        → a GitHub issue) for the common case where a user spots that something's wrong but won't
+        sit down to fix it. It feeds the same queue without requiring an edit.
+      </p>
+
+      <!-- 6. MODERATION -->
+      <h2 class="section"><span class="num">6</span>Moderation &amp; trust tiers</h2>
+      <p class="lead">
+        Because every contribution is a PR, moderation is review-and-merge — but volume is
+        managed with tiers so trivial fixes don't bottleneck on a human and risky changes always do.
+      </p>
+      <div class="table-scroll">
+        <table>
+          <thead><tr><th>Submission</th><th>From a new / anonymous ID</th><th>From a trusted contributor</th></tr></thead>
+          <tbody>
+            <tr><td><strong>Report</strong> (issue)</td><td colspan="2">Auto-filed to the queue; no merge risk.</td></tr>
+            <tr><td><strong>Correction</strong> (field diff)</td><td>Held for review.</td><td>Eligible for auto-merge once CI is green.</td></tr>
+            <tr><td><strong>New device</strong></td><td>Held — full review.</td><td>Held — full review (new identity still gets a look).</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>
+        “Trusted” is earned, not logged-in: an install ID with N merged, un-reverted
+        contributions. Everything stays revertible — the catalog's whole history is in git.
+      </p>
+
+      <!-- 7. IDENTITY -->
+      <h2 class="section"><span class="num">7</span>Identity &amp; abuse — without accounts</h2>
+      <p class="lead">
+        You asked whether this needs a Neon DB + login to track bad actors. It doesn't — not to
+        start, and not to mirror the catalog. Identity stays as light as the job allows.
+      </p>
+      <div class="table-scroll">
+        <table>
+          <thead><tr><th>Level</th><th>What it is</th><th>When</th></tr></thead>
+          <tbody>
+            <tr><td><strong>Pseudonymous install ID</strong></td><td>Random id minted on first run (optionally tied to a hashed email if the user wants credit). Worker rate-limits per ID + IP and keeps a blocklist.</td><td><strong>v1 — recommended.</strong> No login UI at all.</td></tr>
+            <tr><td><strong>Optional GitHub sign-in</strong></td><td>Opt-in OAuth, only for contributors who want their handle credited or to earn trusted auto-merge.</td><td>Additive, later.</td></tr>
+            <tr><td><strong>Full accounts</strong></td><td>Managed auth + reputation store.</td><td>Only if abuse volume ever demands it.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>
+        The <em>only</em> state living outside git is a tiny Cloudflare KV/D1 table of
+        <strong>moderation state</strong> — install IDs, rate counters, a blocklist, submission
+        status. That is a moderation concern, never a copy of the catalog. Text fields are
+        sanitized (the app already depends on <code>dompurify</code>) and payloads are size-capped
+        at the Worker.
+      </p>
+
+      <!-- 8. OPEN PROBLEMS -->
+      <h2 class="section"><span class="num">8</span>The problems worth naming now</h2>
+      <p class="lead">These aren't infrastructure, but they decide whether the community library is any good. The first and the last are the load-bearing ones.</p>
+      <div class="grid">
+        <div class="card">
+          <h4><span class="dot" style="background: var(--power)"></span>Data license</h4>
+          <p>A redistributable community catalog needs an explicit license so contributions can legally ship inside the bundled snapshot, and so we steer clear of scraped-manufacturer-data IP problems. The whole “win on community, not catalog scale” moat rests on this being clean.</p>
+          <span class="rec">Recommend: CC0-1.0, affirmed at submit time</span>
+        </div>
+        <div class="card">
+          <h4><span class="dot" style="background: var(--control)"></span>Canonical identity &amp; dedup</h4>
+          <p>Two people submit “Sony BRAVIA X90L.” Without a normalized key and a merge-don't-duplicate rule, the catalog fills with near-duplicates and rots.</p>
+          <span class="rec">Recommend: slug key <code>mfr/model</code> = the file path</span>
+        </div>
+        <div class="card">
+          <h4><span class="dot" style="background: var(--av)"></span>Connector-vocabulary coupling</h4>
+          <p>Connectors are a controlled vocabulary. A device referencing a connector an older client doesn't know must degrade gracefully — which it already does in <code>cableColor()</code> / <code>checkPortCompatibility()</code>. Catalogs that <em>need</em> a new connector are gated by <code>minAppVersion</code>.</p>
+          <span class="rec">Mostly handled — keep the fallback paths honest</span>
+        </div>
+        <div class="card">
+          <h4><span class="dot" style="background: var(--power)"></span>Seeding the cold start</h4>
+          <p>The roadmap already says the <em>real</em> hard problem is seeding the catalog, not hosting. An empty contribution system is worthless. A bulk CSV/JSON import path (and a first pass of common gear) is a required workstream.</p>
+          <span class="rec risk">Highest-risk item — plan it explicitly</span>
+        </div>
+        <div class="card">
+          <h4><span class="dot" style="background: var(--network)"></span>Offline &amp; failure behavior</h4>
+          <p>Sync is background and optional; the app works forever on the bundled snapshot if the network or CDN is gone. Submissions queue locally and retry. Local-first all the way down.</p>
+          <span class="rec">Design invariant, not a feature</span>
+        </div>
+        <div class="card">
+          <h4><span class="dot" style="background: var(--audio)"></span>Versioned &amp; reversible</h4>
+          <p>Because the catalog is git, a poisoned or wrong merge is <code>git revert</code> + republish. The snapshot's <code>rev</code> moves forward; clients converge on the next sync.</p>
+          <span class="rec">A safety property we get for free</span>
+        </div>
+      </div>
+
+      <!-- 9. SCHEMA SEAM -->
+      <h2 class="section"><span class="num">9</span>The schema seam (Phase&nbsp;1 groundwork)</h2>
+      <p class="lead">
+        The roadmap promises the schema is “designed for this in Phase&nbsp;1.” These are the
+        small, additive fields that leave the seam open — documented here, implemented when
+        Phase&nbsp;4 lands. Nothing here breaks existing <code>.sigpath</code> files.
+      </p>
+      <pre><code><span class="c">// src/schema/device.ts — additive, all optional</span>
+type DeviceModel = {
+  <span class="c">// …existing fields (id, manufacturer, model, category, ports, source, …)</span>
+  rev?: number;             <span class="c">// catalog revision this row came from</span>
+  contentHash?: string;     <span class="c">// row hash — powers deltas &amp; dedup</span>
+  forkedFrom?: {            <span class="c">// set when a community device is forked to correct it</span>
+    id: string;
+    baseRev: number;
+    baseHash: string;
+  };
+};</code></pre>
+      <p>
+        <code>source</code> already exists and is the merge seam;
+        <code>loadCatalog()</code> grows a community-SQLite layer beside the built-in models and
+        the personal library it reads today.
+      </p>
+
+      <!-- 10. BUILD ORDER -->
+      <h2 class="section"><span class="num">10</span>Suggested build order</h2>
+      <div class="table-scroll">
+        <table>
+          <thead><tr><th>#</th><th>Step</th><th>Why this slot</th></tr></thead>
+          <tbody>
+            <tr><td>1</td><td>Add the schema seam fields + local SQLite mirror; merge it into <code>loadCatalog()</code></td><td>Read path first — useful even with a hand-seeded catalog; no server needed.</td></tr>
+            <tr><td>2</td><td>Stand up the data repo: layout, JSON Schema, CC0, publish CI → snapshot + manifest on Releases</td><td>Makes the read plane real and gives contributors a target to PR against.</td></tr>
+            <tr><td>3</td><td>Bulk seed import (CSV/JSON) + a first pass of common gear</td><td>The cold-start risk. The catalog has to be worth syncing on day one.</td></tr>
+            <tr><td>4</td><td>In-app sync client (background, ETag, apply to SQLite)</td><td>Now there's something to sync.</td></tr>
+            <tr><td>5</td><td>The Cloudflare Worker + “Submit / Correct / Report” UI</td><td>Opens the write plane once the read plane is proven.</td></tr>
+            <tr><td>6</td><td>Trust tiers, auto-merge, blocklist; deltas when snapshot size warrants</td><td>Scale-driven polish — add when volume asks for it, not before.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <footer>
+        <div><strong>sigpath</strong> · community library architecture · companion to <a href="ROADMAP.html">ROADMAP.html</a></div>
+        <div style="margin-top:6px;"><a href="https://github.com/patricktr/sigpath">github.com/patricktr/sigpath</a></div>
+      </footer>
+    </div>
+  </body>
+</html>

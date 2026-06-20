@@ -1,0 +1,4532 @@
+[
+  {
+    "id": "aja-video-systems/ki-pro-ultra-plus",
+    "manufacturer": "AJA Video Systems",
+    "model": "Ki Pro Ultra Plus",
+    "category": "recorder",
+    "type": "Recorder",
+    "ports": [
+      {
+        "id": "sdi-in-1",
+        "name": "SDI In 1",
+        "direction": "input",
+        "connector": "bnc",
+        "note": "3G-SDI"
+      },
+      {
+        "id": "sdi-in-2",
+        "name": "SDI In 2",
+        "direction": "input",
+        "connector": "bnc",
+        "note": "3G-SDI"
+      },
+      {
+        "id": "sdi-in-3",
+        "name": "SDI In 3",
+        "direction": "input",
+        "connector": "bnc",
+        "note": "3G-SDI"
+      },
+      {
+        "id": "sdi-in-4",
+        "name": "SDI In 4",
+        "direction": "input",
+        "connector": "bnc",
+        "note": "3G-SDI"
+      },
+      {
+        "id": "sdi-out-1",
+        "name": "SDI Out 1",
+        "direction": "output",
+        "connector": "bnc",
+        "note": "3G-SDI"
+      },
+      {
+        "id": "sdi-out-2",
+        "name": "SDI Out 2",
+        "direction": "output",
+        "connector": "bnc",
+        "note": "3G-SDI"
+      },
+      {
+        "id": "sdi-out-3",
+        "name": "SDI Out 3",
+        "direction": "output",
+        "connector": "bnc",
+        "note": "3G-SDI"
+      },
+      {
+        "id": "sdi-out-4",
+        "name": "SDI Out 4",
+        "direction": "output",
+        "connector": "bnc",
+        "note": "3G-SDI"
+      },
+      {
+        "id": "fiber-in-1",
+        "name": "Fiber In 1",
+        "direction": "input",
+        "connector": "fiber-lc",
+        "note": "Optional SFP module; replaces corresponding SDI BNC input when installed"
+      },
+      {
+        "id": "fiber-in-2",
+        "name": "Fiber In 2",
+        "direction": "input",
+        "connector": "fiber-lc",
+        "note": "Optional SFP module"
+      },
+      {
+        "id": "fiber-in-3",
+        "name": "Fiber In 3",
+        "direction": "input",
+        "connector": "fiber-lc",
+        "note": "Optional SFP module"
+      },
+      {
+        "id": "fiber-in-4",
+        "name": "Fiber In 4",
+        "direction": "input",
+        "connector": "fiber-lc",
+        "note": "Optional SFP module"
+      },
+      {
+        "id": "fiber-out-1",
+        "name": "Fiber Out 1",
+        "direction": "output",
+        "connector": "fiber-lc",
+        "note": "Optional SFP module"
+      },
+      {
+        "id": "fiber-out-2",
+        "name": "Fiber Out 2",
+        "direction": "output",
+        "connector": "fiber-lc",
+        "note": "Optional SFP module"
+      },
+      {
+        "id": "fiber-out-3",
+        "name": "Fiber Out 3",
+        "direction": "output",
+        "connector": "fiber-lc",
+        "note": "Optional SFP module"
+      },
+      {
+        "id": "fiber-out-4",
+        "name": "Fiber Out 4",
+        "direction": "output",
+        "connector": "fiber-lc",
+        "note": "Optional SFP module"
+      },
+      {
+        "id": "hdmi-in",
+        "name": "HDMI In",
+        "direction": "input",
+        "connector": "hdmi",
+        "note": "HDMI 2.0 Type A; 8-ch embedded audio"
+      },
+      {
+        "id": "hdmi-out",
+        "name": "HDMI Out",
+        "direction": "output",
+        "connector": "hdmi",
+        "note": "HDMI 2.0 Type A; 8-ch embedded audio"
+      },
+      {
+        "id": "aes-ebu-audio",
+        "name": "AES/EBU Audio",
+        "direction": "bidirectional",
+        "connector": "aes3",
+        "note": "8-channel AES/EBU via DB-25 TASCAM pinout (physical connector is DB-25, not AES3 XLR); carries both input and output on a single connector per AJA spec '1/2x DB-25'"
+      },
+      {
+        "id": "analog-audio-in",
+        "name": "Analog Audio In",
+        "direction": "input",
+        "connector": "aes3",
+        "note": "8-channel balanced analog via DB-25 TASCAM pinout; physical connector is DB-25 — no DB-25 type in schema, aes3 used as closest available; 24-bit A/D"
+      },
+      {
+        "id": "analog-audio-out",
+        "name": "Analog Audio Out",
+        "direction": "output",
+        "connector": "aes3",
+        "note": "8-channel balanced analog via DB-25 TASCAM pinout; physical connector is DB-25; 24-bit D/A"
+      },
+      {
+        "id": "monitor-out-l",
+        "name": "Monitor Out L",
+        "direction": "output",
+        "connector": "rca",
+        "note": "Unbalanced stereo monitor output"
+      },
+      {
+        "id": "monitor-out-r",
+        "name": "Monitor Out R",
+        "direction": "output",
+        "connector": "rca",
+        "note": "Unbalanced stereo monitor output"
+      },
+      {
+        "id": "headphone",
+        "name": "Headphone",
+        "direction": "output",
+        "connector": "trs-3.5",
+        "note": "3.5mm stereo headphone jack"
+      },
+      {
+        "id": "ltc-in",
+        "name": "LTC In",
+        "direction": "input",
+        "connector": "bnc",
+        "note": "Linear timecode input"
+      },
+      {
+        "id": "ltc-out",
+        "name": "LTC Out",
+        "direction": "output",
+        "connector": "bnc",
+        "note": "Linear timecode output"
+      },
+      {
+        "id": "ref-in",
+        "name": "Ref In",
+        "direction": "input",
+        "connector": "bnc",
+        "note": "External reference (blackburst/tri-level sync), looping — 2 BNC connectors"
+      },
+      {
+        "id": "rs-422",
+        "name": "RS-422",
+        "direction": "bidirectional",
+        "connector": "rs422",
+        "note": "DE-9 female; Sony 9-pin machine control protocol"
+      },
+      {
+        "id": "lan",
+        "name": "LAN",
+        "direction": "bidirectional",
+        "connector": "rj45",
+        "note": "10/100/1000 Ethernet"
+      },
+      {
+        "id": "dc-power-1",
+        "name": "DC Power 1",
+        "direction": "input",
+        "connector": "xlr4-dc",
+        "note": "4-pin XLR DC input; 12–18V DC, 5.4A max; dual redundant with DC Power 2"
+      },
+      {
+        "id": "dc-power-2",
+        "name": "DC Power 2",
+        "direction": "input",
+        "connector": "xlr4-dc",
+        "note": "4-pin XLR DC input; second redundant DC input; 12–18V DC"
+      }
+    ],
+    "rackUnits": 1,
+    "sourceUrl": "https://www.aja.com/products/ki-pro-ultra-plus",
+    "source": "community",
+    "rev": 1,
+    "contentHash": "9f93172d"
+  },
+  {
+    "id": "akg/akg-c414-xlii",
+    "manufacturer": "AKG",
+    "model": "AKG C414 XLII",
+    "category": "audio",
+    "type": "Media source",
+    "ports": [
+      {
+        "id": "output",
+        "name": "Output",
+        "direction": "output",
+        "connector": "xlr3",
+        "note": "Balanced XLR-3 output, pin 2 hot. Phantom power (44–52 VDC, ~4–4.5 mA per IEC 61938) is supplied to the mic over this same cable — there is no separate power connector."
+      }
+    ],
+    "sourceUrl": "https://www.manua.ls/akg/c414-xlii/manual",
+    "source": "community",
+    "rev": 1,
+    "contentHash": "72da3560"
+  },
+  {
+    "id": "apple/tv-4k",
+    "manufacturer": "Apple",
+    "model": "TV 4K",
+    "category": "source",
+    "type": "Media source",
+    "ports": [
+      {
+        "id": "hdmi",
+        "name": "HDMI",
+        "direction": "output",
+        "connector": "hdmi"
+      }
+    ],
+    "source": "community",
+    "rev": 1,
+    "contentHash": "58c47e7e"
+  },
+  {
+    "id": "atlona/at-hd4-v41",
+    "manufacturer": "Atlona",
+    "model": "AT-HD4-V41",
+    "category": "switcher",
+    "type": "Video switcher",
+    "ports": [
+      {
+        "id": "hdmi-in-1",
+        "name": "HDMI IN 1",
+        "direction": "input",
+        "connector": "hdmi"
+      },
+      {
+        "id": "hdmi-in-2",
+        "name": "HDMI IN 2",
+        "direction": "input",
+        "connector": "hdmi"
+      },
+      {
+        "id": "hdmi-in-3",
+        "name": "HDMI IN 3",
+        "direction": "input",
+        "connector": "hdmi"
+      },
+      {
+        "id": "hdmi-in-4",
+        "name": "HDMI IN 4",
+        "direction": "input",
+        "connector": "hdmi"
+      },
+      {
+        "id": "hdmi-out",
+        "name": "HDMI OUT",
+        "direction": "output",
+        "connector": "hdmi",
+        "note": "Supports ARC and HEC (100 Mbps HDMI Ethernet Channel)"
+      },
+      {
+        "id": "s-pdif-out",
+        "name": "S/PDIF OUT",
+        "direction": "output",
+        "connector": "rca",
+        "note": "Connector type (optical Toslink vs. coaxial RCA) is not explicitly stated in any available documentation. RCA coaxial is used here as the default for budget HDMI switchers of this era, but this remains unverified. Supports PCM 2ch, Dolby Digital, DTS 5.1."
+      },
+      {
+        "id": "lan",
+        "name": "LAN",
+        "direction": "bidirectional",
+        "connector": "rj45",
+        "note": "100 Mbps Ethernet for HEC-capable devices"
+      },
+      {
+        "id": "rs-232",
+        "name": "RS-232",
+        "direction": "bidirectional",
+        "connector": "rs232",
+        "note": "9-pin female D-sub connector confirmed on manual page 7. 9600 baud, 8N1, no flow control."
+      },
+      {
+        "id": "ir-in",
+        "name": "IR IN",
+        "direction": "input",
+        "connector": "trs-3.5",
+        "note": "For included Atlona IR receiver module"
+      },
+      {
+        "id": "dc-5v",
+        "name": "DC 5V",
+        "direction": "input",
+        "connector": "dc-barrel",
+        "note": "5V/2.6A from included external power supply (AC 100–240V input)"
+      }
+    ],
+    "sourceUrl": "https://www.manualslib.com/manual/748028/Atlona-At-Hd4-V41.html?page=7",
+    "source": "community",
+    "rev": 1,
+    "contentHash": "fc3d18a5"
+  },
+  {
+    "id": "audio-technica/audio-technica-at2020",
+    "manufacturer": "Audio-Technica",
+    "model": "Audio-Technica AT2020",
+    "category": "audio",
+    "type": "Other",
+    "ports": [
+      {
+        "id": "output",
+        "name": "Output",
+        "direction": "output",
+        "connector": "xlr3",
+        "note": "3-pin XLRM balanced output; 48V phantom power is received over this same cable — there is no separate power inlet"
+      }
+    ],
+    "sourceUrl": "https://www.audio-technica.com/en/at2020",
+    "source": "community",
+    "rev": 1,
+    "contentHash": "1ab27ceb"
+  },
+  {
+    "id": "barco/clickshare-cx-50",
+    "manufacturer": "Barco",
+    "model": "ClickShare CX-50",
+    "category": "other",
+    "type": "Other",
+    "ports": [
+      {
+        "id": "hdmi-output",
+        "name": "HDMI Output",
+        "direction": "output",
+        "connector": "hdmi",
+        "note": "HDMI 1.4b, 4K UHD (3840x2160) @ 30Hz"
+      },
+      {
+        "id": "hdmi-input",
+        "name": "HDMI Input",
+        "direction": "input",
+        "connector": "hdmi",
+        "note": "HDMI 1.4b, up to 1920x1080 @ 30Hz"
+      },
+      {
+        "id": "usb-c-rear",
+        "name": "USB-C (Rear)",
+        "direction": "bidirectional",
+        "connector": "usb-c",
+        "note": "USB 2.0, rear panel; for USB peripherals/cameras"
+      },
+      {
+        "id": "usb-a-1-rear",
+        "name": "USB-A 1 (Rear)",
+        "direction": "bidirectional",
+        "connector": "usb-a",
+        "note": "USB 2.0, rear panel"
+      },
+      {
+        "id": "usb-a-2-rear",
+        "name": "USB-A 2 (Rear)",
+        "direction": "bidirectional",
+        "connector": "usb-a",
+        "note": "USB 2.0, rear panel"
+      },
+      {
+        "id": "usb-a-front",
+        "name": "USB-A (Front)",
+        "direction": "bidirectional",
+        "connector": "usb-a",
+        "note": "USB 2.0, front panel; for ClickShare Button"
+      },
+      {
+        "id": "ethernet-lan",
+        "name": "Ethernet LAN",
+        "direction": "bidirectional",
+        "connector": "rj45",
+        "note": "1 Gbit Ethernet"
+      },
+      {
+        "id": "audio-line-out-analog",
+        "name": "Audio Line Out (Analog)",
+        "direction": "output",
+        "connector": "trs-3.5",
+        "note": "3.5mm mini jack, analog stereo line output"
+      },
+      {
+        "id": "s-pdif-out-digital",
+        "name": "S/PDIF Out (Digital)",
+        "direction": "output",
+        "connector": "toslink",
+        "note": "TOSLINK optical digital audio output"
+      },
+      {
+        "id": "power-in",
+        "name": "Power In",
+        "direction": "input",
+        "connector": "dc-barrel",
+        "note": "12V DC, 4.2A min; supplied by included external Class 2 power adapter (110-220V AC mains input on adapter side)"
+      }
+    ],
+    "sourceUrl": "https://www.manualslib.com/manual/1797802/Barco-Cx-50.html",
+    "source": "community",
+    "rev": 1,
+    "contentHash": "9bebe167"
+  },
+  {
+    "id": "belden-hirschmann/hirschmann-spider-8tx",
+    "manufacturer": "Belden (Hirschmann)",
+    "model": "Hirschmann SPIDER 8TX",
+    "category": "network",
+    "type": "Network switch",
+    "ports": [
+      {
+        "id": "port-1",
+        "name": "Port 1",
+        "direction": "bidirectional",
+        "connector": "rj45",
+        "note": "10/100BASE-TX, auto-negotiation, auto-polarity, autocrossing"
+      },
+      {
+        "id": "port-2",
+        "name": "Port 2",
+        "direction": "bidirectional",
+        "connector": "rj45",
+        "note": "10/100BASE-TX, auto-negotiation, auto-polarity, autocrossing"
+      },
+      {
+        "id": "port-3",
+        "name": "Port 3",
+        "direction": "bidirectional",
+        "connector": "rj45",
+        "note": "10/100BASE-TX, auto-negotiation, auto-polarity, autocrossing"
+      },
+      {
+        "id": "port-4",
+        "name": "Port 4",
+        "direction": "bidirectional",
+        "connector": "rj45",
+        "note": "10/100BASE-TX, auto-negotiation, auto-polarity, autocrossing"
+      },
+      {
+        "id": "port-5",
+        "name": "Port 5",
+        "direction": "bidirectional",
+        "connector": "rj45",
+        "note": "10/100BASE-TX, auto-negotiation, auto-polarity, autocrossing"
+      },
+      {
+        "id": "port-6",
+        "name": "Port 6",
+        "direction": "bidirectional",
+        "connector": "rj45",
+        "note": "10/100BASE-TX, auto-negotiation, auto-polarity, autocrossing"
+      },
+      {
+        "id": "port-7",
+        "name": "Port 7",
+        "direction": "bidirectional",
+        "connector": "rj45",
+        "note": "10/100BASE-TX, auto-negotiation, auto-polarity, autocrossing"
+      },
+      {
+        "id": "port-8",
+        "name": "Port 8",
+        "direction": "bidirectional",
+        "connector": "rj45",
+        "note": "10/100BASE-TX, auto-negotiation, auto-polarity, autocrossing"
+      },
+      {
+        "id": "dc-in",
+        "name": "DC In",
+        "direction": "input",
+        "connector": "euroblock-dc",
+        "note": "3-pin screw terminal block; pins: +V, 0V, GND (chassis ground); 12–24V DC nominal (9.6–32V DC range); Class 2 / SELV supply required; max 3.9W at 24V DC"
+      }
+    ],
+    "sourceUrl": "https://www.doc.hirschmann.com/pdf/IG_SPIDER_I_05_0618_en_2018-06-22.pdf",
+    "source": "community",
+    "rev": 1,
+    "contentHash": "f9197c71"
+  },
+  {
+    "id": "benq/benq-rp6503",
+    "manufacturer": "BenQ",
+    "model": "BenQ RP6503",
+    "category": "display",
+    "type": "Display",
+    "ports": [
+      {
+        "id": "hdmi-in-1",
+        "name": "HDMI In 1",
+        "direction": "input",
+        "connector": "hdmi",
+        "note": "Rear panel, HDMI 2.0"
+      },
+      {
+        "id": "hdmi-in-2",
+        "name": "HDMI In 2",
+        "direction": "input",
+        "connector": "hdmi",
+        "note": "Rear panel, HDMI 2.0"
+      },
+      {
+        "id": "hdmi-in-3",
+        "name": "HDMI In 3",
+        "direction": "input",
+        "connector": "hdmi",
+        "note": "Front panel, HDMI 2.0"
+      },
+      {
+        "id": "hdmi-out",
+        "name": "HDMI Out",
+        "direction": "output",
+        "connector": "hdmi",
+        "note": "Rear panel, HDMI 2.0, 4K@60Hz with audio"
+      },
+      {
+        "id": "displayport-in",
+        "name": "DisplayPort In",
+        "direction": "input",
+        "connector": "dp",
+        "note": "Rear panel, DisplayPort 1.2a"
+      },
+      {
+        "id": "vga-in",
+        "name": "VGA In",
+        "direction": "input",
+        "connector": "vga",
+        "note": "Rear panel"
+      },
+      {
+        "id": "pc-audio-in",
+        "name": "PC Audio In",
+        "direction": "input",
+        "connector": "trs-3.5",
+        "note": "Rear panel, 3.5mm line input to accompany VGA"
+      },
+      {
+        "id": "mic-in",
+        "name": "Mic In",
+        "direction": "input",
+        "connector": "trs-3.5",
+        "note": "Front panel, 3.5mm microphone/mic input"
+      },
+      {
+        "id": "audio-out",
+        "name": "Audio Out",
+        "direction": "output",
+        "connector": "trs-3.5",
+        "note": "Rear panel, 3.5mm earphone/line out"
+      },
+      {
+        "id": "s-pdif",
+        "name": "S/PDIF",
+        "direction": "output",
+        "connector": "toslink",
+        "note": "Rear panel, optical digital audio output"
+      },
+      {
+        "id": "usb-a-1",
+        "name": "USB-A 1",
+        "direction": "bidirectional",
+        "connector": "usb-a",
+        "note": "USB 2.0"
+      },
+      {
+        "id": "usb-a-2",
+        "name": "USB-A 2",
+        "direction": "bidirectional",
+        "connector": "usb-a",
+        "note": "USB 2.0"
+      },
+      {
+        "id": "usb-a-3",
+        "name": "USB-A 3",
+        "direction": "bidirectional",
+        "connector": "usb-a",
+        "note": "USB 3.2 Gen 1"
+      },
+      {
+        "id": "usb-a-4",
+        "name": "USB-A 4",
+        "direction": "bidirectional",
+        "connector": "usb-a",
+        "note": "USB 3.2 Gen 1"
+      },
+      {
+        "id": "usb-a-5",
+        "name": "USB-A 5",
+        "direction": "bidirectional",
+        "connector": "usb-a",
+        "note": "USB 3.2 Gen 1"
+      },
+      {
+        "id": "usb-a-6",
+        "name": "USB-A 6",
+        "direction": "bidirectional",
+        "connector": "usb-a",
+        "note": "USB 3.2 Gen 1"
+      },
+      {
+        "id": "usb-a-7",
+        "name": "USB-A 7",
+        "direction": "bidirectional",
+        "connector": "usb-a",
+        "note": "USB 3.2 Gen 1; front panel"
+      },
+      {
+        "id": "usb-b-1",
+        "name": "USB-B 1",
+        "direction": "input",
+        "connector": "usb-b",
+        "note": "USB 3.0, touch connection to host PC for rear HDMI inputs"
+      },
+      {
+        "id": "usb-b-2",
+        "name": "USB-B 2",
+        "direction": "input",
+        "connector": "usb-b",
+        "note": "USB 3.0, touch connection to host PC"
+      },
+      {
+        "id": "usb-b-3",
+        "name": "USB-B 3",
+        "direction": "input",
+        "connector": "usb-b",
+        "note": "USB 3.0, touch connection to host PC for front HDMI input"
+      },
+      {
+        "id": "usb-c-1",
+        "name": "USB-C 1",
+        "direction": "bidirectional",
+        "connector": "usb-c",
+        "note": "USB 3.0, front panel; supports display input and USB hub"
+      },
+      {
+        "id": "usb-c-2",
+        "name": "USB-C 2",
+        "direction": "bidirectional",
+        "connector": "usb-c",
+        "note": "USB 3.0 with Power Delivery 65W; rear panel"
+      },
+      {
+        "id": "lan-1-android",
+        "name": "LAN 1 (Android)",
+        "direction": "bidirectional",
+        "connector": "rj45",
+        "note": "10/100/1000 Mbps, for built-in Android OS"
+      },
+      {
+        "id": "lan-2-ops",
+        "name": "LAN 2 (OPS)",
+        "direction": "bidirectional",
+        "connector": "rj45",
+        "note": "10/100/1000 Mbps, for optional OPS slot-in PC"
+      },
+      {
+        "id": "rs232",
+        "name": "RS232",
+        "direction": "bidirectional",
+        "connector": "rs232",
+        "note": "DB9 connector; for serial control. Connector type DB9 inferred from standard BenQ IFP practice — spec page lists '1 × RS-232' without explicit connector label"
+      },
+      {
+        "id": "ac-in",
+        "name": "AC In",
+        "direction": "input",
+        "connector": "iec",
+        "note": "IEC C14 inlet inferred; BenQ ships multiple regional power cords in box confirming detachable cord. Spec states AC 100–240V 50/60Hz. Power inlet connector type not explicitly stated on spec page."
+      }
+    ],
+    "sourceUrl": "https://www.benq.com/en-me/business/ifp/rp6503/specifications.html",
+    "source": "community",
+    "rev": 1,
+    "contentHash": "1b95968e"
+  },
+  {
+    "id": "blackmagic-design/atem-mini-pro",
+    "manufacturer": "Blackmagic Design",
+    "model": "ATEM Mini Pro",
+    "category": "switcher",
+    "type": "Video switcher",
+    "ports": [
+      {
+        "id": "hdmi-in-1",
+        "name": "HDMI In 1",
+        "direction": "input",
+        "connector": "hdmi"
+      },
+      {
+        "id": "hdmi-in-2",
+        "name": "HDMI In 2",
+        "direction": "input",
+        "connector": "hdmi"
+      },
+      {
+        "id": "hdmi-in-3",
+        "name": "HDMI In 3",
+        "direction": "input",
+        "connector": "hdmi"
+      },
+      {
+        "id": "hdmi-in-4",
+        "name": "HDMI In 4",
+        "direction": "input",
+        "connector": "hdmi"
+      },
+      {
+        "id": "hdmi-out",
+        "name": "HDMI Out",
+        "direction": "output",
+        "connector": "hdmi"
+      },
+      {
+        "id": "usb-c",
+        "name": "USB-C",
+        "direction": "bidirectional",
+        "connector": "usb-c",
+        "note": "Webcam out / record / control"
+      },
+      {
+        "id": "mic-in-1",
+        "name": "Mic In 1",
+        "direction": "input",
+        "connector": "trs-3.5"
+      },
+      {
+        "id": "mic-in-2",
+        "name": "Mic In 2",
+        "direction": "input",
+        "connector": "trs-3.5"
+      },
+      {
+        "id": "ethernet",
+        "name": "Ethernet",
+        "direction": "bidirectional",
+        "connector": "rj45",
+        "note": "Stream / control"
+      },
+      {
+        "id": "12v-dc",
+        "name": "12V DC",
+        "direction": "input",
+        "connector": "dc-barrel"
+      }
+    ],
+    "sourceUrl": "https://www.blackmagicdesign.com/products/atemmini/techspecs",
+    "source": "community",
+    "rev": 1,
+    "contentHash": "ddd6eb3d"
+  },
+  {
+    "id": "blackmagic-design/hyperdeck-studio-hd-plus",
+    "manufacturer": "Blackmagic Design",
+    "model": "HyperDeck Studio HD Plus",
+    "category": "recorder",
+    "type": "Recorder",
+    "ports": [
+      {
+        "id": "sdi-input",
+        "name": "SDI Input",
+        "direction": "input",
+        "connector": "bnc",
+        "note": "1x SDI; supports 270Mb, 1.5G, 3G, 6G; 16 channels embedded audio"
+      },
+      {
+        "id": "sdi-output-1",
+        "name": "SDI Output 1",
+        "direction": "output",
+        "connector": "bnc",
+        "note": "SDI output; 16 channels embedded audio"
+      },
+      {
+        "id": "sdi-output-2",
+        "name": "SDI Output 2",
+        "direction": "output",
+        "connector": "bnc",
+        "note": "SDI output; 16 channels embedded audio"
+      },
+      {
+        "id": "sdi-monitor-output",
+        "name": "SDI Monitor Output",
+        "direction": "output",
+        "connector": "bnc",
+        "note": "SDI monitor output; 16 channels embedded audio"
+      },
+      {
+        "id": "hdmi-input",
+        "name": "HDMI Input",
+        "direction": "input",
+        "connector": "hdmi",
+        "note": "HDMI 2.0; 8 channels embedded audio"
+      },
+      {
+        "id": "hdmi-output",
+        "name": "HDMI Output",
+        "direction": "output",
+        "connector": "hdmi",
+        "note": "HDMI 2.0; 8 channels embedded audio"
+      },
+      {
+        "id": "timecode-input",
+        "name": "Timecode Input",
+        "direction": "input",
+        "connector": "bnc",
+        "note": "BNC timecode input"
+      },
+      {
+        "id": "timecode-output",
+        "name": "Timecode Output",
+        "direction": "output",
+        "connector": "bnc",
+        "note": "BNC timecode output"
+      },
+      {
+        "id": "reference-input",
+        "name": "Reference Input",
+        "direction": "input",
+        "connector": "bnc",
+        "note": "Tri-Sync / Black Burst reference input"
+      },
+      {
+        "id": "reference-output",
+        "name": "Reference Output",
+        "direction": "output",
+        "connector": "bnc",
+        "note": "Tri-Sync / Black Burst reference output"
+      },
+      {
+        "id": "rs-422-in",
+        "name": "RS-422 In",
+        "direction": "input",
+        "connector": "rs422",
+        "note": "Deck control input"
+      },
+      {
+        "id": "rs-422-out",
+        "name": "RS-422 Out",
+        "direction": "output",
+        "connector": "rs422",
+        "note": "Deck control output"
+      },
+      {
+        "id": "ethernet",
+        "name": "Ethernet",
+        "direction": "bidirectional",
+        "connector": "rj45",
+        "note": "1 Gb/s Ethernet for network control and streaming"
+      },
+      {
+        "id": "usb-c",
+        "name": "USB-C",
+        "direction": "bidirectional",
+        "connector": "usb-c",
+        "note": "USB 3.0 Type-C, up to 5 Gb/s; external media recording/expansion"
+      },
+      {
+        "id": "headphone",
+        "name": "Headphone",
+        "direction": "output",
+        "connector": "trs-6.35",
+        "note": "6.35mm headphone output with mono speaker monitoring"
+      },
+      {
+        "id": "dc-power-input",
+        "name": "DC Power Input",
+        "direction": "input",
+        "connector": "xlr4-dc",
+        "note": "4-pin XLR 12V DC input for external/battery power; device also has internal 100-240V AC 50/60Hz supply (max 100W) — physical AC inlet type not explicitly stated in source"
+      }
+    ],
+    "rackUnits": 1,
+    "sourceUrl": "https://www.blackmagicdesign.com/products/hyperdeckstudio/techspecs/W-HYD-12",
+    "source": "community",
+    "rev": 1,
+    "contentHash": "7c638aee"
+  },
+  {
+    "id": "blackmagic-design/mini-converter-sdi-to-hdmi-6g",
+    "manufacturer": "Blackmagic Design",
+    "model": "Mini Converter SDI to HDMI 6G",
+    "category": "converter",
+    "type": "Converter",
+    "ports": [
+      {
+        "id": "sdi-in",
+        "name": "SDI In",
+        "direction": "input",
+        "connector": "sdi",
+        "note": "Up to 6G-SDI"
+      },
+      {
+        "id": "sdi-loop-out",
+        "name": "SDI Loop Out",
+        "direction": "output",
+        "connector": "sdi"
+      },
+      {
+        "id": "hdmi-out",
+        "name": "HDMI Out",
+        "direction": "output",
+        "connector": "hdmi"
+      },
+      {
+        "id": "12v-dc",
+        "name": "12V DC",
+        "direction": "input",
+        "connector": "dc-barrel"
+      }
+    ],
+    "sourceUrl": "https://www.blackmagicdesign.com/products/miniconverters/techspecs",
+    "source": "community",
+    "rev": 1,
+    "contentHash": "e83c1f9a"
+  },
+  {
+    "id": "cisco/catalyst-9200l-24p-4g",
+    "manufacturer": "Cisco",
+    "model": "Catalyst 9200L-24P-4G",
+    "category": "network",
+    "type": "Network switch",
+    "ports": [
+      {
+        "id": "10-100-1000-poe-ethernet-1-24",
+        "name": "10/100/1000 PoE+ Ethernet 1–24",
+        "direction": "bidirectional",
+        "connector": "rj45",
+        "note": "24 downlink ports with full PoE+ (up to 30W per port)"
+      },
+      {
+        "id": "1g-sfp-uplink-1-4",
+        "name": "1G SFP Uplink 1–4",
+        "direction": "bidirectional",
+        "connector": "sfp",
+        "note": "4 fixed 1G SFP uplink ports"
+      },
+      {
+        "id": "management-ethernet",
+        "name": "Management Ethernet",
+        "direction": "bidirectional",
+        "connector": "rj45",
+        "note": "Dedicated out-of-band management Gigabit Ethernet port"
+      },
+      {
+        "id": "rj-45-console",
+        "name": "RJ-45 Console",
+        "direction": "input",
+        "connector": "rj45",
+        "note": "Serial console port; requires RJ-45-to-DB-9 adapter cable for PC connection"
+      },
+      {
+        "id": "usb-console-mini-b",
+        "name": "USB Console (mini-B)",
+        "direction": "input",
+        "connector": "usb-b",
+        "note": "USB mini-Type B (5-pin) console port; requires USB-A to USB-mini-B cable. Not micro-B."
+      },
+      {
+        "id": "usb-type-a",
+        "name": "USB Type A",
+        "direction": "bidirectional",
+        "connector": "usb-a",
+        "note": "USB-A port for external flash storage; NOT a console port"
+      },
+      {
+        "id": "ac-power-inlet",
+        "name": "AC Power Inlet",
+        "direction": "input",
+        "connector": "iec",
+        "note": "IEC C14 male inlet on the switch; accepts standard C13 power cord (e.g. CAB-AC-C9200L, C13-to-NEMA-5-15P). 100–240 VAC, 50–60 Hz."
+      }
+    ],
+    "rackUnits": 1,
+    "sourceUrl": "https://www.manualslib.com/manual/3005287/Cisco-Catalyst-9200-Series.html",
+    "source": "community",
+    "rev": 1,
+    "contentHash": "eee1fb43"
+  },
+  {
+    "id": "crestron/am-3200",
+    "manufacturer": "Crestron",
+    "model": "AM-3200",
+    "category": "source",
+    "type": "Media player",
+    "ports": [
+      {
+        "id": "hdmi-in",
+        "name": "HDMI In",
+        "direction": "input",
+        "connector": "hdmi",
+        "note": "Type A; accepts HDMI, DVI, and DisplayPort signals (with adapter)"
+      },
+      {
+        "id": "hdmi-out",
+        "name": "HDMI Out",
+        "direction": "output",
+        "connector": "hdmi",
+        "note": "Type A; HDMI digital video/audio output"
+      },
+      {
+        "id": "audio-out",
+        "name": "Audio Out",
+        "direction": "output",
+        "connector": "euroblock",
+        "note": "5-pin 3.5mm terminal block; balanced/unbalanced stereo, 4 Vrms balanced / 2 Vrms unbalanced"
+      },
+      {
+        "id": "rs-232-com",
+        "name": "RS-232/COM",
+        "direction": "bidirectional",
+        "connector": "euroblock",
+        "note": "5-pin 3.5mm terminal block; bidirectional RS-232 at up to 115.2k baud"
+      },
+      {
+        "id": "ir-serial-out",
+        "name": "IR/Serial Out",
+        "direction": "output",
+        "connector": "ir",
+        "note": "2-pin 3.5mm terminal block; 1-way IR output at 1.1 MHz or TTL/RS-232 at 19.2k baud"
+      },
+      {
+        "id": "lan-poe",
+        "name": "LAN PoE+",
+        "direction": "input",
+        "connector": "rj45",
+        "note": "100Base-TX/1000Base-T; IEEE 802.3at Class 4 PoE+ powers the unit; primary network connection"
+      },
+      {
+        "id": "lan-aux",
+        "name": "LAN AUX",
+        "direction": "bidirectional",
+        "connector": "rj45",
+        "note": "100Base-TX/1000Base-T; secondary/auxiliary network port"
+      },
+      {
+        "id": "usb-type-a-x2",
+        "name": "USB Type A (x2)",
+        "direction": "bidirectional",
+        "connector": "usb-a",
+        "note": "One USB 2.0 host and one USB 3.0 host port for peripherals"
+      },
+      {
+        "id": "usb-type-b",
+        "name": "USB Type B",
+        "direction": "input",
+        "connector": "usb-b",
+        "note": "USB 3.0 device port; used as computer console connection"
+      },
+      {
+        "id": "power",
+        "name": "Power",
+        "direction": "input",
+        "connector": "dc-barrel",
+        "note": "24 VDC at 1.25 A via 2.1x5.5 mm barrel connector; optional if powered via LAN PoE+"
+      }
+    ],
+    "sourceUrl": "https://docs.crestron.com/en-us/9020/Content/Topics/QSG_to_PM/AM-3200%20Specs.htm",
+    "source": "community",
+    "rev": 1,
+    "contentHash": "4989f7b0"
+  },
+  {
+    "id": "crestron/cp4-r",
+    "manufacturer": "Crestron",
+    "model": "CP4-R",
+    "category": "control",
+    "type": "Control processor",
+    "ports": [
+      {
+        "id": "lan",
+        "name": "LAN",
+        "direction": "bidirectional",
+        "connector": "rj45",
+        "note": "100BASE-TX/1000BASE-T Ethernet, 8-pin RJ-45 female"
+      },
+      {
+        "id": "com-1",
+        "name": "COM 1",
+        "direction": "bidirectional",
+        "connector": "euroblock",
+        "note": "5-pin 3.5mm detachable terminal block; RS-232/422/485; 115.2k baud max"
+      },
+      {
+        "id": "com-2",
+        "name": "COM 2",
+        "direction": "bidirectional",
+        "connector": "euroblock",
+        "note": "3-pin 3.5mm detachable terminal block; RS-232 only; 115.2k baud max"
+      },
+      {
+        "id": "com-3",
+        "name": "COM 3",
+        "direction": "bidirectional",
+        "connector": "euroblock",
+        "note": "3-pin 3.5mm detachable terminal block; RS-232 only; 115.2k baud max"
+      },
+      {
+        "id": "ir-serial-1-4",
+        "name": "IR/Serial 1-4",
+        "direction": "output",
+        "connector": "euroblock",
+        "note": "8-pin 3.5mm detachable terminal block (shared with IR/Serial 5-8); IR up to 1.2 MHz or TTL/RS-232 serial output; 4 ports per block"
+      },
+      {
+        "id": "ir-serial-5-8",
+        "name": "IR/Serial 5-8",
+        "direction": "output",
+        "connector": "euroblock",
+        "note": "8-pin 3.5mm detachable terminal block; IR up to 1.2 MHz or TTL/RS-232 serial output; 4 ports per block"
+      },
+      {
+        "id": "relay-1-4",
+        "name": "Relay 1-4",
+        "direction": "output",
+        "connector": "euroblock",
+        "note": "8-pin 3.5mm detachable terminal block (shared with Relay 5-8); 8 normally open isolated relays, 1A 30VAC/VDC"
+      },
+      {
+        "id": "relay-5-8",
+        "name": "Relay 5-8",
+        "direction": "output",
+        "connector": "euroblock",
+        "note": "8-pin 3.5mm detachable terminal block; 8 normally open isolated relays, 1A 30VAC/VDC"
+      },
+      {
+        "id": "i-o-1-8",
+        "name": "I/O 1-8",
+        "direction": "bidirectional",
+        "connector": "euroblock",
+        "note": "9-pin 3.5mm detachable terminal block; Versiport digital I/O (0-24VDC) or analog input (0-10VDC)"
+      },
+      {
+        "id": "net-cresnet",
+        "name": "NET (Cresnet)",
+        "direction": "bidirectional",
+        "connector": "euroblock",
+        "note": "4-pin 3.5mm detachable terminal block; Cresnet network for compatible Crestron devices"
+      },
+      {
+        "id": "usb-rear",
+        "name": "USB (Rear)",
+        "direction": "bidirectional",
+        "connector": "usb-a",
+        "note": "USB 2.0 Type-A female; rear panel; for mass storage devices"
+      },
+      {
+        "id": "usb-front",
+        "name": "USB (Front)",
+        "direction": "bidirectional",
+        "connector": "usb-b",
+        "note": "USB 2.0 Type-B female; front panel; console/setup port"
+      },
+      {
+        "id": "power",
+        "name": "Power",
+        "direction": "input",
+        "connector": "dc-barrel",
+        "note": "2.1x5.5mm DC barrel connector; 24VDC 2.0A input; external power pack included"
+      }
+    ],
+    "rackUnits": 1,
+    "sourceUrl": "https://docs.crestron.com/en-us/8559/Content/Topics/Specifications/CP4-R-Specifications.htm",
+    "source": "community",
+    "rev": 1,
+    "contentHash": "45082220"
+  },
+  {
+    "id": "crestron/dm-md8x8",
+    "manufacturer": "Crestron",
+    "model": "DM-MD8X8",
+    "category": "matrix",
+    "type": "Matrix router",
+    "ports": [
+      {
+        "id": "dmnet-1",
+        "name": "DMNet 1",
+        "direction": "bidirectional",
+        "connector": "euroblock",
+        "note": "4-pin 3.5mm detachable terminal block; DigitalMedia network data"
+      },
+      {
+        "id": "dmnet-2",
+        "name": "DMNet 2",
+        "direction": "bidirectional",
+        "connector": "euroblock",
+        "note": "4-pin 3.5mm detachable terminal block"
+      },
+      {
+        "id": "dmnet-3",
+        "name": "DMNet 3",
+        "direction": "bidirectional",
+        "connector": "euroblock",
+        "note": "4-pin 3.5mm detachable terminal block"
+      },
+      {
+        "id": "dmnet-4",
+        "name": "DMNet 4",
+        "direction": "bidirectional",
+        "connector": "euroblock",
+        "note": "4-pin 3.5mm detachable terminal block"
+      },
+      {
+        "id": "dmnet-5",
+        "name": "DMNet 5",
+        "direction": "bidirectional",
+        "connector": "euroblock",
+        "note": "4-pin 3.5mm detachable terminal block"
+      },
+      {
+        "id": "dmnet-6",
+        "name": "DMNet 6",
+        "direction": "bidirectional",
+        "connector": "euroblock",
+        "note": "4-pin 3.5mm detachable terminal block"
+      },
+      {
+        "id": "dmnet-7",
+        "name": "DMNet 7",
+        "direction": "bidirectional",
+        "connector": "euroblock",
+        "note": "4-pin 3.5mm detachable terminal block"
+      },
+      {
+        "id": "dmnet-8",
+        "name": "DMNet 8",
+        "direction": "bidirectional",
+        "connector": "euroblock",
+        "note": "4-pin 3.5mm detachable terminal block"
+      },
+      {
+        "id": "eig-1",
+        "name": "EIG 1",
+        "direction": "input",
+        "connector": "euroblock",
+        "note": "3-pin 3.5mm detachable terminal block; External/Internal/Ground power selection for DMNet port 1; max 75W @ 24V DC from external supply"
+      },
+      {
+        "id": "eig-2",
+        "name": "EIG 2",
+        "direction": "input",
+        "connector": "euroblock",
+        "note": "3-pin 3.5mm detachable terminal block; power selection for DMNet port 2"
+      },
+      {
+        "id": "eig-3",
+        "name": "EIG 3",
+        "direction": "input",
+        "connector": "euroblock",
+        "note": "3-pin 3.5mm detachable terminal block; power selection for DMNet port 3"
+      },
+      {
+        "id": "eig-4",
+        "name": "EIG 4",
+        "direction": "input",
+        "connector": "euroblock",
+        "note": "3-pin 3.5mm detachable terminal block; power selection for DMNet port 4"
+      },
+      {
+        "id": "eig-5",
+        "name": "EIG 5",
+        "direction": "input",
+        "connector": "euroblock",
+        "note": "3-pin 3.5mm detachable terminal block; power selection for DMNet port 5"
+      },
+      {
+        "id": "eig-6",
+        "name": "EIG 6",
+        "direction": "input",
+        "connector": "euroblock",
+        "note": "3-pin 3.5mm detachable terminal block; power selection for DMNet port 6"
+      },
+      {
+        "id": "eig-7",
+        "name": "EIG 7",
+        "direction": "input",
+        "connector": "euroblock",
+        "note": "3-pin 3.5mm detachable terminal block; power selection for DMNet port 7"
+      },
+      {
+        "id": "eig-8",
+        "name": "EIG 8",
+        "direction": "input",
+        "connector": "euroblock",
+        "note": "3-pin 3.5mm detachable terminal block; power selection for DMNet port 8"
+      },
+      {
+        "id": "lan",
+        "name": "LAN",
+        "direction": "bidirectional",
+        "connector": "rj45",
+        "note": "10Base-T/100Base-TX/1000Base-T Gigabit Ethernet"
+      },
+      {
+        "id": "computer-console",
+        "name": "Computer (Console)",
+        "direction": "bidirectional",
+        "connector": "usb-b",
+        "note": "USB Type B female console port on front panel"
+      },
+      {
+        "id": "ac-power",
+        "name": "AC Power",
+        "direction": "input",
+        "connector": "iec",
+        "note": "IEC 60320 C14 inlet; 100-240V AC, 50/60 Hz, 4A max, 220W typical"
+      }
+    ],
+    "rackUnits": 4,
+    "sourceUrl": "https://www.manualslib.com/manual/660703/Crestron-8x8-Digitalmedia-Dm-Md8x8.html",
+    "source": "community",
+    "rev": 1,
+    "contentHash": "c162a768"
+  },
+  {
+    "id": "crestron/tsw-1070",
+    "manufacturer": "Crestron",
+    "model": "TSW-1070",
+    "category": "control",
+    "type": "Control processor",
+    "ports": [
+      {
+        "id": "lan-poe",
+        "name": "LAN PoE",
+        "direction": "bidirectional",
+        "connector": "rj45",
+        "note": "8-pin RJ-45 female; 100BASE-TX Ethernet; IEEE 802.3at Type 2 PoE+ PD (receives power, 15–30 W depending on configuration); green and yellow status LEDs"
+      },
+      {
+        "id": "usb-1",
+        "name": "USB 1",
+        "direction": "bidirectional",
+        "connector": "usb-a",
+        "note": "USB 2.0 host port; for optional room scheduling accessories (light bar, RFID card reader)"
+      },
+      {
+        "id": "usb-2",
+        "name": "USB 2",
+        "direction": "bidirectional",
+        "connector": "usb-a",
+        "note": "USB 2.0 host port; for optional room scheduling accessories; USB ports require PoE+ (802.3at Type 2) PSE to function"
+      }
+    ],
+    "sourceUrl": "https://docs.crestron.com/en-us/8550/Content/Topics/Specifications/Specifications-TSW-1070.htm",
+    "source": "community",
+    "rev": 1,
+    "contentHash": "9563dfc4"
+  },
+  {
+    "id": "cyberpower/pdu15b2f12r",
+    "manufacturer": "CyberPower",
+    "model": "PDU15B2F12R",
+    "category": "power",
+    "type": "PDU",
+    "ports": [
+      {
+        "id": "ac-input",
+        "name": "AC Input",
+        "direction": "input",
+        "connector": "nema-5-15",
+        "note": "Captive 15 ft cord, NEMA 5-15P plug, 15A max / 12A derated, 100–125V 50/60Hz"
+      },
+      {
+        "id": "ac-output-1-front",
+        "name": "AC Output 1 (Front)",
+        "direction": "output",
+        "connector": "nema-5-15",
+        "note": "NEMA 5-15R receptacle, front panel"
+      },
+      {
+        "id": "ac-output-2-front",
+        "name": "AC Output 2 (Front)",
+        "direction": "output",
+        "connector": "nema-5-15",
+        "note": "NEMA 5-15R receptacle, front panel"
+      },
+      {
+        "id": "ac-output-3-rear",
+        "name": "AC Output 3 (Rear)",
+        "direction": "output",
+        "connector": "nema-5-15",
+        "note": "NEMA 5-15R receptacle, rear"
+      },
+      {
+        "id": "ac-output-4-rear",
+        "name": "AC Output 4 (Rear)",
+        "direction": "output",
+        "connector": "nema-5-15",
+        "note": "NEMA 5-15R receptacle, rear"
+      },
+      {
+        "id": "ac-output-5-rear",
+        "name": "AC Output 5 (Rear)",
+        "direction": "output",
+        "connector": "nema-5-15",
+        "note": "NEMA 5-15R receptacle, rear"
+      },
+      {
+        "id": "ac-output-6-rear",
+        "name": "AC Output 6 (Rear)",
+        "direction": "output",
+        "connector": "nema-5-15",
+        "note": "NEMA 5-15R receptacle, rear"
+      },
+      {
+        "id": "ac-output-7-rear",
+        "name": "AC Output 7 (Rear)",
+        "direction": "output",
+        "connector": "nema-5-15",
+        "note": "NEMA 5-15R receptacle, rear"
+      },
+      {
+        "id": "ac-output-8-rear",
+        "name": "AC Output 8 (Rear)",
+        "direction": "output",
+        "connector": "nema-5-15",
+        "note": "NEMA 5-15R receptacle, rear"
+      },
+      {
+        "id": "ac-output-9-rear",
+        "name": "AC Output 9 (Rear)",
+        "direction": "output",
+        "connector": "nema-5-15",
+        "note": "NEMA 5-15R receptacle, rear"
+      },
+      {
+        "id": "ac-output-10-rear",
+        "name": "AC Output 10 (Rear)",
+        "direction": "output",
+        "connector": "nema-5-15",
+        "note": "NEMA 5-15R receptacle, rear"
+      },
+      {
+        "id": "ac-output-11-rear",
+        "name": "AC Output 11 (Rear)",
+        "direction": "output",
+        "connector": "nema-5-15",
+        "note": "NEMA 5-15R receptacle, rear"
+      },
+      {
+        "id": "ac-output-12-rear",
+        "name": "AC Output 12 (Rear)",
+        "direction": "output",
+        "connector": "nema-5-15",
+        "note": "NEMA 5-15R receptacle, rear"
+      },
+      {
+        "id": "ac-output-13-rear",
+        "name": "AC Output 13 (Rear)",
+        "direction": "output",
+        "connector": "nema-5-15",
+        "note": "NEMA 5-15R receptacle, rear"
+      },
+      {
+        "id": "ac-output-14-rear",
+        "name": "AC Output 14 (Rear)",
+        "direction": "output",
+        "connector": "nema-5-15",
+        "note": "NEMA 5-15R receptacle, rear"
+      }
+    ],
+    "rackUnits": 1,
+    "sourceUrl": "https://www.cyberpowersystems.com/product/pdus/basic/pdu15b2f12r/",
+    "source": "community",
+    "rev": 1,
+    "contentHash": "1f8fe3ca"
+  },
+  {
+    "id": "electro-voice/zlx-15p",
+    "manufacturer": "Electro-Voice",
+    "model": "ZLX-15P",
+    "category": "audio",
+    "type": "Speaker",
+    "ports": [
+      {
+        "id": "input-1",
+        "name": "Input 1",
+        "direction": "input",
+        "connector": "xlr3",
+        "accepts": [
+          "trs-6.35"
+        ],
+        "note": "XLR/TRS combo jack, balanced mic/line input with gain control"
+      },
+      {
+        "id": "input-2",
+        "name": "Input 2",
+        "direction": "input",
+        "connector": "xlr3",
+        "accepts": [
+          "trs-6.35"
+        ],
+        "note": "XLR/TRS combo jack, balanced mic/line input with gain control"
+      },
+      {
+        "id": "aux-in",
+        "name": "Aux In",
+        "direction": "input",
+        "connector": "trs-3.5",
+        "note": "3.5mm stereo auxiliary input for media devices"
+      },
+      {
+        "id": "link-output",
+        "name": "Link Output",
+        "direction": "output",
+        "connector": "xlr3",
+        "note": "XLR output carrying sum of all inputs; used for daisy-chaining additional speakers"
+      },
+      {
+        "id": "mains-in",
+        "name": "Mains In",
+        "direction": "input",
+        "connector": "iec",
+        "note": "IEC AC power inlet; operates 100–240V AC"
+      }
+    ],
+    "sourceUrl": "https://www.manualslib.com/manual/593410/Electro-Voice-Zlx-12p.html",
+    "source": "community",
+    "rev": 1,
+    "contentHash": "b79b838a"
+  },
+  {
+    "id": "elgato/game-capture-4k-x",
+    "manufacturer": "Elgato",
+    "model": "Game Capture 4K X",
+    "category": "recorder",
+    "type": "Recorder",
+    "ports": [
+      {
+        "id": "hdmi-in",
+        "name": "HDMI In",
+        "direction": "input",
+        "connector": "hdmi",
+        "note": "Unencrypted HDMI input from gaming source; supports up to 4K144"
+      },
+      {
+        "id": "hdmi-out-passthrough",
+        "name": "HDMI Out (Passthrough)",
+        "direction": "output",
+        "connector": "hdmi",
+        "note": "Lag-free HDMI passthrough to display"
+      },
+      {
+        "id": "usb-c-data-power",
+        "name": "USB-C (Data/Power)",
+        "direction": "bidirectional",
+        "connector": "usb-c",
+        "note": "USB 3.2 Gen 2 Type-C; connects to host computer and powers the device — no separate power supply"
+      },
+      {
+        "id": "3-5mm-stereo-line-in",
+        "name": "3.5mm Stereo Line In",
+        "direction": "input",
+        "connector": "trs-3.5",
+        "note": "Stereo line-level input; intended for use with Chat Link Pro accessory"
+      }
+    ],
+    "sourceUrl": "https://www.elgato.com/us/en/p/game-capture-4k-x",
+    "source": "community",
+    "rev": 1,
+    "contentHash": "9036666a"
+  },
+  {
+    "id": "extron/dsc-301-hd",
+    "manufacturer": "Extron",
+    "model": "dsc-301-hd",
+    "category": "converter",
+    "type": "Scaler",
+    "ports": [
+      {
+        "id": "composite-in",
+        "name": "Composite In",
+        "direction": "input",
+        "connector": "bnc",
+        "note": "Female BNC, composite video"
+      },
+      {
+        "id": "rgb-yuv-in",
+        "name": "RGB/YUV In",
+        "direction": "input",
+        "connector": "vga",
+        "note": "Female 15-pin HD (HD-15); accepts RGBHV, RGBS, RGsB, YUV/component video"
+      },
+      {
+        "id": "hdmi-in",
+        "name": "HDMI In",
+        "direction": "input",
+        "connector": "hdmi",
+        "note": "Female HDMI Type A; accepts HDMI or DVI (with adapter); HDCP-compliant"
+      },
+      {
+        "id": "audio-in-1",
+        "name": "Audio In 1",
+        "direction": "input",
+        "connector": "trs-3.5",
+        "note": "3.5mm stereo TRS; unbalanced analog audio for Composite input"
+      },
+      {
+        "id": "audio-in-2",
+        "name": "Audio In 2",
+        "direction": "input",
+        "connector": "trs-3.5",
+        "note": "3.5mm stereo TRS; unbalanced analog audio for RGB/YUV input"
+      },
+      {
+        "id": "audio-in-3",
+        "name": "Audio In 3",
+        "direction": "input",
+        "connector": "trs-3.5",
+        "note": "3.5mm stereo TRS; unbalanced analog audio for HDMI input (analog passthrough); HDMI input also carries embedded digital audio"
+      },
+      {
+        "id": "hdmi-out",
+        "name": "HDMI Out",
+        "direction": "output",
+        "connector": "hdmi",
+        "note": "Female HDMI Type A; scaled video with embedded audio output"
+      },
+      {
+        "id": "rs-232",
+        "name": "RS-232",
+        "direction": "bidirectional",
+        "connector": "euroblock",
+        "note": "Rear panel 3-pole captive screw (euroblock); Tx, Rx, G pins; serial control"
+      },
+      {
+        "id": "usb-config",
+        "name": "USB Config",
+        "direction": "bidirectional",
+        "connector": "usb-micro",
+        "note": "Front panel female Mini-USB-B connector (not micro-USB); closest match in controlled list is usb-micro. Used for Extron Configurator software connection and firmware upgrade."
+      },
+      {
+        "id": "dc-power",
+        "name": "DC Power",
+        "direction": "input",
+        "connector": "euroblock-dc",
+        "note": "Rear panel 2-pole captive screw (euroblock); 12 VDC, 1.5 A external power supply."
+      }
+    ],
+    "sourceUrl": "https://creationnetworks.net/products/extron-dsc-301-hd-three-input-compact-hdcp-compliant-video-scaler",
+    "source": "community",
+    "rev": 1,
+    "contentHash": "931c803b"
+  },
+  {
+    "id": "extron/dxp-88-hdmi",
+    "manufacturer": "Extron",
+    "model": "DXP 88 HDMI",
+    "category": "matrix",
+    "type": "Matrix router",
+    "ports": [
+      {
+        "id": "hdmi-in-1",
+        "name": "HDMI In 1",
+        "direction": "input",
+        "connector": "hdmi"
+      },
+      {
+        "id": "hdmi-in-2",
+        "name": "HDMI In 2",
+        "direction": "input",
+        "connector": "hdmi"
+      },
+      {
+        "id": "hdmi-in-3",
+        "name": "HDMI In 3",
+        "direction": "input",
+        "connector": "hdmi"
+      },
+      {
+        "id": "hdmi-in-4",
+        "name": "HDMI In 4",
+        "direction": "input",
+        "connector": "hdmi"
+      },
+      {
+        "id": "hdmi-in-5",
+        "name": "HDMI In 5",
+        "direction": "input",
+        "connector": "hdmi"
+      },
+      {
+        "id": "hdmi-in-6",
+        "name": "HDMI In 6",
+        "direction": "input",
+        "connector": "hdmi"
+      },
+      {
+        "id": "hdmi-in-7",
+        "name": "HDMI In 7",
+        "direction": "input",
+        "connector": "hdmi"
+      },
+      {
+        "id": "hdmi-in-8",
+        "name": "HDMI In 8",
+        "direction": "input",
+        "connector": "hdmi"
+      },
+      {
+        "id": "hdmi-out-1",
+        "name": "HDMI Out 1",
+        "direction": "output",
+        "connector": "hdmi"
+      },
+      {
+        "id": "hdmi-out-2",
+        "name": "HDMI Out 2",
+        "direction": "output",
+        "connector": "hdmi"
+      },
+      {
+        "id": "hdmi-out-3",
+        "name": "HDMI Out 3",
+        "direction": "output",
+        "connector": "hdmi"
+      },
+      {
+        "id": "hdmi-out-4",
+        "name": "HDMI Out 4",
+        "direction": "output",
+        "connector": "hdmi"
+      },
+      {
+        "id": "hdmi-out-5",
+        "name": "HDMI Out 5",
+        "direction": "output",
+        "connector": "hdmi"
+      },
+      {
+        "id": "hdmi-out-6",
+        "name": "HDMI Out 6",
+        "direction": "output",
+        "connector": "hdmi"
+      },
+      {
+        "id": "hdmi-out-7",
+        "name": "HDMI Out 7",
+        "direction": "output",
+        "connector": "hdmi"
+      },
+      {
+        "id": "hdmi-out-8",
+        "name": "HDMI Out 8",
+        "direction": "output",
+        "connector": "hdmi"
+      },
+      {
+        "id": "rs-232",
+        "name": "RS-232",
+        "direction": "bidirectional",
+        "connector": "rs232",
+        "note": "Rear panel, 9-pin female DE-9 connector. Pins: 2=Tx, 3=Rx, 5=GND."
+      },
+      {
+        "id": "rs-232-front",
+        "name": "RS-232 (Front)",
+        "direction": "bidirectional",
+        "connector": "trs-3.5",
+        "note": "Front panel 2.5 mm mini stereo jack (not 3.5 mm — closest available connector is trs-3.5; actual is 2.5 mm TRS). Tip=Tx, Ring=Rx, Sleeve=GND."
+      },
+      {
+        "id": "lan",
+        "name": "LAN",
+        "direction": "bidirectional",
+        "connector": "rj45",
+        "note": "10/100Base-T, supports Telnet, HTTP, DHCP."
+      },
+      {
+        "id": "ac-in",
+        "name": "AC In",
+        "direction": "input",
+        "connector": "iec",
+        "note": "Internal power supply, 100-240 VAC 50-60 Hz. Standard IEC C14 inlet typical for 2U rack equipment with internal PSU; connector type inferred — spec sheet states internal supply but does not name the inlet type explicitly."
+      }
+    ],
+    "rackUnits": 2,
+    "sourceUrl": "https://www.cinos.net/wp-content/uploads/resources/extron/matrix-switchers/cinos-extron-dxp-hdmi-series-specifications.pdf",
+    "source": "community",
+    "rev": 1,
+    "contentHash": "f868487b"
+  },
+  {
+    "id": "focusrite/rednet-d16r-mkii",
+    "manufacturer": "Focusrite",
+    "model": "RedNet D16R MkII",
+    "category": "audio",
+    "type": "Audio interface",
+    "ports": [
+      {
+        "id": "aes3-i-o-a",
+        "name": "AES3 I/O A",
+        "direction": "bidirectional",
+        "connector": "aes3",
+        "note": "DB25 AES59 — carries 8 channels AES3 in + 8 channels AES3 out"
+      },
+      {
+        "id": "aes3-i-o-b",
+        "name": "AES3 I/O B",
+        "direction": "bidirectional",
+        "connector": "aes3",
+        "note": "DB25 AES59 — carries 8 channels AES3 in + 8 channels AES3 out"
+      },
+      {
+        "id": "aes3-dars-in",
+        "name": "AES3 / DARS In",
+        "direction": "input",
+        "connector": "xlr3",
+        "note": "Alternate AES3 input; also used as optional DARS (Digital Audio Reference Signal) input"
+      },
+      {
+        "id": "aes3-out",
+        "name": "AES3 Out",
+        "direction": "output",
+        "connector": "xlr3",
+        "note": "Alternate AES3 output"
+      },
+      {
+        "id": "s-pdif-in",
+        "name": "S/PDIF In",
+        "direction": "input",
+        "connector": "rca",
+        "note": "S/PDIF input; replaces DB25 channels 3–4 when active"
+      },
+      {
+        "id": "s-pdif-out",
+        "name": "S/PDIF Out",
+        "direction": "output",
+        "connector": "rca",
+        "note": "S/PDIF output; switchable"
+      },
+      {
+        "id": "word-clock-in",
+        "name": "Word Clock In",
+        "direction": "input",
+        "connector": "bnc",
+        "note": "75Ω; switchable termination"
+      },
+      {
+        "id": "word-clock-out",
+        "name": "Word Clock Out",
+        "direction": "output",
+        "connector": "bnc",
+        "note": "75Ω"
+      },
+      {
+        "id": "network-a",
+        "name": "Network A",
+        "direction": "bidirectional",
+        "connector": "ethercon",
+        "accepts": [
+          "rj45"
+        ],
+        "note": "Primary Dante network; EtherCON NE8FBH-S; also accepts standard RJ45"
+      },
+      {
+        "id": "network-b",
+        "name": "Network B",
+        "direction": "bidirectional",
+        "connector": "ethercon",
+        "accepts": [
+          "rj45"
+        ],
+        "note": "Secondary/redundant Dante network; EtherCON NE8FBH-S; also accepts standard RJ45"
+      },
+      {
+        "id": "ac-power-a",
+        "name": "AC Power A",
+        "direction": "input",
+        "connector": "iec",
+        "note": "Locking IEC inlet (specific locking variant unconfirmed — Focusrite spec says only 'locking IEC inlets'); PSU A of dual redundant supply; 100–240V 50/60Hz 30VA"
+      },
+      {
+        "id": "ac-power-b",
+        "name": "AC Power B",
+        "direction": "input",
+        "connector": "iec",
+        "note": "Locking IEC inlet (specific locking variant unconfirmed); PSU B of dual redundant supply; 100–240V 50/60Hz 30VA"
+      }
+    ],
+    "rackUnits": 1,
+    "sourceUrl": "https://us.focusrite.com/products/rednet-d16r-mkii",
+    "source": "community",
+    "rev": 1,
+    "contentHash": "97df6ea1"
+  },
+  {
+    "id": "focusrite/scarlett-2i2-4th-gen",
+    "manufacturer": "Focusrite",
+    "model": "Scarlett 2i2 (4th Gen)",
+    "category": "audio",
+    "type": "Audio interface",
+    "ports": [
+      {
+        "id": "input-1",
+        "name": "Input 1",
+        "direction": "input",
+        "connector": "xlr3",
+        "accepts": [
+          "trs-6.35"
+        ],
+        "note": "Combo XLR / 1/4\" TRS"
+      },
+      {
+        "id": "input-2",
+        "name": "Input 2",
+        "direction": "input",
+        "connector": "xlr3",
+        "accepts": [
+          "trs-6.35"
+        ],
+        "note": "Combo XLR / 1/4\" TRS"
+      },
+      {
+        "id": "output-l",
+        "name": "Output L",
+        "direction": "output",
+        "connector": "trs-6.35"
+      },
+      {
+        "id": "output-r",
+        "name": "Output R",
+        "direction": "output",
+        "connector": "trs-6.35"
+      },
+      {
+        "id": "headphones",
+        "name": "Headphones",
+        "direction": "output",
+        "connector": "trs-6.35"
+      },
+      {
+        "id": "usb-c",
+        "name": "USB-C",
+        "direction": "bidirectional",
+        "connector": "usb-c",
+        "note": "To computer"
+      },
+      {
+        "id": "usb-c-power",
+        "name": "USB-C Power",
+        "direction": "input",
+        "connector": "usb-c",
+        "note": "5V external power"
+      }
+    ],
+    "sourceUrl": "https://focusrite.com/products/scarlett-2i2",
+    "source": "community",
+    "rev": 1,
+    "contentHash": "33e97a45"
+  },
+  {
+    "id": "furman/furman-m-8x2",
+    "manufacturer": "Furman",
+    "model": "Furman M-8x2",
+    "category": "power",
+    "type": "Power conditioner",
+    "ports": [
+      {
+        "id": "ac-outlets-rear",
+        "name": "AC Outlets (Rear)",
+        "direction": "output",
+        "connector": "nema-5-15",
+        "note": "8 switched NEMA 5-15R outlets on rear panel; 3 spaced for wall-wart adapters"
+      },
+      {
+        "id": "ac-outlet-front",
+        "name": "AC Outlet (Front)",
+        "direction": "output",
+        "connector": "nema-5-15",
+        "note": "1 convenience NEMA 5-15R outlet on front panel"
+      },
+      {
+        "id": "ac-in",
+        "name": "AC In",
+        "direction": "input",
+        "connector": "nema-5-15",
+        "note": "Captive 6 ft 14 AWG line cord with NEMA 5-15P plug; not a detachable IEC inlet"
+      }
+    ],
+    "rackUnits": 1,
+    "sourceUrl": "https://furmanpower.com/products/m-8x2",
+    "source": "community",
+    "rev": 1,
+    "contentHash": "f7bbf3d6"
+  },
+  {
+    "id": "furman/pl-8c",
+    "manufacturer": "Furman",
+    "model": "PL-8C",
+    "category": "power",
+    "type": "Power conditioner",
+    "ports": [
+      {
+        "id": "ac-in",
+        "name": "AC In",
+        "direction": "input",
+        "connector": "nema-5-15",
+        "note": "Captive 10 ft cord"
+      },
+      {
+        "id": "rear-outlet-1",
+        "name": "Rear Outlet 1",
+        "direction": "output",
+        "connector": "nema-5-15",
+        "note": "Bank A"
+      },
+      {
+        "id": "rear-outlet-2",
+        "name": "Rear Outlet 2",
+        "direction": "output",
+        "connector": "nema-5-15",
+        "note": "Bank A"
+      },
+      {
+        "id": "rear-outlet-3",
+        "name": "Rear Outlet 3",
+        "direction": "output",
+        "connector": "nema-5-15",
+        "note": "Bank A"
+      },
+      {
+        "id": "rear-outlet-4",
+        "name": "Rear Outlet 4",
+        "direction": "output",
+        "connector": "nema-5-15",
+        "note": "Bank B"
+      },
+      {
+        "id": "rear-outlet-5",
+        "name": "Rear Outlet 5",
+        "direction": "output",
+        "connector": "nema-5-15",
+        "note": "Bank B"
+      },
+      {
+        "id": "rear-outlet-6",
+        "name": "Rear Outlet 6",
+        "direction": "output",
+        "connector": "nema-5-15",
+        "note": "Bank B"
+      },
+      {
+        "id": "rear-outlet-7",
+        "name": "Rear Outlet 7",
+        "direction": "output",
+        "connector": "nema-5-15",
+        "note": "Bank B"
+      },
+      {
+        "id": "rear-outlet-8",
+        "name": "Rear Outlet 8",
+        "direction": "output",
+        "connector": "nema-5-15",
+        "note": "Bank B"
+      },
+      {
+        "id": "front-outlet",
+        "name": "Front Outlet",
+        "direction": "output",
+        "connector": "nema-5-15"
+      }
+    ],
+    "rackUnits": 1,
+    "sourceUrl": "https://www.bhphotovideo.com/c/product/584417-REG/Furman_PL_8C_PL_8_C_Power_Conditioner.html",
+    "source": "community",
+    "rev": 1,
+    "contentHash": "fbb7c8c9"
+  },
+  {
+    "id": "jbl-professional/srx835p",
+    "manufacturer": "JBL Professional",
+    "model": "SRX835P",
+    "category": "audio",
+    "type": "Speaker",
+    "ports": [
+      {
+        "id": "ch1-input",
+        "name": "CH1 Input",
+        "direction": "input",
+        "connector": "xlr3",
+        "accepts": [
+          "trs-6.35"
+        ],
+        "note": "Balanced XLR female + 1/4\" TRS combo; accepts mic, line, and instrument levels"
+      },
+      {
+        "id": "ch1-direct-out",
+        "name": "CH1 Direct Out",
+        "direction": "output",
+        "connector": "xlr3",
+        "note": "Balanced XLR male; passes CH1 signal directly from input, bypassing DSP for zero latency; for daisy-chaining"
+      },
+      {
+        "id": "ch2-input",
+        "name": "CH2 Input",
+        "direction": "input",
+        "connector": "xlr3",
+        "accepts": [
+          "trs-6.35"
+        ],
+        "note": "Balanced XLR female + 1/4\" TRS combo; accepts mic, line, and instrument levels"
+      },
+      {
+        "id": "ch2-direct-out",
+        "name": "CH2 Direct Out",
+        "direction": "output",
+        "connector": "xlr3",
+        "note": "Balanced XLR male; passes CH2 signal directly from input, bypassing DSP for zero latency; for daisy-chaining"
+      },
+      {
+        "id": "mix-out",
+        "name": "Mix Out",
+        "direction": "output",
+        "connector": "xlr3",
+        "note": "Balanced XLR male; post-DSP mix of CH1 and CH2; adds approx. 2ms latency"
+      },
+      {
+        "id": "network-ethercon",
+        "name": "Network (EtherCon)",
+        "direction": "bidirectional",
+        "connector": "ethercon",
+        "note": "HiQnet network control; for linking multiple SRX800 units; NOT to be connected to a LAN"
+      },
+      {
+        "id": "ac-power",
+        "name": "AC Power",
+        "direction": "input",
+        "connector": "iec",
+        "note": "Locking IEC AC mains inlet"
+      }
+    ],
+    "sourceUrl": "https://www.jbl.com/on/demandware.static/-/Sites-masterCatalog_Harman/default/dw11bc9856/pdfs/JBL_SRX800_UsersGuide_061515.pdf",
+    "source": "community",
+    "rev": 1,
+    "contentHash": "49ca1ea2"
+  },
+  {
+    "id": "jvc/jvc-gy-hc550",
+    "manufacturer": "JVC",
+    "model": "JVC GY-HC550",
+    "category": "source",
+    "type": "Camera",
+    "ports": [
+      {
+        "id": "sdi-out",
+        "name": "SDI Out",
+        "direction": "output",
+        "connector": "bnc",
+        "note": "3G-SDI, up to 1080/60p 4:2:2 10-bit with embedded audio and timecode"
+      },
+      {
+        "id": "hdmi-out",
+        "name": "HDMI Out",
+        "direction": "output",
+        "connector": "hdmi",
+        "note": "Full-size Type A; up to UHD (3840x2160) 60p 4:2:2 10-bit"
+      },
+      {
+        "id": "av-out",
+        "name": "AV Out",
+        "direction": "output",
+        "connector": "trs-3.5",
+        "note": "3.5mm TRRS composite A/V output"
+      },
+      {
+        "id": "input-1",
+        "name": "Input 1",
+        "direction": "input",
+        "connector": "xlr3",
+        "note": "XLR 3-pin Mic/Line input, +48V phantom power"
+      },
+      {
+        "id": "input-2",
+        "name": "Input 2",
+        "direction": "input",
+        "connector": "xlr3",
+        "note": "XLR 3-pin Mic/Line input, +48V phantom power"
+      },
+      {
+        "id": "aux-in",
+        "name": "AUX In",
+        "direction": "input",
+        "connector": "trs-3.5",
+        "note": "3.5mm stereo mini jack mic-level input"
+      },
+      {
+        "id": "headphone",
+        "name": "Headphone",
+        "direction": "output",
+        "connector": "trs-3.5",
+        "note": "3.5mm stereo headphone monitor output"
+      },
+      {
+        "id": "tc",
+        "name": "TC",
+        "direction": "bidirectional",
+        "connector": "rca",
+        "note": "Timecode input/output via RCA connector; confirmed by ProVideo Coalition review and VidOvation spec listing"
+      },
+      {
+        "id": "lan",
+        "name": "LAN",
+        "direction": "bidirectional",
+        "connector": "rj45",
+        "note": "1000Base-T Ethernet; used for streaming, IFB, and remote control"
+      },
+      {
+        "id": "usb-host",
+        "name": "USB Host",
+        "direction": "bidirectional",
+        "connector": "usb-a",
+        "note": "USB 3.0 Type-A; supports USB LAN adapters and optional accessories"
+      },
+      {
+        "id": "remote",
+        "name": "Remote",
+        "direction": "input",
+        "connector": "trs-3.5",
+        "note": "2.5mm mini jack LANC (Control-L) wired remote; closest controlled-list connector is trs-3.5 — actual connector is 2.5mm TS/TRRS, not standard 3.5mm"
+      },
+      {
+        "id": "dc-in",
+        "name": "DC In",
+        "direction": "input",
+        "connector": "dc-barrel",
+        "note": "DC 12V input via AC adapter (battery is 7.2V but mounts in battery slot, not a panel connector)"
+      }
+    ],
+    "sourceUrl": "https://www.jvc.com/usa/pro/professional-video/handheld-cameras/gy-hc550u/",
+    "source": "community",
+    "rev": 1,
+    "contentHash": "e7971f00"
+  },
+  {
+    "id": "kramer-electronics/kramer-via-go2",
+    "manufacturer": "Kramer Electronics",
+    "model": "Kramer VIA GO2",
+    "category": "source",
+    "type": "Media source",
+    "ports": [
+      {
+        "id": "hdmi",
+        "name": "HDMI",
+        "direction": "output",
+        "connector": "hdmi",
+        "note": "Labeled 'HDMI™ Connector' (item 6 in the product diagram). Official spec table lists it under Outputs. Manual Rev 5 also describes an HDMI IN feature (software-switchable), but the hardware spec table lists only one HDMI port under Outputs."
+      },
+      {
+        "id": "lan",
+        "name": "LAN",
+        "direction": "bidirectional",
+        "connector": "rj45",
+        "note": "Labeled 'RJ-45 Connector' (item 7). Used for LAN network connectivity."
+      },
+      {
+        "id": "usb-3-0",
+        "name": "USB 3.0",
+        "direction": "bidirectional",
+        "connector": "usb-a",
+        "note": "Labeled 'USB 3.0 Connector' (item 3). Female Type-A. Used for keyboard, mouse, or other USB peripherals."
+      },
+      {
+        "id": "usb-2-0",
+        "name": "USB 2.0",
+        "direction": "bidirectional",
+        "connector": "usb-a",
+        "note": "Labeled 'USB 2.0 Connector' (item 4). Female Type-A. Used for keyboard, mouse, or other USB peripherals."
+      },
+      {
+        "id": "power",
+        "name": "Power",
+        "direction": "input",
+        "connector": "dc-barrel",
+        "note": "Labeled 'Power Connector' (item 8). Connects to included 12V DC / 2A external power adapter."
+      }
+    ],
+    "sourceUrl": "https://www.markertek.com/Attachments/Manuals/Kramer/KR-VIA-GO2_User-Manual.pdf",
+    "source": "community",
+    "rev": 1,
+    "contentHash": "2641e521"
+  },
+  {
+    "id": "kramer/kramer-vs-84h2",
+    "manufacturer": "Kramer",
+    "model": "Kramer VS-84H2",
+    "category": "matrix",
+    "type": "Matrix router",
+    "ports": [
+      {
+        "id": "input-1",
+        "name": "INPUT 1",
+        "direction": "input",
+        "connector": "hdmi"
+      },
+      {
+        "id": "input-2",
+        "name": "INPUT 2",
+        "direction": "input",
+        "connector": "hdmi"
+      },
+      {
+        "id": "input-3",
+        "name": "INPUT 3",
+        "direction": "input",
+        "connector": "hdmi"
+      },
+      {
+        "id": "input-4",
+        "name": "INPUT 4",
+        "direction": "input",
+        "connector": "hdmi"
+      },
+      {
+        "id": "input-5",
+        "name": "INPUT 5",
+        "direction": "input",
+        "connector": "hdmi"
+      },
+      {
+        "id": "input-6",
+        "name": "INPUT 6",
+        "direction": "input",
+        "connector": "hdmi"
+      },
+      {
+        "id": "input-7",
+        "name": "INPUT 7",
+        "direction": "input",
+        "connector": "hdmi"
+      },
+      {
+        "id": "input-8",
+        "name": "INPUT 8",
+        "direction": "input",
+        "connector": "hdmi"
+      },
+      {
+        "id": "output-1",
+        "name": "OUTPUT 1",
+        "direction": "output",
+        "connector": "hdmi"
+      },
+      {
+        "id": "output-2",
+        "name": "OUTPUT 2",
+        "direction": "output",
+        "connector": "hdmi"
+      },
+      {
+        "id": "output-3",
+        "name": "OUTPUT 3",
+        "direction": "output",
+        "connector": "hdmi"
+      },
+      {
+        "id": "output-4",
+        "name": "OUTPUT 4",
+        "direction": "output",
+        "connector": "hdmi"
+      },
+      {
+        "id": "ethernet",
+        "name": "ETHERNET",
+        "direction": "bidirectional",
+        "connector": "rj45"
+      },
+      {
+        "id": "rs-232",
+        "name": "RS-232",
+        "direction": "bidirectional",
+        "connector": "euroblock",
+        "note": "3-pin terminal block for serial control from PC or control system"
+      },
+      {
+        "id": "prog",
+        "name": "PROG",
+        "direction": "bidirectional",
+        "connector": "usb-micro",
+        "note": "Mini USB port for firmware upgrade and PC/controller communication"
+      },
+      {
+        "id": "usb",
+        "name": "USB",
+        "direction": "output",
+        "connector": "usb-a",
+        "note": "5V/2A USB Type-A port for powering an external device"
+      },
+      {
+        "id": "ac-in",
+        "name": "AC In",
+        "direction": "input",
+        "connector": "iec",
+        "note": "Universal 100-240V AC 50/60Hz inlet; IEC C14 type inferred from detachable power cord reference in manual — exact inlet type not explicitly stated in available documentation"
+      }
+    ],
+    "rackUnits": 1,
+    "sourceUrl": "https://www.markertek.com/product/kr-vs-84h2/kramer-vs-84h2-8x4-4k-hdr-hdcp-2-2-hdmi-matrix-switcher-with-digital-audio-routing",
+    "source": "community",
+    "rev": 1,
+    "contentHash": "4dd98e50"
+  },
+  {
+    "id": "kramer/vs-211h2",
+    "manufacturer": "Kramer",
+    "model": "VS-211H2",
+    "category": "switcher",
+    "type": "Video switcher",
+    "ports": [
+      {
+        "id": "input-1",
+        "name": "INPUT 1",
+        "direction": "input",
+        "connector": "hdmi",
+        "note": "HDMI Type A female; connects to HDMI source 1"
+      },
+      {
+        "id": "input-2",
+        "name": "INPUT 2",
+        "direction": "input",
+        "connector": "hdmi",
+        "note": "HDMI Type A female; connects to HDMI source 2"
+      },
+      {
+        "id": "output",
+        "name": "OUTPUT",
+        "direction": "output",
+        "connector": "hdmi",
+        "note": "HDMI Type A female; connects to HDMI display/acceptor"
+      },
+      {
+        "id": "ctrl-rs-232",
+        "name": "CTRL RS-232",
+        "direction": "bidirectional",
+        "connector": "euroblock",
+        "note": "3-pin terminal block for RS-232 serial device control"
+      },
+      {
+        "id": "remote",
+        "name": "REMOTE",
+        "direction": "input",
+        "connector": "euroblock",
+        "note": "3-pin terminal block (IN1, IN2, GND) for contact closure remote switching"
+      },
+      {
+        "id": "5v-dc",
+        "name": "5V DC",
+        "direction": "input",
+        "connector": "dc-barrel",
+        "note": "Power input; supplied by included 5.2V DC / 4A desktop power adapter"
+      }
+    ],
+    "sourceUrl": "https://www.manualslib.com/manual/1536717/Kramer-Vs-211h2.html",
+    "source": "community",
+    "rev": 1,
+    "contentHash": "3df3c9c3"
+  },
+  {
+    "id": "lab-gruppen/lab-gruppen-fp-10000q",
+    "manufacturer": "Lab.gruppen",
+    "model": "Lab.gruppen FP 10000Q",
+    "category": "amplifier",
+    "type": "Amplifier",
+    "ports": [
+      {
+        "id": "input-a",
+        "name": "Input A",
+        "direction": "input",
+        "connector": "xlr3",
+        "note": "Balanced XLR-F, electronically balanced, channel A"
+      },
+      {
+        "id": "input-b",
+        "name": "Input B",
+        "direction": "input",
+        "connector": "xlr3",
+        "note": "Balanced XLR-F, electronically balanced, channel B"
+      },
+      {
+        "id": "input-c",
+        "name": "Input C",
+        "direction": "input",
+        "connector": "xlr3",
+        "note": "Balanced XLR-F, electronically balanced, channel C"
+      },
+      {
+        "id": "input-d",
+        "name": "Input D",
+        "direction": "input",
+        "connector": "xlr3",
+        "note": "Balanced XLR-F, electronically balanced, channel D"
+      },
+      {
+        "id": "output-a",
+        "name": "Output A",
+        "direction": "output",
+        "connector": "speakon",
+        "note": "Neutrik NL4FC speakON on SP variant; binding posts on BP variant (must be specified at order). This port describes the SP variant."
+      },
+      {
+        "id": "output-b",
+        "name": "Output B",
+        "direction": "output",
+        "connector": "speakon",
+        "note": "Neutrik NL4FC speakON on SP variant; binding posts on BP variant."
+      },
+      {
+        "id": "output-c",
+        "name": "Output C",
+        "direction": "output",
+        "connector": "speakon",
+        "note": "Neutrik NL4FC speakON on SP variant; binding posts on BP variant."
+      },
+      {
+        "id": "output-d",
+        "name": "Output D",
+        "direction": "output",
+        "connector": "speakon",
+        "note": "Neutrik NL4FC speakON on SP variant; binding posts on BP variant."
+      },
+      {
+        "id": "nomadlink-network-in",
+        "name": "NomadLink Network In",
+        "direction": "input",
+        "connector": "ethercon",
+        "note": "Neutrik EtherCon-housed RJ45 for NomadLink Ethernet control and monitoring network"
+      },
+      {
+        "id": "nomadlink-network-out",
+        "name": "NomadLink Network Out",
+        "direction": "output",
+        "connector": "ethercon",
+        "note": "Neutrik EtherCon-housed RJ45 for NomadLink Ethernet daisy-chain output"
+      },
+      {
+        "id": "ac-in",
+        "name": "AC In",
+        "direction": "input",
+        "connector": "iec",
+        "note": "Captive mains cord — 230V CE version uses 16A CEE7/Schuko cord; 115V ETL version uses 30A NEMA L6-30 twist-lock cord. Neither is a panel-mount IEC inlet; 'iec' is the closest available connector type. Actual connector is region-dependent hardwired cord."
+      }
+    ],
+    "rackUnits": 2,
+    "sourceUrl": "https://www.manualslib.com/manual/290497/Lab-Gruppen-FpPlus-Series-Fp-10000q.html",
+    "source": "community",
+    "rev": 1,
+    "contentHash": "bd89db84"
+  },
+  {
+    "id": "lectrosonics/lectrosonics-src",
+    "manufacturer": "Lectrosonics",
+    "model": "Lectrosonics SRc",
+    "category": "audio",
+    "type": "Other",
+    "ports": [
+      {
+        "id": "antenna-1",
+        "name": "Antenna 1",
+        "direction": "input",
+        "connector": "bnc",
+        "note": "Actual connector is SMA female (50 Ohm). SMA is not in the controlled list; closest listed is bnc (also a 50-Ohm RF coaxial). RF antenna input for channel 1."
+      },
+      {
+        "id": "antenna-2",
+        "name": "Antenna 2",
+        "direction": "input",
+        "connector": "bnc",
+        "note": "Actual connector is SMA female (50 Ohm). Same caveat as Antenna 1. RF antenna input for channel 2."
+      },
+      {
+        "id": "audio-out-ta5",
+        "name": "Audio Out (TA5)",
+        "direction": "output",
+        "connector": "ts-6.35",
+        "note": "Actual connector is a 5-pin TA5M (Switchcraft TA-series mini connector), carrying balanced stereo (CH1 and CH2) outputs. TA5 is not in the controlled list; it is a proprietary Switchcraft 5-pin locking mini connector — not TS, TRS, or XLR. Closest available is ts-6.35 as a placeholder, but this is a significant mismatch. Located on front panel."
+      },
+      {
+        "id": "ch1-audio-out",
+        "name": "CH1 Audio Out",
+        "direction": "output",
+        "connector": "xlr3",
+        "note": "Actual connector is TA3M (Switchcraft 3-pin mini locking connector, also called mini-XLR). Balanced mono output for channel 1 via SREXT or SRHARNESS rear adapter. TA3 is not in the controlled list; xlr3 is the closest functional equivalent."
+      },
+      {
+        "id": "ch2-audio-out",
+        "name": "CH2 Audio Out",
+        "direction": "output",
+        "connector": "xlr3",
+        "note": "Actual connector is TA3M (Switchcraft 3-pin mini locking connector). Balanced mono output for channel 2 via SREXT or SRHARNESS rear adapter. Same caveat as CH1."
+      },
+      {
+        "id": "ir-sync",
+        "name": "IR Sync",
+        "direction": "bidirectional",
+        "connector": "ir",
+        "note": "Front-panel IR sync port for pairing/programming compatible Lectrosonics transmitters. Optical, not a wired connector."
+      },
+      {
+        "id": "dc-power",
+        "name": "DC Power",
+        "direction": "input",
+        "connector": "dc-barrel",
+        "note": "Actual connector is an LZR-style locking coaxial DC connector (threaded lock collar, center-positive, ID ~0.080 in / OD ~0.218 in). This is a proprietary Lectrosonics locking barrel — dc-barrel is the closest standard in the list. Accepts 7–18 V DC @ ~1.4 W. Provided via SREXT adapter rear panel."
+      }
+    ],
+    "sourceUrl": "https://www.manualslib.com/manual/1302835/Lectrosonics-Src.html",
+    "source": "community",
+    "rev": 1,
+    "contentHash": "a9918b3c"
+  },
+  {
+    "id": "lg/86uh5f-h",
+    "manufacturer": "LG",
+    "model": "86UH5F-H",
+    "category": "display",
+    "type": "Display",
+    "ports": [
+      {
+        "id": "hdmi-in-1",
+        "name": "HDMI In 1",
+        "direction": "input",
+        "connector": "hdmi",
+        "note": "HDCP 2.2/1.4"
+      },
+      {
+        "id": "hdmi-in-2",
+        "name": "HDMI In 2",
+        "direction": "input",
+        "connector": "hdmi",
+        "note": "HDCP 2.2/1.4"
+      },
+      {
+        "id": "hdmi-in-3",
+        "name": "HDMI In 3",
+        "direction": "input",
+        "connector": "hdmi",
+        "note": "HDCP 1.4"
+      },
+      {
+        "id": "dvi-d-in",
+        "name": "DVI-D In",
+        "direction": "input",
+        "connector": "dvi",
+        "note": "HDCP 1.4"
+      },
+      {
+        "id": "displayport-in",
+        "name": "DisplayPort In",
+        "direction": "input",
+        "connector": "dp",
+        "note": "HDCP 2.2/1.3"
+      },
+      {
+        "id": "hdmi-out",
+        "name": "HDMI Out",
+        "direction": "output",
+        "connector": "hdmi"
+      },
+      {
+        "id": "displayport-out",
+        "name": "DisplayPort Out",
+        "direction": "output",
+        "connector": "dp",
+        "note": "Loop-through; accepts signal from HDMI1/2, DVI, DP, USB-C, or OPS inputs"
+      },
+      {
+        "id": "audio-in",
+        "name": "Audio In",
+        "direction": "input",
+        "connector": "trs-3.5"
+      },
+      {
+        "id": "audio-out",
+        "name": "Audio Out",
+        "direction": "output",
+        "connector": "trs-3.5"
+      },
+      {
+        "id": "rs-232c-in",
+        "name": "RS-232C In",
+        "direction": "input",
+        "connector": "trs-3.5",
+        "note": "3.5mm 4-pin; RS-232C control"
+      },
+      {
+        "id": "rs-232c-out",
+        "name": "RS-232C Out",
+        "direction": "output",
+        "connector": "trs-3.5",
+        "note": "3.5mm; RS-232C daisy-chain"
+      },
+      {
+        "id": "ir-in",
+        "name": "IR In",
+        "direction": "input",
+        "connector": "ir",
+        "note": "3.5mm"
+      },
+      {
+        "id": "lan",
+        "name": "LAN",
+        "direction": "bidirectional",
+        "connector": "rj45"
+      },
+      {
+        "id": "usb-a-1",
+        "name": "USB-A 1",
+        "direction": "input",
+        "connector": "usb-a",
+        "note": "USB 2.0"
+      },
+      {
+        "id": "usb-a-2",
+        "name": "USB-A 2",
+        "direction": "input",
+        "connector": "usb-a",
+        "note": "USB 2.0"
+      },
+      {
+        "id": "ac-power",
+        "name": "AC Power",
+        "direction": "input",
+        "connector": "iec",
+        "note": "AC 100-240V~, 50/60 Hz; 215W typical"
+      }
+    ],
+    "sourceUrl": "https://solutions.lg.com/us/digital-signage/lg-86uh5f-h",
+    "source": "community",
+    "rev": 1,
+    "contentHash": "6355499f"
+  },
+  {
+    "id": "lg/oled-c3",
+    "manufacturer": "LG",
+    "model": "OLED C3",
+    "category": "display",
+    "type": "Display",
+    "ports": [
+      {
+        "id": "hdmi-1",
+        "name": "HDMI 1",
+        "direction": "input",
+        "connector": "hdmi"
+      },
+      {
+        "id": "hdmi-2-earc",
+        "name": "HDMI 2 (eARC)",
+        "direction": "input",
+        "connector": "hdmi",
+        "note": "eARC"
+      },
+      {
+        "id": "hdmi-3",
+        "name": "HDMI 3",
+        "direction": "input",
+        "connector": "hdmi"
+      },
+      {
+        "id": "hdmi-4",
+        "name": "HDMI 4",
+        "direction": "input",
+        "connector": "hdmi"
+      },
+      {
+        "id": "optical-out",
+        "name": "Optical Out",
+        "direction": "output",
+        "connector": "toslink"
+      },
+      {
+        "id": "ethernet",
+        "name": "Ethernet",
+        "direction": "bidirectional",
+        "connector": "rj45"
+      },
+      {
+        "id": "usb-1",
+        "name": "USB 1",
+        "direction": "bidirectional",
+        "connector": "usb-a",
+        "note": "USB 2.0"
+      },
+      {
+        "id": "usb-2",
+        "name": "USB 2",
+        "direction": "bidirectional",
+        "connector": "usb-a",
+        "note": "USB 2.0"
+      },
+      {
+        "id": "usb-3",
+        "name": "USB 3",
+        "direction": "bidirectional",
+        "connector": "usb-a",
+        "note": "USB 2.0"
+      },
+      {
+        "id": "rs-232c",
+        "name": "RS-232C",
+        "direction": "bidirectional",
+        "connector": "rs232",
+        "note": "Service / control"
+      },
+      {
+        "id": "ac-in",
+        "name": "AC In",
+        "direction": "input",
+        "connector": "nema-5-15",
+        "note": "Captive cord (US)"
+      }
+    ],
+    "sourceUrl": "https://www.flatpanelshd.com/review.php?subaction=showfull&id=1686299145",
+    "source": "community",
+    "rev": 1,
+    "contentHash": "ba809beb"
+  },
+  {
+    "id": "magewell/pro-convert-hdmi-4k-plus",
+    "manufacturer": "Magewell",
+    "model": "Pro Convert HDMI 4K Plus",
+    "category": "converter",
+    "type": "Converter",
+    "ports": [
+      {
+        "id": "hdmi-in",
+        "name": "HDMI In",
+        "direction": "input",
+        "connector": "hdmi",
+        "note": "HDMI 2.0 / HDMI 1.4 / DVI-D; supports up to 4096×2160 60fps 4:4:4; carries up to 8-channel embedded audio"
+      },
+      {
+        "id": "hdmi-loop-through",
+        "name": "HDMI Loop Through",
+        "direction": "output",
+        "connector": "hdmi",
+        "note": "HDMI loop-through of the input signal; maximum 4096×2160 60fps 4:4:4"
+      },
+      {
+        "id": "ethernet",
+        "name": "Ethernet",
+        "direction": "bidirectional",
+        "connector": "rj45",
+        "note": "10/100/1000 Mbps Gigabit; primary NDI output path; also powers the device via IEEE 802.3af PoE"
+      },
+      {
+        "id": "usb",
+        "name": "USB",
+        "direction": "bidirectional",
+        "connector": "usb-b",
+        "note": "USB 2.0 Type B; used for device configuration, RNDIS/ECM network access, and as an alternative 5V/2.1A power input via included adapter; no separate DC barrel jack — USB-B is the only discrete power connector"
+      },
+      {
+        "id": "control-tally",
+        "name": "Control/Tally",
+        "direction": "bidirectional",
+        "connector": "midi-din",
+        "note": "Mini-DIN-8 jack shared with tally function; supports PTZ camera control (VISCA, PELCO-P, PELCO-D) and RS-232/RS-422 via included Mini-DIN-8 to DIN-8+DB9 breakout cable. midi-din is the closest available connector id for an 8-pin Mini-DIN (the standard list has no mini-din-8 entry)"
+      }
+    ],
+    "sourceUrl": "https://www.magewell.com/tech-specs/pro-convert-hdmi-4k-plus",
+    "source": "community",
+    "rev": 1,
+    "contentHash": "6c4273d2"
+  },
+  {
+    "id": "mersive/solstice-pod-gen3",
+    "manufacturer": "Mersive",
+    "model": "Solstice Pod Gen3",
+    "category": "other",
+    "type": "Other",
+    "ports": [
+      {
+        "id": "hdmi-out-1",
+        "name": "HDMI Out 1",
+        "direction": "output",
+        "connector": "hdmi",
+        "note": "HDMI 2.0; supports up to 4K when used as sole display output"
+      },
+      {
+        "id": "hdmi-out-2",
+        "name": "HDMI Out 2",
+        "direction": "output",
+        "connector": "hdmi",
+        "note": "HDMI 1.4; supports up to 1080p; 4K only available on HDMI Out 1 when used alone"
+      },
+      {
+        "id": "hdmi-in",
+        "name": "HDMI In",
+        "direction": "input",
+        "connector": "hdmi",
+        "note": "HDMI 1.4b; HDCP not supported"
+      },
+      {
+        "id": "stereo-out",
+        "name": "Stereo Out",
+        "direction": "output",
+        "connector": "trs-3.5",
+        "note": "3.5mm stereo analog audio output"
+      },
+      {
+        "id": "usb-3-0-1",
+        "name": "USB 3.0 (1)",
+        "direction": "bidirectional",
+        "connector": "usb-a",
+        "note": "USB 3.0 host port"
+      },
+      {
+        "id": "usb-3-0-2",
+        "name": "USB 3.0 (2)",
+        "direction": "bidirectional",
+        "connector": "usb-a",
+        "note": "USB 3.0 host port"
+      },
+      {
+        "id": "usb-c",
+        "name": "USB-C",
+        "direction": "bidirectional",
+        "connector": "usb-c",
+        "note": "Reserved for future features per Mersive documentation"
+      },
+      {
+        "id": "ethernet",
+        "name": "Ethernet",
+        "direction": "bidirectional",
+        "connector": "rj45",
+        "note": "Gigabit Ethernet with PoE+ support (IEEE 802.3 Type 2); device can be powered via this port instead of DC barrel"
+      },
+      {
+        "id": "dc-power-in",
+        "name": "DC Power In",
+        "direction": "input",
+        "connector": "dc-barrel",
+        "note": "12VDC, 2A max; 5.5mm OD / 2.1mm ID, center positive. UL/IEC/EN certified PS2/LPS supply. Mutually exclusive with PoE+ power."
+      }
+    ],
+    "sourceUrl": "https://documentation.mersive.com/en/solstice/deploy-solstice/solstice-setup/gen3-solstice-pod-specs.html",
+    "source": "community",
+    "rev": 1,
+    "contentHash": "fe4ad685"
+  },
+  {
+    "id": "meyer-sound/meyer-sound-leopard",
+    "manufacturer": "Meyer Sound",
+    "model": "Meyer Sound LEOPARD",
+    "category": "audio",
+    "type": "Speaker",
+    "ports": [
+      {
+        "id": "input",
+        "name": "Input",
+        "direction": "input",
+        "connector": "xlr5",
+        "accepts": [
+          "xlr3"
+        ],
+        "note": "XLR 5-pin female; pins 2/3 carry balanced audio, pins 4/5 carry RMS network signal. XLR 3-pin female variant available (audio only, no RMS)."
+      },
+      {
+        "id": "loop-output",
+        "name": "Loop Output",
+        "direction": "output",
+        "connector": "xlr5",
+        "accepts": [
+          "xlr3"
+        ],
+        "note": "XLR 5-pin male loop output; wired in parallel to Input, passes unbuffered source signal even when unit is powered off. XLR 3-pin male variant available."
+      },
+      {
+        "id": "ac-in",
+        "name": "AC In",
+        "direction": "input",
+        "connector": "powercon",
+        "note": "powerCON 20 (Neutrik blue, NAC3MPA-1 style) AC power input. 100–240 V AC, 50/60 Hz, auto-selecting."
+      },
+      {
+        "id": "ac-loop-out",
+        "name": "AC Loop Out",
+        "direction": "output",
+        "connector": "powercon",
+        "note": "powerCON 20 loop output for daisy-chaining AC power to adjacent cabinet."
+      }
+    ],
+    "sourceUrl": "https://docs.meyersound.com/products/en/datasheet---leopard---leopard-m80.html",
+    "source": "community",
+    "rev": 1,
+    "contentHash": "83326dcc"
+  },
+  {
+    "id": "netgear/gs308v3",
+    "manufacturer": "NETGEAR",
+    "model": "GS308v3",
+    "category": "network",
+    "type": "Network switch",
+    "ports": [
+      {
+        "id": "port-1",
+        "name": "Port 1",
+        "direction": "bidirectional",
+        "connector": "rj45"
+      },
+      {
+        "id": "port-2",
+        "name": "Port 2",
+        "direction": "bidirectional",
+        "connector": "rj45"
+      },
+      {
+        "id": "port-3",
+        "name": "Port 3",
+        "direction": "bidirectional",
+        "connector": "rj45"
+      },
+      {
+        "id": "port-4",
+        "name": "Port 4",
+        "direction": "bidirectional",
+        "connector": "rj45"
+      },
+      {
+        "id": "port-5",
+        "name": "Port 5",
+        "direction": "bidirectional",
+        "connector": "rj45"
+      },
+      {
+        "id": "port-6",
+        "name": "Port 6",
+        "direction": "bidirectional",
+        "connector": "rj45"
+      },
+      {
+        "id": "port-7",
+        "name": "Port 7",
+        "direction": "bidirectional",
+        "connector": "rj45"
+      },
+      {
+        "id": "port-8",
+        "name": "Port 8",
+        "direction": "bidirectional",
+        "connector": "rj45"
+      },
+      {
+        "id": "dc-power",
+        "name": "DC Power",
+        "direction": "input",
+        "connector": "dc-barrel"
+      }
+    ],
+    "sourceUrl": "https://www.netgear.com/business/wired/switches/unmanaged/gs308/",
+    "source": "community",
+    "rev": 1,
+    "contentHash": "d0612094"
+  },
+  {
+    "id": "netgear/m4250-26g4f-poe",
+    "manufacturer": "Netgear",
+    "model": "M4250-26G4F-PoE+",
+    "category": "network",
+    "type": "Network switch",
+    "ports": [
+      {
+        "id": "port-1-24-poe",
+        "name": "Port 1–24 (PoE+)",
+        "direction": "bidirectional",
+        "connector": "rj45",
+        "note": "24x 10/100/1000BASE-T RJ45 with PoE+ (802.3at), 300W total budget, 30W per port"
+      },
+      {
+        "id": "port-25-26",
+        "name": "Port 25–26",
+        "direction": "bidirectional",
+        "connector": "rj45",
+        "note": "2x 10/100/1000BASE-T RJ45 non-PoE uplink ports"
+      },
+      {
+        "id": "sfp-1-4",
+        "name": "SFP 1–4",
+        "direction": "bidirectional",
+        "connector": "sfp",
+        "note": "4x 1000BASE-X SFP fiber/copper uplink ports"
+      },
+      {
+        "id": "management",
+        "name": "Management",
+        "direction": "bidirectional",
+        "connector": "rj45",
+        "note": "1x dedicated out-of-band management RJ45 port"
+      },
+      {
+        "id": "console-usb-c",
+        "name": "Console (USB-C)",
+        "direction": "bidirectional",
+        "connector": "usb-c",
+        "note": "USB Type-C console port; USB-C-to-serial cable included"
+      },
+      {
+        "id": "console-rj45",
+        "name": "Console (RJ45)",
+        "direction": "bidirectional",
+        "connector": "rj45",
+        "note": "RS232 serial console via RJ45 connector; RJ45-to-DB9 adapter cable included — physical connector is RJ45 but carries RS232 signal"
+      },
+      {
+        "id": "usb",
+        "name": "USB",
+        "direction": "bidirectional",
+        "connector": "usb-a",
+        "note": "1x USB Type-A port for storage/firmware"
+      },
+      {
+        "id": "ac-in",
+        "name": "AC In",
+        "direction": "input",
+        "connector": "iec",
+        "note": "IEC C14 inlet with integral on/off switch; power consumption 35.8W (no PoE) to 401W (full PoE load)"
+      }
+    ],
+    "rackUnits": 1,
+    "sourceUrl": "https://www.netguardstore.com/gsm4230p.asp",
+    "source": "community",
+    "rev": 1,
+    "contentHash": "05ea0d3b"
+  },
+  {
+    "id": "netgear/netgear-m4250-40g8xf-poe",
+    "manufacturer": "Netgear",
+    "model": "Netgear M4250-40G8XF-PoE+",
+    "category": "network",
+    "type": "Network switch",
+    "ports": [
+      {
+        "id": "poe-port-1-40",
+        "name": "PoE+ Port 1–40",
+        "direction": "bidirectional",
+        "connector": "rj45",
+        "note": "40x 10/100/1000BASE-T PoE+ ports (802.3at), 960W total PoE budget, rear-facing for clean AV rack integration"
+      },
+      {
+        "id": "sfp-port-1-8",
+        "name": "SFP+ Port 1–8",
+        "direction": "bidirectional",
+        "connector": "sfp",
+        "note": "8x 1G/10G SFP+ fiber uplink ports"
+      },
+      {
+        "id": "management",
+        "name": "Management",
+        "direction": "bidirectional",
+        "connector": "rj45",
+        "note": "1x out-of-band 1G Ethernet management port"
+      },
+      {
+        "id": "console-usb-c",
+        "name": "Console (USB-C)",
+        "direction": "bidirectional",
+        "connector": "usb-c",
+        "note": "USB-C console port for CLI management; included cable: USB-C to USB-A 2.0"
+      },
+      {
+        "id": "console-rj45",
+        "name": "Console (RJ45)",
+        "direction": "bidirectional",
+        "connector": "rj45",
+        "note": "RJ45 RS232 serial console port; included cable: RJ45 straight-through to DB9. Closest controlled-list connector is rj45 (carries RS232 signaling via Cisco-style rollover cable)."
+      },
+      {
+        "id": "usb-a-storage",
+        "name": "USB-A Storage",
+        "direction": "bidirectional",
+        "connector": "usb-a",
+        "note": "1x USB-A port for configuration files, logs, and firmware images"
+      },
+      {
+        "id": "ac-in",
+        "name": "AC In",
+        "direction": "input",
+        "connector": "iec",
+        "note": "IEC C14 inlet with on/off switch; uses standard IEC C13-to-C14 power cord"
+      }
+    ],
+    "rackUnits": 1,
+    "sourceUrl": "https://www.netguardstore.com/gsm4248px.asp",
+    "source": "community",
+    "rev": 1,
+    "contentHash": "9c32eaaa"
+  },
+  {
+    "id": "panasonic/panasonic-aw-ue150",
+    "manufacturer": "Panasonic",
+    "model": "Panasonic AW-UE150",
+    "category": "source",
+    "type": "Camera",
+    "ports": [
+      {
+        "id": "g-l-in",
+        "name": "G/L IN",
+        "direction": "input",
+        "connector": "bnc",
+        "note": "Genlock input; accepts Black Burst Sync (BBS) and tri-level sync"
+      },
+      {
+        "id": "12g-sdi-out",
+        "name": "12G-SDI OUT",
+        "direction": "output",
+        "connector": "bnc",
+        "note": "SMPTE 2082-1 standard, 75Ω"
+      },
+      {
+        "id": "3g-sdi-out",
+        "name": "3G-SDI OUT",
+        "direction": "output",
+        "connector": "bnc",
+        "note": "SMPTE 424M / SMPTE 292, 75Ω, Level-A/Level-B"
+      },
+      {
+        "id": "moni-out",
+        "name": "MONI OUT",
+        "direction": "output",
+        "connector": "bnc",
+        "note": "HD-SDI monitor output, SMPTE 292, 75Ω"
+      },
+      {
+        "id": "hdmi-out",
+        "name": "HDMI OUT",
+        "direction": "output",
+        "connector": "hdmi",
+        "note": "HDMI 2.0 standard, 4:2:2/10-bit, HDCP not supported"
+      },
+      {
+        "id": "optical-fiber",
+        "name": "Optical Fiber",
+        "direction": "output",
+        "connector": "sfp",
+        "note": "SFP+ standard slot for optional fiber output module"
+      },
+      {
+        "id": "lan",
+        "name": "LAN",
+        "direction": "bidirectional",
+        "connector": "rj45",
+        "note": "100BASE-TX / 1000BASE-T; carries IP video streaming, IP camera control, and PoE++ power input (IEEE802.3bt, 42–57 V DC)"
+      },
+      {
+        "id": "rs-422-control-in",
+        "name": "RS-422 CONTROL IN",
+        "direction": "input",
+        "connector": "rj45",
+        "note": "RS-422 serial control over RJ-45 connector; not a standard RJ-45 network port"
+      },
+      {
+        "id": "mic-line-in",
+        "name": "MIC/LINE IN",
+        "direction": "input",
+        "connector": "trs-3.5",
+        "note": "Stereo mini jack (3.5mm); selectable plug-in power; AAC audio compatible (IP output only)"
+      },
+      {
+        "id": "dc-12v-in",
+        "name": "DC 12V IN",
+        "direction": "input",
+        "connector": "xlr4-dc",
+        "note": "4-pin XLR (XLR4) DC input; accepts 10.8–13.2 V DC at 4.0 A."
+      }
+    ],
+    "sourceUrl": "https://pro-av.panasonic.net/en/products/aw-ue150/spec.html",
+    "source": "community",
+    "rev": 1,
+    "contentHash": "6892d480"
+  },
+  {
+    "id": "planar-systems/planar-pct2235",
+    "manufacturer": "Planar Systems",
+    "model": "Planar PCT2235",
+    "category": "display",
+    "type": "Display",
+    "ports": [
+      {
+        "id": "vga",
+        "name": "VGA",
+        "direction": "input",
+        "connector": "vga",
+        "note": "15-pin VGA analog video input"
+      },
+      {
+        "id": "hdmi",
+        "name": "HDMI",
+        "direction": "input",
+        "connector": "hdmi",
+        "note": "19-pin HDMI digital video input"
+      },
+      {
+        "id": "displayport",
+        "name": "DisplayPort",
+        "direction": "input",
+        "connector": "dp",
+        "note": "20-pin DisplayPort digital video input"
+      },
+      {
+        "id": "audio-in",
+        "name": "Audio In",
+        "direction": "input",
+        "connector": "trs-3.5",
+        "note": "3.5mm stereo audio input for built-in 2W x 2 speakers"
+      },
+      {
+        "id": "usb",
+        "name": "USB",
+        "direction": "bidirectional",
+        "connector": "usb-b",
+        "note": "USB Type-B connector for touchscreen (projected capacitive, 10-point) interface to host; connects via A-to-B cable"
+      },
+      {
+        "id": "ac-in",
+        "name": "AC In",
+        "direction": "input",
+        "connector": "iec",
+        "note": "Internal power supply; connector type listed as AC power-in without explicit IEC/captive detail — assumed IEC C14 inlet based on product class; confirm from unit or user guide if precision required"
+      }
+    ],
+    "sourceUrl": "https://avlgear.com/products/planar-pct2235-22-inch-full-hd-lcd-touch-screen-monitor",
+    "source": "community",
+    "rev": 1,
+    "contentHash": "f0be4ebd"
+  },
+  {
+    "id": "powersoft/x4",
+    "manufacturer": "Powersoft",
+    "model": "X4",
+    "category": "amplifier",
+    "type": "Amplifier",
+    "ports": [
+      {
+        "id": "analog-input-ch1",
+        "name": "Analog Input CH1",
+        "direction": "input",
+        "connector": "xlr3",
+        "note": "Neutrik XLR female, balanced analog, Pin 2 hot"
+      },
+      {
+        "id": "analog-input-ch2",
+        "name": "Analog Input CH2",
+        "direction": "input",
+        "connector": "xlr3",
+        "note": "Neutrik XLR female, balanced analog, Pin 2 hot"
+      },
+      {
+        "id": "analog-input-ch3",
+        "name": "Analog Input CH3",
+        "direction": "input",
+        "connector": "xlr3",
+        "note": "Neutrik XLR female, balanced analog, Pin 2 hot"
+      },
+      {
+        "id": "analog-input-ch4",
+        "name": "Analog Input CH4",
+        "direction": "input",
+        "connector": "xlr3",
+        "note": "Neutrik XLR female, balanced analog, Pin 2 hot"
+      },
+      {
+        "id": "aes3-input-ch1-ch2",
+        "name": "AES3 Input CH1/CH2",
+        "direction": "input",
+        "connector": "aes3",
+        "note": "Neutrik XLR female, AES3 110Ω, carries two AES3 channels (CH1+CH2)"
+      },
+      {
+        "id": "aes3-input-ch3-ch4",
+        "name": "AES3 Input CH3/CH4",
+        "direction": "input",
+        "connector": "aes3",
+        "note": "Neutrik XLR female, AES3 110Ω, carries two AES3 channels (CH3+CH4)"
+      },
+      {
+        "id": "speaker-output-ch1-ch2",
+        "name": "Speaker Output CH1/CH2",
+        "direction": "output",
+        "connector": "speakon",
+        "note": "Neutrik NL4MD speakON, one connector per channel pair; supports single-ended and bridge-tied loads"
+      },
+      {
+        "id": "speaker-output-ch3-ch4",
+        "name": "Speaker Output CH3/CH4",
+        "direction": "output",
+        "connector": "speakon",
+        "note": "Neutrik NL4MD speakON, one connector per channel pair; supports single-ended and bridge-tied loads"
+      },
+      {
+        "id": "network-eth1-primary",
+        "name": "Network ETH1 (Primary)",
+        "direction": "bidirectional",
+        "connector": "ethercon",
+        "note": "Neutrik etherCON, primary network port; 100 Mbit/s (IEEE 802.3u) and 1 Gbit/s (IEEE 802.3ab)"
+      },
+      {
+        "id": "network-eth2-secondary",
+        "name": "Network ETH2 (Secondary)",
+        "direction": "bidirectional",
+        "connector": "ethercon",
+        "note": "Neutrik etherCON, secondary/redundant network port"
+      },
+      {
+        "id": "remote-on-off",
+        "name": "Remote ON/OFF",
+        "direction": "input",
+        "connector": "euroblock",
+        "note": "Phoenix euroblock connector for remote power control"
+      },
+      {
+        "id": "ac-mains-input",
+        "name": "AC Mains Input",
+        "direction": "input",
+        "connector": "euroblock",
+        "note": "Phoenix PC 5/5-STF1-7,62 flying connector; accepts single-phase (100–240 V), bi-phase, or three-phase (200–415 V) 50/60 Hz"
+      },
+      {
+        "id": "usb-firmware-update",
+        "name": "USB (Firmware Update)",
+        "direction": "input",
+        "connector": "usb-a",
+        "note": "Front-panel USB-A port for firmware updates via USB key (confirmed in manual page 24, section 13: Software Update)"
+      }
+    ],
+    "rackUnits": 2,
+    "sourceUrl": "https://www.manualslib.com/manual/869671/Powersoft-X4.html",
+    "source": "community",
+    "rev": 1,
+    "contentHash": "31e51580"
+  },
+  {
+    "id": "ptzoptics/pt30x-se-gy-g3",
+    "manufacturer": "PTZOptics",
+    "model": "PT30X-SE-GY-G3",
+    "category": "source",
+    "type": "Camera",
+    "ports": [
+      {
+        "id": "hdmi-out",
+        "name": "HDMI Out",
+        "direction": "output",
+        "connector": "hdmi",
+        "note": "HDMI version 1.3"
+      },
+      {
+        "id": "3g-sdi-out",
+        "name": "3G-SDI Out",
+        "direction": "output",
+        "connector": "bnc",
+        "note": "3G-SDI, 800mVP-p, 75Ω, SMPTE 424M"
+      },
+      {
+        "id": "usb-3-0-out",
+        "name": "USB 3.0 Out",
+        "direction": "output",
+        "connector": "usb-c",
+        "note": "USB 3.0 Type-C video/UVC output"
+      },
+      {
+        "id": "rj45-ethernet",
+        "name": "RJ45 Ethernet",
+        "direction": "bidirectional",
+        "connector": "rj45",
+        "note": "10/100 Adaptive Ethernet with PoE 802.3af input"
+      },
+      {
+        "id": "audio-in",
+        "name": "Audio In",
+        "direction": "input",
+        "connector": "trs-3.5",
+        "note": "3.5mm line-level input; stereo unconfirmed"
+      },
+      {
+        "id": "rs232-in",
+        "name": "RS232 In",
+        "direction": "input",
+        "connector": "rs232",
+        "note": "8-pin Mini-DIN, max 30m"
+      },
+      {
+        "id": "rs232-out",
+        "name": "RS232 Out",
+        "direction": "output",
+        "connector": "rs232",
+        "note": "8-pin Mini-DIN, max 30m"
+      },
+      {
+        "id": "rs485",
+        "name": "RS485",
+        "direction": "bidirectional",
+        "connector": "rs485",
+        "note": "2-pin Phoenix connector, max 1200m"
+      },
+      {
+        "id": "dc-power-in",
+        "name": "DC Power In",
+        "direction": "input",
+        "connector": "dc-barrel",
+        "note": "JEITA type, DC 12V, 2A max"
+      }
+    ],
+    "sourceUrl": "https://ptzoptics.com/move-se/",
+    "source": "community",
+    "rev": 1,
+    "contentHash": "3d42b5eb"
+  },
+  {
+    "id": "qsc/gx5",
+    "manufacturer": "QSC",
+    "model": "GX5",
+    "category": "amplifier",
+    "type": "Amplifier",
+    "ports": [
+      {
+        "id": "ch1-xlr-input",
+        "name": "Ch1 XLR Input",
+        "direction": "input",
+        "connector": "xlr3",
+        "note": "Balanced, Pin 2 hot. Internally parallel with Ch1 TRS input jack."
+      },
+      {
+        "id": "ch1-trs-input",
+        "name": "Ch1 TRS Input",
+        "direction": "input",
+        "connector": "trs-6.35",
+        "note": "Balanced. Internally parallel with Ch1 XLR input. To drive both channels from the same source, an external TRS jumper cable must be physically patched by the user between the Ch1 and Ch2 TRS jacks — there is no built-in feed-through between channels."
+      },
+      {
+        "id": "ch1-rca-input",
+        "name": "Ch1 RCA Input",
+        "direction": "input",
+        "connector": "rca",
+        "note": "Unbalanced phono input, Ch1."
+      },
+      {
+        "id": "ch2-xlr-input",
+        "name": "Ch2 XLR Input",
+        "direction": "input",
+        "connector": "xlr3",
+        "note": "Balanced, Pin 2 hot. Internally parallel with Ch2 TRS input jack."
+      },
+      {
+        "id": "ch2-trs-input",
+        "name": "Ch2 TRS Input",
+        "direction": "input",
+        "connector": "trs-6.35",
+        "note": "Balanced. Internally parallel with Ch2 XLR input."
+      },
+      {
+        "id": "ch2-rca-input",
+        "name": "Ch2 RCA Input",
+        "direction": "input",
+        "connector": "rca",
+        "note": "Unbalanced phono input, Ch2."
+      },
+      {
+        "id": "ch1-speaker-output-speakon-ts-combo",
+        "name": "Ch1 Speaker Output (Speakon/TS Combo)",
+        "direction": "output",
+        "connector": "speakon",
+        "accepts": [
+          "ts-6.35"
+        ],
+        "note": "Neutrik combo jack; accepts Speakon 2-pole or 4-pole (2 poles connected) or 1/4\" TS plugs."
+      },
+      {
+        "id": "ch1-binding-posts",
+        "name": "Ch1 Binding Posts",
+        "direction": "output",
+        "connector": "banana",
+        "note": "Accepts banana plugs, bare wire, or spade terminals."
+      },
+      {
+        "id": "ch2-speaker-output-speakon-ts-combo",
+        "name": "Ch2 Speaker Output (Speakon/TS Combo)",
+        "direction": "output",
+        "connector": "speakon",
+        "accepts": [
+          "ts-6.35"
+        ],
+        "note": "Neutrik combo jack; accepts Speakon 2-pole or 4-pole (2 poles connected) or 1/4\" TS plugs."
+      },
+      {
+        "id": "ch2-binding-posts",
+        "name": "Ch2 Binding Posts",
+        "direction": "output",
+        "connector": "banana",
+        "note": "Accepts banana plugs, bare wire, or spade terminals."
+      },
+      {
+        "id": "ac-power-input",
+        "name": "AC Power Input",
+        "direction": "input",
+        "connector": "iec",
+        "note": "Standard IEC power inlet with adjacent resettable circuit breaker on rear panel."
+      }
+    ],
+    "rackUnits": 2,
+    "sourceUrl": "https://www.qscaudio.com/index.php?id=12667",
+    "source": "community",
+    "rev": 1,
+    "contentHash": "a3198468"
+  },
+  {
+    "id": "rme/fireface-ufx-iii",
+    "manufacturer": "RME",
+    "model": "Fireface UFX III",
+    "category": "audio",
+    "type": "Audio interface",
+    "ports": [
+      {
+        "id": "line-in-1-8",
+        "name": "Line In 1-8",
+        "direction": "input",
+        "connector": "trs-6.35",
+        "note": "8 balanced analog line inputs on rear panel, servo-balanced, +24dBu max"
+      },
+      {
+        "id": "mic-inst-line-in-9-12",
+        "name": "Mic/Inst/Line In 9-12",
+        "direction": "input",
+        "connector": "xlr3",
+        "accepts": [
+          "trs-6.35"
+        ],
+        "note": "4 front-panel combo XLR/TRS inputs (mic, instrument, or line), 75dB gain range"
+      },
+      {
+        "id": "monitor-out-1-2",
+        "name": "Monitor Out 1-2",
+        "direction": "output",
+        "connector": "xlr3",
+        "note": "2 balanced XLR monitor outputs on rear panel, servo-balanced, +24dBu max"
+      },
+      {
+        "id": "line-out-3-8",
+        "name": "Line Out 3-8",
+        "direction": "output",
+        "connector": "trs-6.35",
+        "note": "6 balanced TRS analog line outputs on rear panel, servo-balanced"
+      },
+      {
+        "id": "phones-1",
+        "name": "Phones 1",
+        "direction": "output",
+        "connector": "trs-6.35",
+        "note": "Front-panel stereo headphone output, +19dBu, independent mix"
+      },
+      {
+        "id": "phones-2",
+        "name": "Phones 2",
+        "direction": "output",
+        "connector": "trs-6.35",
+        "note": "Front-panel stereo headphone output, +19dBu, independent mix"
+      },
+      {
+        "id": "aes-ebu-in",
+        "name": "AES/EBU In",
+        "direction": "input",
+        "connector": "aes3",
+        "note": "Transformer-balanced AES/EBU digital input on rear panel"
+      },
+      {
+        "id": "aes-ebu-out",
+        "name": "AES/EBU Out",
+        "direction": "output",
+        "connector": "aes3",
+        "note": "Transformer-balanced AES/EBU digital output on rear panel"
+      },
+      {
+        "id": "adat-in-1",
+        "name": "ADAT In 1",
+        "direction": "input",
+        "connector": "toslink",
+        "note": "ADAT optical input; also usable as S/PDIF optical in"
+      },
+      {
+        "id": "adat-out-1",
+        "name": "ADAT Out 1",
+        "direction": "output",
+        "connector": "toslink",
+        "note": "ADAT optical output; also usable as S/PDIF optical out"
+      },
+      {
+        "id": "adat-in-2",
+        "name": "ADAT In 2",
+        "direction": "input",
+        "connector": "toslink",
+        "note": "ADAT optical input; also usable as S/PDIF optical in"
+      },
+      {
+        "id": "adat-out-2",
+        "name": "ADAT Out 2",
+        "direction": "output",
+        "connector": "toslink",
+        "note": "ADAT optical output; also usable as S/PDIF optical out"
+      },
+      {
+        "id": "madi-optical-in",
+        "name": "MADI Optical In",
+        "direction": "input",
+        "connector": "fiber-lc",
+        "note": "MADI optical input, 64 channels bidirectional; actual physical connector is SC/FDDI duplex (multimode 62.5/125 or 50/125), not LC — listed as fiber-lc as the closest available enum value"
+      },
+      {
+        "id": "madi-optical-out",
+        "name": "MADI Optical Out",
+        "direction": "output",
+        "connector": "fiber-lc",
+        "note": "MADI optical output, 64 channels; actual physical connector is SC/FDDI duplex (multimode), not LC"
+      },
+      {
+        "id": "word-clock-madi-coax-in",
+        "name": "Word Clock / MADI Coax In",
+        "direction": "input",
+        "connector": "bnc",
+        "note": "BNC Word Clock input, switchable to coaxial MADI input (75 Ohm)"
+      },
+      {
+        "id": "word-clock-madi-coax-out",
+        "name": "Word Clock / MADI Coax Out",
+        "direction": "output",
+        "connector": "bnc",
+        "note": "BNC Word Clock output, switchable to coaxial MADI output"
+      },
+      {
+        "id": "midi-in-front",
+        "name": "MIDI In (Front)",
+        "direction": "input",
+        "connector": "midi-din",
+        "note": "5-pin DIN MIDI input on front panel"
+      },
+      {
+        "id": "midi-out-front",
+        "name": "MIDI Out (Front)",
+        "direction": "output",
+        "connector": "midi-din",
+        "note": "5-pin DIN MIDI output on front panel"
+      },
+      {
+        "id": "midi-in-rear",
+        "name": "MIDI In (Rear)",
+        "direction": "input",
+        "connector": "midi-din",
+        "note": "5-pin DIN MIDI input on rear panel"
+      },
+      {
+        "id": "midi-out-rear",
+        "name": "MIDI Out (Rear)",
+        "direction": "output",
+        "connector": "midi-din",
+        "note": "5-pin DIN MIDI output on rear panel"
+      },
+      {
+        "id": "usb-3-0-host",
+        "name": "USB 3.0 Host",
+        "direction": "bidirectional",
+        "connector": "usb-b",
+        "note": "Rear-panel USB Type-B 3.0 port for computer connection; also supports USB 2.0 mode (limited to non-MADI I/O)"
+      },
+      {
+        "id": "usb-a-durec-front",
+        "name": "USB-A DURec (Front)",
+        "direction": "bidirectional",
+        "connector": "usb-a",
+        "note": "Front-panel USB-A port for DURec direct recording to USB storage device"
+      },
+      {
+        "id": "usb-a-arc-remote-rear",
+        "name": "USB-A ARC Remote (Rear)",
+        "direction": "bidirectional",
+        "connector": "usb-a",
+        "note": "Rear-panel USB-A port for optional RME ARC USB advanced remote control unit"
+      },
+      {
+        "id": "ac-power",
+        "name": "AC Power",
+        "direction": "input",
+        "connector": "iec",
+        "note": "IEC C14 power inlet; internal universal switching PSU, 100-240V AC, 19-25W"
+      }
+    ],
+    "rackUnits": 1,
+    "sourceUrl": "https://www.rme-usa.com/fireface-ufx-3.html",
+    "source": "community",
+    "rev": 1,
+    "contentHash": "4e815297"
+  },
+  {
+    "id": "roku/roku-express-4k",
+    "manufacturer": "Roku",
+    "model": "Roku Express 4K+",
+    "category": "source",
+    "type": "Media player",
+    "ports": [
+      {
+        "id": "hdmi-out",
+        "name": "HDMI Out",
+        "direction": "output",
+        "connector": "hdmi",
+        "note": "HDMI 2.0, HDCP 2.2; supports up to 4K/60fps, HDR10, HDR10+, HLG. Dolby Vision is NOT supported."
+      },
+      {
+        "id": "power",
+        "name": "Power",
+        "direction": "input",
+        "connector": "usb-micro",
+        "note": "Micro USB power input; 5V 1A, ~2.5W typical during 4K streaming. Can be powered from TV USB port or included AC adapter."
+      }
+    ],
+    "sourceUrl": "https://www.amazon.com/Roku-Express-Streaming-Wireless-Controls/dp/B0916TKFF2",
+    "source": "community",
+    "rev": 1,
+    "contentHash": "d7e9e65c"
+  },
+  {
+    "id": "roland/roland-vc-1-sc",
+    "manufacturer": "Roland",
+    "model": "Roland VC-1-SC",
+    "category": "converter",
+    "type": "Converter",
+    "ports": [
+      {
+        "id": "sdi-in",
+        "name": "SDI In",
+        "direction": "input",
+        "connector": "bnc",
+        "note": "Combined/loopthrough with one of the SDI Out connectors. Supports 3G-SDI (SMPTE 424M/425M-AB), HD-SDI (SMPTE 292M), and SD-SDI (SMPTE 259M-C)."
+      },
+      {
+        "id": "sdi-out-1",
+        "name": "SDI Out 1",
+        "direction": "output",
+        "connector": "bnc",
+        "note": "One of two SDI outputs; this one is shared/combined with the SDI In connector (loopthrough or re-clocked output)."
+      },
+      {
+        "id": "sdi-out-2",
+        "name": "SDI Out 2",
+        "direction": "output",
+        "connector": "bnc",
+        "note": "Dedicated second SDI output. Supports 3G-SDI (SMPTE 424M/425M-AB), HD-SDI (SMPTE 292M), and SD-SDI (SMPTE 259M-C)."
+      },
+      {
+        "id": "hdmi-in",
+        "name": "HDMI In",
+        "direction": "input",
+        "connector": "hdmi",
+        "note": "HDMI Type A (19-pin). Supports HDCP."
+      },
+      {
+        "id": "hdmi-out",
+        "name": "HDMI Out",
+        "direction": "output",
+        "connector": "hdmi",
+        "note": "HDMI Type A (19-pin). Supports HDCP."
+      },
+      {
+        "id": "rgb-component-in",
+        "name": "RGB/Component In",
+        "direction": "input",
+        "connector": "vga",
+        "note": "HD DB-15 (VGA shell) used for analog RGB or YPbPr component input, not VGA-signal. Signal levels: 1.0Vp-p (Y), 0.7Vp-p (R/G/B/Pb/Pr), 5VTTL (H/V sync). Closest connector in list is 'vga'."
+      },
+      {
+        "id": "composite-in",
+        "name": "Composite In",
+        "direction": "input",
+        "connector": "bnc",
+        "note": "Composite video input. 1.0Vp-p. Supports NTSC and PAL."
+      },
+      {
+        "id": "ref-in",
+        "name": "Ref In",
+        "direction": "input",
+        "connector": "bnc",
+        "note": "Reference/sync input. 75 ohm. Accepts Black Burst, Bi-level, and Tri-level sync."
+      },
+      {
+        "id": "audio-in-l-r",
+        "name": "Audio In L/R",
+        "direction": "input",
+        "connector": "rca",
+        "note": "Analog audio RCA phono pair (L and R), combined/shared with Audio Out. Input level -6 dBV."
+      },
+      {
+        "id": "audio-out-l-r",
+        "name": "Audio Out L/R",
+        "direction": "output",
+        "connector": "rca",
+        "note": "Analog audio RCA phono pair (L and R), combined/shared with Audio In. Max output level +6 dBV."
+      },
+      {
+        "id": "usb",
+        "name": "USB",
+        "direction": "bidirectional",
+        "connector": "usb-b",
+        "note": "Hi-Speed USB Type B. Used for firmware updates and control."
+      },
+      {
+        "id": "dc-in",
+        "name": "DC In",
+        "direction": "input",
+        "connector": "dc-barrel",
+        "note": "9V DC input from included external AC adapter."
+      }
+    ],
+    "sourceUrl": "https://proav.roland.com/global/products/vc-1-sc/specifications/",
+    "source": "community",
+    "rev": 1,
+    "contentHash": "55220cda"
+  },
+  {
+    "id": "roland/v-60hd",
+    "manufacturer": "Roland",
+    "model": "V-60HD",
+    "category": "switcher",
+    "type": "Video switcher",
+    "ports": [
+      {
+        "id": "sdi-in-1",
+        "name": "SDI IN 1",
+        "direction": "input",
+        "connector": "bnc",
+        "note": "3G-SDI / HD-SDI (SMPTE 424M/425M-AB, 292M)"
+      },
+      {
+        "id": "sdi-in-2",
+        "name": "SDI IN 2",
+        "direction": "input",
+        "connector": "bnc",
+        "note": "3G-SDI / HD-SDI (SMPTE 424M/425M-AB, 292M)"
+      },
+      {
+        "id": "sdi-in-3",
+        "name": "SDI IN 3",
+        "direction": "input",
+        "connector": "bnc",
+        "note": "3G-SDI / HD-SDI (SMPTE 424M/425M-AB, 292M)"
+      },
+      {
+        "id": "sdi-in-4",
+        "name": "SDI IN 4",
+        "direction": "input",
+        "connector": "bnc",
+        "note": "3G-SDI / HD-SDI (SMPTE 424M/425M-AB, 292M)"
+      },
+      {
+        "id": "hdmi-in-5",
+        "name": "HDMI IN 5",
+        "direction": "input",
+        "connector": "hdmi",
+        "note": "HDMI Type A, HDCP supported, multi-format"
+      },
+      {
+        "id": "hdmi-in-6",
+        "name": "HDMI IN 6",
+        "direction": "input",
+        "connector": "hdmi",
+        "note": "HDMI Type A, shared input slot with RGB/COMPONENT IN 6; HDCP supported"
+      },
+      {
+        "id": "rgb-component-in-6",
+        "name": "RGB/COMPONENT IN 6",
+        "direction": "input",
+        "connector": "vga",
+        "note": "HD DB-15 connector, shares input slot with HDMI IN 6; accepts RGB or component video"
+      },
+      {
+        "id": "sdi-out-1",
+        "name": "SDI OUT 1",
+        "direction": "output",
+        "connector": "bnc",
+        "note": "3G-SDI / HD-SDI (SMPTE 424M/425M-AB, 292M)"
+      },
+      {
+        "id": "sdi-out-2",
+        "name": "SDI OUT 2",
+        "direction": "output",
+        "connector": "bnc",
+        "note": "3G-SDI / HD-SDI (SMPTE 424M/425M-AB, 292M)"
+      },
+      {
+        "id": "hdmi-out-1",
+        "name": "HDMI OUT 1",
+        "direction": "output",
+        "connector": "hdmi",
+        "note": "HDMI Type A, HDCP supported"
+      },
+      {
+        "id": "hdmi-out-2",
+        "name": "HDMI OUT 2",
+        "direction": "output",
+        "connector": "hdmi",
+        "note": "HDMI Type A, HDCP supported"
+      },
+      {
+        "id": "hdmi-multi-view",
+        "name": "HDMI MULTI-VIEW",
+        "direction": "output",
+        "connector": "hdmi",
+        "note": "HDMI Type A, multi-view monitor output"
+      },
+      {
+        "id": "audio-in-1",
+        "name": "AUDIO IN 1",
+        "direction": "input",
+        "connector": "xlr3",
+        "accepts": [
+          "trs-6.35"
+        ],
+        "note": "Combo XLR/1/4-inch TRS; 48V phantom power available"
+      },
+      {
+        "id": "audio-in-2",
+        "name": "AUDIO IN 2",
+        "direction": "input",
+        "connector": "xlr3",
+        "accepts": [
+          "trs-6.35"
+        ],
+        "note": "Combo XLR/1/4-inch TRS; 48V phantom power available"
+      },
+      {
+        "id": "audio-in-3",
+        "name": "AUDIO IN 3",
+        "direction": "input",
+        "connector": "xlr3",
+        "accepts": [
+          "trs-6.35"
+        ],
+        "note": "Combo XLR/1/4-inch TRS; 48V phantom power available"
+      },
+      {
+        "id": "audio-in-4",
+        "name": "AUDIO IN 4",
+        "direction": "input",
+        "connector": "xlr3",
+        "accepts": [
+          "trs-6.35"
+        ],
+        "note": "Combo XLR/1/4-inch TRS; 48V phantom power available"
+      },
+      {
+        "id": "audio-in-5",
+        "name": "AUDIO IN 5",
+        "direction": "input",
+        "connector": "rca",
+        "note": "RCA phono (stereo pair with AUDIO IN 6)"
+      },
+      {
+        "id": "audio-in-6",
+        "name": "AUDIO IN 6",
+        "direction": "input",
+        "connector": "rca",
+        "note": "RCA phono (stereo pair with AUDIO IN 5)"
+      },
+      {
+        "id": "audio-out-xlr",
+        "name": "AUDIO OUT (XLR)",
+        "direction": "output",
+        "connector": "xlr3",
+        "note": "Balanced XLR master audio output"
+      },
+      {
+        "id": "audio-out-rca",
+        "name": "AUDIO OUT (RCA)",
+        "direction": "output",
+        "connector": "rca",
+        "note": "Unbalanced RCA phono master audio output"
+      },
+      {
+        "id": "phones",
+        "name": "PHONES",
+        "direction": "output",
+        "connector": "trs-6.35",
+        "note": "Stereo 1/4-inch headphone output"
+      },
+      {
+        "id": "tally-gpi",
+        "name": "TALLY/GPI",
+        "direction": "bidirectional",
+        "connector": "rs485",
+        "note": "Physical connector is DB-25 Female (not in schema enum — rs485 is nearest multi-pin control type); 12 tally outputs + 8 GPI"
+      },
+      {
+        "id": "rs-232",
+        "name": "RS-232",
+        "direction": "bidirectional",
+        "connector": "rs232",
+        "note": "DB-9 Male; remote control"
+      },
+      {
+        "id": "control-lan",
+        "name": "CONTROL (LAN)",
+        "direction": "bidirectional",
+        "connector": "rj45",
+        "note": "100BASE-TX Ethernet; remote control"
+      },
+      {
+        "id": "usb-memory",
+        "name": "USB MEMORY",
+        "direction": "bidirectional",
+        "connector": "usb-a",
+        "note": "USB Type A; for firmware update / still image capture to flash drive"
+      },
+      {
+        "id": "dc-in",
+        "name": "DC IN",
+        "direction": "input",
+        "connector": "dc-barrel",
+        "note": "Powered by included Roland PSB-7U AC adapter"
+      }
+    ],
+    "sourceUrl": "https://proav.roland.com/global/products/v-60hd/specifications/",
+    "source": "community",
+    "rev": 1,
+    "contentHash": "ea24ae20"
+  },
+  {
+    "id": "samsung/samsung-qm85r",
+    "manufacturer": "Samsung",
+    "model": "Samsung QM85R",
+    "category": "display",
+    "type": "Display",
+    "ports": [
+      {
+        "id": "hdmi-in-1-arc",
+        "name": "HDMI IN 1 (ARC)",
+        "direction": "input",
+        "connector": "hdmi"
+      },
+      {
+        "id": "hdmi-in-2-daisy-chain-in",
+        "name": "HDMI IN 2 (DAISY CHAIN IN)",
+        "direction": "input",
+        "connector": "hdmi"
+      },
+      {
+        "id": "hdmi-out-daisy-chain-out",
+        "name": "HDMI OUT (DAISY CHAIN OUT)",
+        "direction": "output",
+        "connector": "hdmi"
+      },
+      {
+        "id": "dvi-magicinfo-in",
+        "name": "DVI/MAGICINFO IN",
+        "direction": "input",
+        "connector": "dvi"
+      },
+      {
+        "id": "dp-in-daisy-chain-in",
+        "name": "DP IN (DAISY CHAIN IN)",
+        "direction": "input",
+        "connector": "dp"
+      },
+      {
+        "id": "dvi-hdmi-audio-in",
+        "name": "DVI/HDMI AUDIO IN",
+        "direction": "input",
+        "connector": "trs-3.5",
+        "note": "3.5mm stereo mini-jack for audio input (used when source is connected via DVI or HDMI without embedded audio)"
+      },
+      {
+        "id": "audio-out",
+        "name": "AUDIO OUT",
+        "direction": "output",
+        "connector": "trs-3.5"
+      },
+      {
+        "id": "rs232c-in",
+        "name": "RS232C IN",
+        "direction": "input",
+        "connector": "trs-3.5",
+        "note": "RS-232C control via 3.5mm stereo mini-jack adapter (Samsung spec lists as 'RS232C Thru Stereo Jack')"
+      },
+      {
+        "id": "rs232c-out",
+        "name": "RS232C OUT",
+        "direction": "output",
+        "connector": "trs-3.5",
+        "note": "RS-232C control via 3.5mm stereo mini-jack adapter"
+      },
+      {
+        "id": "ir-in",
+        "name": "IR IN",
+        "direction": "input",
+        "connector": "trs-3.5",
+        "note": "External IR extender input via 3.5mm jack"
+      },
+      {
+        "id": "usb-1-1-0a",
+        "name": "USB 1 (1.0A)",
+        "direction": "bidirectional",
+        "connector": "usb-a"
+      },
+      {
+        "id": "usb-2-0-5a",
+        "name": "USB 2 (0.5A)",
+        "direction": "bidirectional",
+        "connector": "usb-a"
+      },
+      {
+        "id": "rj45-lan",
+        "name": "RJ45 (LAN)",
+        "direction": "bidirectional",
+        "connector": "rj45"
+      },
+      {
+        "id": "ac-in",
+        "name": "AC IN",
+        "direction": "input",
+        "connector": "iec",
+        "note": "IEC C14 inlet; detachable power cord, 100–240 V AC 50/60 Hz"
+      }
+    ],
+    "sourceUrl": "https://www.samsung.com/us/business/support/owners/product/qmr-series-digital-signage-qm85r/",
+    "source": "community",
+    "rev": 1,
+    "contentHash": "9daf3508"
+  },
+  {
+    "id": "sony/brc-x400",
+    "manufacturer": "Sony",
+    "model": "BRC-X400",
+    "category": "source",
+    "type": "Camera",
+    "ports": [
+      {
+        "id": "hdmi-out",
+        "name": "HDMI OUT",
+        "direction": "output",
+        "connector": "hdmi",
+        "note": "HDMI Type A × 1; 4K output available via HDMI (and IP); version 1.4b compatible"
+      },
+      {
+        "id": "sdi-out",
+        "name": "SDI OUT",
+        "direction": "output",
+        "connector": "bnc",
+        "note": "BNC × 1; 3G-SDI; HD output only (4K not supported via SDI)"
+      },
+      {
+        "id": "ext-sync-in",
+        "name": "EXT SYNC IN",
+        "direction": "input",
+        "connector": "bnc",
+        "note": "BNC × 1; 75Ω; accepts HD 3-level sync or SD Black Burst; BRC-X400/X401 models only, not on SRG variants"
+      },
+      {
+        "id": "mic-1",
+        "name": "MIC 1",
+        "direction": "input",
+        "connector": "trs-3.5",
+        "note": "Mini jack ø3.5mm; Mic/Line selectable"
+      },
+      {
+        "id": "mic-2",
+        "name": "MIC 2",
+        "direction": "input",
+        "connector": "trs-3.5",
+        "note": "Mini jack ø3.5mm; Mic/Line selectable; Y-adapter connection supported"
+      },
+      {
+        "id": "visca-rs-422-in",
+        "name": "VISCA RS-422 IN",
+        "direction": "input",
+        "connector": "rj45",
+        "note": "RJ-45; RS-422 serial VISCA control; connect from remote controller or previous camera in daisy chain"
+      },
+      {
+        "id": "visca-rs-422-out",
+        "name": "VISCA RS-422 OUT",
+        "direction": "output",
+        "connector": "rj45",
+        "note": "RJ-45; RS-422 serial VISCA control; connect to next camera in daisy chain; max cable length 1.2 km"
+      },
+      {
+        "id": "lan",
+        "name": "LAN",
+        "direction": "bidirectional",
+        "connector": "rj45",
+        "note": "RJ-45; 10/100/1000BASE-T; PoE+ (IEEE802.3at) power input; VISCA over IP, S700PTP, CGI control, and IP video streaming"
+      },
+      {
+        "id": "dc-in-12v",
+        "name": "DC IN 12V",
+        "direction": "input",
+        "connector": "dc-barrel",
+        "note": "IEC60130-10 (JEITA RC-5320A TYPE4); 5.5mm OD / 3.3mm ID / 1.0mm pin; DC 10.8–13.2V; supplied AC adapter (100–240V, 50/60Hz). Camera can also be powered via PoE+ on the LAN port instead."
+      }
+    ],
+    "sourceUrl": "https://www.manualslib.com/manual/1664613/Sony-Brc-X400.html",
+    "source": "community",
+    "rev": 1,
+    "contentHash": "7055560d"
+  },
+  {
+    "id": "sony/uwp-d21",
+    "manufacturer": "Sony",
+    "model": "UWP-D21",
+    "category": "audio",
+    "type": "Wireless mic",
+    "ports": [
+      {
+        "id": "utx-b40-mic-input",
+        "name": "UTX-B40 MIC Input",
+        "direction": "input",
+        "connector": "trs-3.5",
+        "note": "3.5mm 3-pole locking mini jack on UTX-B40 bodypack transmitter. MIC and LINE modes selectable."
+      },
+      {
+        "id": "utx-b40-usb-c-service-only",
+        "name": "UTX-B40 USB-C (Service only)",
+        "direction": "input",
+        "connector": "usb-c",
+        "note": "Labeled 'For use by service personnel' in parts diagram (manual p.10). USB power at DC 5V/200mA+ is technically possible (p.16) but this is not a standard user-accessible power input."
+      },
+      {
+        "id": "urx-p40-audio-output",
+        "name": "URX-P40 Audio Output",
+        "direction": "output",
+        "connector": "trs-3.5",
+        "note": "3.5mm 3-pole locking mini jack on URX-P40 receiver. XLR-BMP conversion cable included for connecting to XLR camera inputs."
+      },
+      {
+        "id": "urx-p40-headphone-output",
+        "name": "URX-P40 Headphone Output",
+        "direction": "output",
+        "connector": "trs-3.5",
+        "note": "3.5mm stereo mini jack on URX-P40 for monitoring received audio."
+      },
+      {
+        "id": "urx-p40-usb-c-power",
+        "name": "URX-P40 USB-C Power",
+        "direction": "input",
+        "connector": "usb-c",
+        "note": "User-accessible USB-C on URX-P40 receiver. DC 5.0V from a commercially available USB portable power supply."
+      }
+    ],
+    "sourceUrl": "https://www.manualslib.com/manual/1740993/Sony-Uwp-D21.html",
+    "source": "community",
+    "rev": 1,
+    "contentHash": "eb64b1f8"
+  },
+  {
+    "id": "tp-link/tl-pa7017",
+    "manufacturer": "TP-Link",
+    "model": "TL-PA7017",
+    "category": "network",
+    "type": "Extender",
+    "ports": [
+      {
+        "id": "ethernet",
+        "name": "Ethernet",
+        "direction": "bidirectional",
+        "connector": "rj45",
+        "note": "Single Gigabit Ethernet port for connecting a wired device to the powerline network"
+      },
+      {
+        "id": "power-wall-plug",
+        "name": "Power / Wall Plug",
+        "direction": "input",
+        "connector": "nema-5-15",
+        "note": "Built-in US wall-plug prongs; source page states 'Plug Type: US' without specifying NEMA 5-15 by name — designation inferred from standard US plug form factor"
+      }
+    ],
+    "sourceUrl": "https://www.tp-link.com/us/home-networking/powerline/tl-pa7017/",
+    "source": "community",
+    "rev": 1,
+    "contentHash": "768aeba2"
+  },
+  {
+    "id": "tripp-lite-eaton/tripp-lite-pdumh15",
+    "manufacturer": "Tripp Lite (Eaton)",
+    "model": "Tripp Lite PDUMH15",
+    "category": "power",
+    "type": "Power conditioner",
+    "ports": [
+      {
+        "id": "ac-in",
+        "name": "AC In",
+        "direction": "input",
+        "connector": "nema-5-15",
+        "note": "NEMA 5-15P plug on 15 ft (4.57 m) captive cord, 120V 15A input (derated to 12A continuous)"
+      },
+      {
+        "id": "ac-out-1-front",
+        "name": "AC Out 1 (Front)",
+        "direction": "output",
+        "connector": "nema-5-15",
+        "note": "NEMA 5-15R front-facing outlet, 120V"
+      },
+      {
+        "id": "ac-out-2",
+        "name": "AC Out 2",
+        "direction": "output",
+        "connector": "nema-5-15",
+        "note": "NEMA 5-15R rear-facing outlet"
+      },
+      {
+        "id": "ac-out-3",
+        "name": "AC Out 3",
+        "direction": "output",
+        "connector": "nema-5-15",
+        "note": "NEMA 5-15R rear-facing outlet"
+      },
+      {
+        "id": "ac-out-4",
+        "name": "AC Out 4",
+        "direction": "output",
+        "connector": "nema-5-15",
+        "note": "NEMA 5-15R rear-facing outlet"
+      },
+      {
+        "id": "ac-out-5",
+        "name": "AC Out 5",
+        "direction": "output",
+        "connector": "nema-5-15",
+        "note": "NEMA 5-15R rear-facing outlet"
+      },
+      {
+        "id": "ac-out-6",
+        "name": "AC Out 6",
+        "direction": "output",
+        "connector": "nema-5-15",
+        "note": "NEMA 5-15R rear-facing outlet"
+      },
+      {
+        "id": "ac-out-7",
+        "name": "AC Out 7",
+        "direction": "output",
+        "connector": "nema-5-15",
+        "note": "NEMA 5-15R rear-facing outlet"
+      },
+      {
+        "id": "ac-out-8",
+        "name": "AC Out 8",
+        "direction": "output",
+        "connector": "nema-5-15",
+        "note": "NEMA 5-15R rear-facing outlet"
+      },
+      {
+        "id": "ac-out-9",
+        "name": "AC Out 9",
+        "direction": "output",
+        "connector": "nema-5-15",
+        "note": "NEMA 5-15R rear-facing outlet"
+      },
+      {
+        "id": "ac-out-10",
+        "name": "AC Out 10",
+        "direction": "output",
+        "connector": "nema-5-15",
+        "note": "NEMA 5-15R rear-facing outlet"
+      },
+      {
+        "id": "ac-out-11",
+        "name": "AC Out 11",
+        "direction": "output",
+        "connector": "nema-5-15",
+        "note": "NEMA 5-15R rear-facing outlet"
+      },
+      {
+        "id": "ac-out-12",
+        "name": "AC Out 12",
+        "direction": "output",
+        "connector": "nema-5-15",
+        "note": "NEMA 5-15R rear-facing outlet"
+      },
+      {
+        "id": "ac-out-13",
+        "name": "AC Out 13",
+        "direction": "output",
+        "connector": "nema-5-15",
+        "note": "NEMA 5-15R rear-facing outlet"
+      }
+    ],
+    "rackUnits": 1,
+    "sourceUrl": "https://tripplite.eaton.com/metered-pdu-15a-13-outlet-120v-15ft-cord-1u-rackmount~PDUMH15",
+    "source": "community",
+    "rev": 1,
+    "contentHash": "ad61a4aa"
+  }
+]

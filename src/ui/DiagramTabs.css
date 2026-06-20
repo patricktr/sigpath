@@ -5,8 +5,8 @@
   flex: 0 0 auto;
   height: 34px;
   padding: 0 8px;
-  background: #f1f5f9;
-  border-top: 1px solid #e2e8f0;
+  background: var(--app-bg);
+  border-top: 1px solid var(--panel-border);
   overflow-x: auto;
 }
 
@@ -20,19 +20,19 @@
   border-bottom: none;
   border-radius: 6px 6px 0 0;
   font-size: 12px;
-  color: #475569;
+  color: var(--text-muted);
   cursor: pointer;
   white-space: nowrap;
 }
 
 .tab:hover {
-  background: #e2e8f0;
+  background: var(--row-hover);
 }
 
 .tab--active {
-  background: #ffffff;
-  border-color: #e2e8f0;
-  color: #0f172a;
+  background: var(--panel-bg);
+  border-color: var(--panel-border);
+  color: var(--text);
   font-weight: 600;
 }
 
@@ -44,21 +44,23 @@
   border: none;
   background: none;
   cursor: pointer;
-  color: #94a3b8;
+  color: var(--text-faint);
   font-size: 14px;
   line-height: 1;
   padding: 0;
 }
 
 .tab__del:hover {
-  color: #ef4444;
+  color: var(--sig-power);
 }
 
 .tab__edit {
   font: inherit;
   font-size: 12px;
   width: 110px;
-  border: 1px solid #93c5fd;
+  background: var(--panel-bg);
+  color: var(--text);
+  border: 1px solid var(--accent);
   border-radius: 4px;
   padding: 1px 4px;
 }
@@ -68,15 +70,15 @@
   width: 24px;
   height: 24px;
   margin-left: 4px;
-  border: 1px solid #cbd5e1;
+  border: 1px solid var(--btn-border);
   border-radius: 6px;
-  background: #ffffff;
-  color: #475569;
+  background: var(--btn-bg);
+  color: var(--text-muted);
   font-size: 15px;
   line-height: 1;
   cursor: pointer;
 }
 
 .tab-add:hover {
-  background: #eef2f7;
+  background: var(--row-hover);
 }

@@ -86,12 +86,15 @@ export function validate(nodes: SigNode[], edges: CableEdgeType[]): ValidationRe
       });
     } else {
       const compat = checkPortCompatibility(out, inp);
+      // ok covers straight cables, passive adapter/transition cables, and device PSUs
+      // (AC↔DC power) — all valid, so no issue is raised; the cable is named in the
+      // Cables & adapters list. Only true mismatches flag here.
       if (compat.status === "error") {
         errorEdges.add(e.id);
         issues.push({
-          id: `signal:${e.id}`,
+          id: `${compat.kind === "converter" ? "converter" : "signal"}:${e.id}`,
           severity: "error",
-          title: "Signal mismatch",
+          title: compat.kind === "converter" ? "Converter needed" : "Signal mismatch",
           detail: `${path}: ${compat.reason}`,
           edgeId: e.id,
           focusNodeIds: [e.source, e.target],
@@ -99,9 +102,9 @@ export function validate(nodes: SigNode[], edges: CableEdgeType[]): ValidationRe
       } else if (compat.status === "warn") {
         warnEdges.add(e.id);
         issues.push({
-          id: `adapter:${e.id}`,
+          id: `compat:${e.id}`,
           severity: "warning",
-          title: "Adapter needed",
+          title: "Check connector",
           detail: `${path}: ${compat.reason}`,
           edgeId: e.id,
           focusNodeIds: [e.source, e.target],

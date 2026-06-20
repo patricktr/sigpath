@@ -131,32 +131,32 @@
 }
 
 /* Dark theme */
-.app--dark .validation-panel {
+[data-theme="dark"] .validation-panel {
   background: #131c2e;
   border-left-color: #25304a;
 }
-.app--dark .validation-panel__head {
+[data-theme="dark"] .validation-panel__head {
   border-bottom-color: #25304a;
 }
-.app--dark .validation-panel__head h2 {
+[data-theme="dark"] .validation-panel__head h2 {
   color: #f1f5f9;
 }
-.app--dark .validation-item {
+[data-theme="dark"] .validation-item {
   background: #182235;
   border-color: #25304a;
 }
-.app--dark .validation-item:hover {
+[data-theme="dark"] .validation-item:hover {
   background: #1f2c44;
 }
-.app--dark .validation-item--error {
+[data-theme="dark"] .validation-item--error {
   border-left-color: #ef4444;
 }
-.app--dark .validation-item--warning {
+[data-theme="dark"] .validation-item--warning {
   border-left-color: #f59e0b;
 }
-.app--dark .validation-item__title {
+[data-theme="dark"] .validation-item__title {
   color: #e2e8f0;
 }
-.app--dark .validation-item__detail {
+[data-theme="dark"] .validation-item__detail {
   color: #94a3b8;
 }

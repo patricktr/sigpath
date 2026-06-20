@@ -121,6 +121,27 @@
       .tag.new { background: color-mix(in srgb, var(--next) 18%, transparent); color: var(--next); }
       li.checked .item-title { text-decoration: line-through; color: var(--muted); }
 
+      /* difficulty badges */
+      .lvl { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em;
+        padding: 1px 6px; border-radius: 6px; margin-left: 6px; white-space: nowrap; vertical-align: 1px; }
+      .lvl-easy { background: color-mix(in srgb, var(--done) 16%, transparent); color: var(--done); }
+      .lvl-med  { background: color-mix(in srgb, var(--next) 16%, transparent); color: var(--next); }
+      .lvl-hard { background: color-mix(in srgb, var(--power) 16%, transparent); color: var(--power); }
+      .lvl-epic { background: color-mix(in srgb, var(--av) 18%, transparent); color: var(--av); }
+
+      /* toolbar + hide-completed */
+      .toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px;
+        margin: 0 0 18px; padding: 11px 14px; background: var(--panel); border: 1px solid var(--line);
+        border-radius: var(--radius); box-shadow: var(--shadow); font-size: 13px; }
+      .toolbar .switch { display: inline-flex; align-items: center; gap: 7px; cursor: pointer; user-select: none; font-weight: 550; }
+      .toolbar .switch input { width: 16px; height: 16px; accent-color: var(--accent); cursor: pointer; }
+      .toolbar .sp { flex: 1 1 auto; }
+      .toolbar button { font: inherit; font-size: 12.5px; color: var(--ink); background: var(--bg);
+        border: 1px solid var(--line); border-radius: 8px; padding: 5px 11px; cursor: pointer; }
+      .toolbar button:hover { border-color: var(--accent); color: var(--accent); }
+      .toolbar .hint { flex-basis: 100%; color: var(--muted); font-size: 12px; margin-top: 2px; }
+      body.hide-done ul.items li.checked { display: none; }
+
       /* table */
       .table-scroll { overflow-x: auto; border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); }
       table { border-collapse: collapse; width: 100%; font-size: 13.5px; background: var(--panel); }
@@ -161,7 +182,7 @@
           A free, local-first AV signal-flow &amp; system-design app — Tauri + React.
           This is the living product roadmap.
         </p>
-        <div class="meta">Last updated June 17, 2026 · status persists in your browser (localStorage)</div>
+        <div class="meta">Last updated June 20, 2026 · checkmarks save per-browser; the committed file is the shared baseline</div>
         <div class="legend">
           <span class="item"><span class="dot" style="background: var(--video)"></span>Video</span>
           <span class="item"><span class="dot" style="background: var(--audio)"></span>Audio</span>
@@ -208,112 +229,151 @@
       <!-- ROADMAP -->
       <h2 class="section">Roadmap</h2>
       <p class="lead">
-        Governing logic: you can't place gear without gear; you can't auto-generate docs without a complete model;
-        and undo/persistence are miserable to retrofit — so they go early.
-        <span class="tag free">free</span> = nearly free from React Flow · <span class="tag new">new</span> = added beyond the original list.
+        Grouped by area of the app, not by sequence — work is live across all of them at once.
+        <span class="tag free">free</span> nearly free from React Flow ·
+        <span class="tag new">new</span> beyond the original list ·
+        difficulty <span class="lvl lvl-easy">Easy</span> <span class="lvl lvl-med">Medium</span> <span class="lvl lvl-hard">Hard</span> <span class="lvl lvl-epic">Epic</span>
       </p>
 
-      <details class="phase" open>
-        <summary>
-          <div class="phase-head">
-            <span class="ph-kicker">Phase 0</span>
-            <p class="ph-title">Canvas foundation</p>
-            <span class="chip done">Done</span>
-          </div>
-        </summary>
-        <div class="progress"><i></i></div>
-        <div class="progress-label"></div>
-        <ul class="items">
-          <li><input type="checkbox" data-id="p0-scaffold" checked /><div class="item-body"><span class="item-title">Tauri v2 + React + TS scaffold</span><div class="item-note">Native Apple Silicon; public repo; verified build.</div></div></li>
-          <li><input type="checkbox" data-id="p0-canvas" checked /><div class="item-body"><span class="item-title">React Flow canvas with port-based device nodes</span><div class="item-note">Ports as typed handles; sample signal chain renders.</div></div></li>
-        </ul>
-      </details>
-
-      <details class="phase" open>
-        <summary>
-          <div class="phase-head">
-            <span class="ph-kicker">Phase 1</span>
-            <p class="ph-title">Make the editor real — build a diagram and keep it</p>
-            <span class="chip next">In progress</span>
-          </div>
-        </summary>
-        <div class="progress"><i></i></div>
-        <div class="progress-label"></div>
-        <ul class="items">
-          <li><input type="checkbox" data-id="p1-schema" /><div class="item-body"><span class="item-title">Device / port / cable schema <span class="tag new">new</span></span><div class="item-note">The spine: controlled vocabularies (signals, connectors, cable types), device model vs. placed instance, compatibility primitive. <em>Building now.</em></div></div></li>
-          <li><input type="checkbox" data-id="p1-persist" /><div class="item-body"><span class="item-title">Local persistence — save/load diagrams to disk <span class="tag new">new</span></span><div class="item-note">Nothing is real until diagrams survive a restart. Files you own.</div></div></li>
-          <li><input type="checkbox" data-id="p1-builder" /><div class="item-body"><span class="item-title">Custom item builder</span><div class="item-note">Define a device + inputs/outputs/labels. The on-ramp before the community DB exists.</div></div></li>
-          <li><input type="checkbox" data-id="p1-cabletypes" /><div class="item-body"><span class="item-title">Cable types + colors</span><div class="item-note">Typed, colored cables — the model everything downstream needs.</div></div></li>
-          <li><input type="checkbox" data-id="p1-undo" /><div class="item-body"><span class="item-title">Undo / redo</span><div class="item-note">Build the history layer early or suffer later.</div></div></li>
-          <li><input type="checkbox" data-id="p1-canvasaffordances" /><div class="item-body"><span class="item-title">Snap-to-grid · multi-select · drag-and-drop <span class="tag free">free</span></span><div class="item-note">Mostly React Flow props/built-ins.</div></div></li>
-        </ul>
-      </details>
-
-      <details class="phase" open>
-        <summary>
-          <div class="phase-head">
-            <span class="ph-kicker">Phase 2</span>
-            <p class="ph-title">Organize &amp; navigate</p>
-            <span class="chip planned">Planned</span>
-          </div>
-        </summary>
-        <div class="progress"><i></i></div>
-        <div class="progress-label"></div>
-        <ul class="items">
-          <li><input type="checkbox" data-id="p2-projects" /><div class="item-body"><span class="item-title">Folders / projects</span><div class="item-note">A project holds multiple diagrams. Builds on persistence.</div></div></li>
-          <li><input type="checkbox" data-id="p2-zones" /><div class="item-body"><span class="item-title">Zones + labels</span><div class="item-note">Color-coded, labeled regions (stage, rack, control room).</div></div></li>
-          <li><input type="checkbox" data-id="p2-annotations" /><div class="item-body"><span class="item-title">Headings / lists / formatted-text annotations</span></div></li>
-          <li><input type="checkbox" data-id="p2-legend" /><div class="item-body"><span class="item-title">Legend (cable-type color key)</span><div class="item-note">Trivial once cable types exist.</div></div></li>
-          <li><input type="checkbox" data-id="p2-lr" /><div class="item-body"><span class="item-title">Left-to-right mode · zoom-to-fit <span class="tag free">free</span> · zoom-to-zone</span><div class="item-note">fit is free via fitView; zoom-to-zone needs zones.</div></div></li>
-          <li><input type="checkbox" data-id="p2-theme" /><div class="item-body"><span class="item-title">Light / dark mode <span class="tag free">free</span></span><div class="item-note">React Flow colorMode; can slide earlier anytime.</div></div></li>
-        </ul>
-      </details>
-
-      <details class="phase" open>
-        <summary>
-          <div class="phase-head">
-            <span class="ph-kicker">Phase 3</span>
-            <p class="ph-title">Documentation &amp; export — the payoff</p>
-            <span class="chip planned">Planned</span>
-          </div>
-        </summary>
-        <div class="progress"><i></i></div>
-        <div class="progress-label"></div>
-        <ul class="items">
-          <li><input type="checkbox" data-id="p3-packlist" /><div class="item-body"><span class="item-title">Auto packlists &amp; patch lists</span><div class="item-note">Derive from the complete model. Make patch lists free (H2R gates them).</div></div></li>
-          <li><input type="checkbox" data-id="p3-export" /><div class="item-body"><span class="item-title">Export — diagram → PNG/JPG/PDF · lists → CSV/structured</span></div></li>
-        </ul>
-      </details>
-
-      <details class="phase" open>
-        <summary>
-          <div class="phase-head">
-            <span class="ph-kicker">Phase 4</span>
-            <p class="ph-title">Community equipment database</p>
-            <span class="chip planned">Planned</span>
-          </div>
-        </summary>
-        <div class="progress"><i></i></div>
-        <div class="progress-label"></div>
-        <ul class="items">
-          <li><input type="checkbox" data-id="p4-library" /><div class="item-body"><span class="item-title">Grab from community library</span><div class="item-note">Bundled SQLite snapshot synced from a zero-egress CDN.</div></div></li>
-          <li><input type="checkbox" data-id="p4-contrib" /><div class="item-body"><span class="item-title">Community-updatable (contribution workflow)</span><div class="item-note">Low-volume write path (PR-against-data-repo or moderation queue). Schema designed for this in Phase 1.</div></div></li>
-        </ul>
-      </details>
-
-      <!-- DIFFERENTIATORS -->
-      <h2 class="section">Differentiators to add</h2>
-      <p class="lead">Beyond the original list — each hits a competitor weakness. Rough priority order.</p>
-      <div class="grid">
-        <div class="card"><h4><span class="rank">1</span>Live signal validation</h4><p>Warn on incompatible types (HDMI-out → SDI-in), dangling ports, over-subscribed outputs, duplicate cable IDs.</p><span class="gap">↳ ConnectCAD's $3.4k/yr Circuit Check — our moat, free</span></div>
-        <div class="card"><h4><span class="rank">2</span>Cable schedule + BOM export</h4><p>Port-to-port table (ID, type, length, from→to) and equipment-quantity list.</p><span class="gap">↳ No indie tool has this</span></div>
-        <div class="card"><h4><span class="rank">3</span>Cable IDs + lengths + auto-numbering</h4><p>ConnectCAD-style rules (prefix/source/dest). Lengths feed packlists &amp; schedules.</p><span class="gap">↳ Table stakes for pros</span></div>
-        <div class="card"><h4><span class="rank">4</span>Rack elevation view</h4><p>A second view (19" front/rear) from the same devices.</p><span class="gap">↳ Stardraw's "one model → many views"</span></div>
-        <div class="card"><h4><span class="rank">5</span>Room templates</h4><p>Huddle room, classroom, streaming rig — fast starts.</p></div>
-        <div class="card"><h4><span class="rank">6</span>Printable cable labels</h4><p>Brother/Dymo-style label sheets.</p><span class="gap">↳ Indie tools lack it</span></div>
-        <div class="card"><h4><span class="rank">7</span>Revision history</h4><p>Natural with local files; SimpleWires charges for it.</p></div>
-        <div class="card"><h4><span class="rank">8</span>North-star: "describe a room → starter diagram"</h4><p>XTEN-AV's AI frontier. Later, atop the community DB — but don't preclude it in the data model.</p></div>
+      <div class="toolbar">
+        <label class="switch"><input type="checkbox" id="toggle-hide-done" /> Hide completed</label>
+        <span class="sp"></span>
+        <button id="btn-export" type="button" title="Copy your checkmarks to share">Copy progress</button>
+        <button id="btn-import" type="button" title="Paste a shared snapshot">Paste progress</button>
+        <button id="btn-reset" type="button" title="Clear local ticks; show the state saved in the file">Reset to file</button>
+        <span class="hint">Checkmarks live in your browser. The committed file is the shared source of truth — use <strong>Copy progress</strong> to sync between browsers or hand the snapshot to Claude to bake in.</span>
       </div>
+
+      <details class="phase" open>
+        <summary>
+          <div class="phase-head">
+            <span class="ph-kicker">Foundation</span>
+            <p class="ph-title">Canvas foundation</p>
+          </div>
+        </summary>
+        <div class="progress"><i></i></div>
+        <div class="progress-label"></div>
+        <ul class="items">
+          <li><input type="checkbox" data-id="p0-scaffold" checked /><div class="item-body"><span class="item-title">Tauri v2 + React + TS scaffold <span class="lvl lvl-med">Medium</span></span><div class="item-note">Native Apple Silicon; public repo; verified build.</div></div></li>
+          <li><input type="checkbox" data-id="p0-canvas" checked /><div class="item-body"><span class="item-title">React Flow canvas with port-based device nodes <span class="lvl lvl-med">Medium</span></span><div class="item-note">Ports as typed handles; sample signal chain renders.</div></div></li>
+        </ul>
+      </details>
+
+      <details class="phase" open>
+        <summary>
+          <div class="phase-head">
+            <span class="ph-kicker">Editing</span>
+            <p class="ph-title">Make the editor real — build a diagram and keep it</p>
+          </div>
+        </summary>
+        <div class="progress"><i></i></div>
+        <div class="progress-label"></div>
+        <ul class="items">
+          <li><input type="checkbox" data-id="p1-schema" checked /><div class="item-body"><span class="item-title">Device / port / cable schema <span class="tag new">new</span> <span class="lvl lvl-hard">Hard</span></span><div class="item-note">The spine: controlled vocabularies (signals, connectors, cable types), device model vs. placed instance, compatibility primitive. <em>Building now.</em></div></div></li>
+          <li><input type="checkbox" data-id="p1-persist" checked /><div class="item-body"><span class="item-title">Local persistence — save/load diagrams to disk <span class="tag new">new</span> <span class="lvl lvl-med">Medium</span></span><div class="item-note">Nothing is real until diagrams survive a restart. Files you own.</div></div></li>
+          <li><input type="checkbox" data-id="p1-builder" checked /><div class="item-body"><span class="item-title">Custom item builder <span class="lvl lvl-med">Medium</span></span><div class="item-note">Define a device + inputs/outputs/labels. The on-ramp before the community DB exists.</div></div></li>
+          <li><input type="checkbox" data-id="p1-cabletypes" checked /><div class="item-body"><span class="item-title">Cable types + colors <span class="lvl lvl-easy">Easy</span></span><div class="item-note">Typed, colored cables — the model everything downstream needs.</div></div></li>
+          <li><input type="checkbox" data-id="p1-cableconverter" checked /><div class="item-body"><span class="item-title">Cables that <em>are</em> the converter <span class="tag new">new</span> <span class="lvl lvl-hard">Hard</span></span><div class="item-note">A cable can carry different connectors on each end (e.g. 1/4" TRS ↔ 3.5mm TRS) as a single cable type — not an adaptor that is its own device. Today a 1/4"→3.5mm link surfaces a "needs adaptor" warning even when a matching cable exists. Model end-to-end connectors per cable so the validator only warns when no cable/adaptor can bridge the two ports. Note: asymmetric cables break the one-connector-per-cable model — a converter cable should render as a smooth color transition from connector A's color to connector B's color (gradient along the line) instead of a single flat cable color.</div></div></li>
+          <li><input type="checkbox" data-id="p1-validation" checked /><div class="item-body"><span class="item-title">Live signal validation <span class="tag new">new</span> <span class="lvl lvl-hard">Hard</span></span><div class="item-note">Warn on incompatible types (HDMI-out → SDI-in), dangling ports, over-subscribed outputs. The "port-first &amp; smart" payoff, built on the schema's compatibility primitive. Mostly done. (Duplicate-cable-ID checking lives with the cable-ID feature, since it needs IDs to exist.) <span style="color: var(--accent);">↳ ConnectCAD's $3.4k/yr Circuit Check — our moat, free.</span></div></div></li>
+          <li><input type="checkbox" data-id="p1-adapteraware" checked /><div class="item-body"><span class="item-title">Adapter &amp; converter awareness <span class="tag new">new</span> <span class="lvl lvl-hard">Hard</span></span><div class="item-note">Name the transition cable when a run changes connector but not signal (HDMI→Mini-HDMI, ¼"→3.5mm) and list them in one spot; AC↔DC is the device's PSU. True signal mismatches (SDI→HDMI) are flagged as errors. <span style="color: var(--accent);">↳ no indie tool does cable-level adapter awareness.</span></div></div></li>
+          <li><input type="checkbox" data-id="p1-autoconverter" /><div class="item-body"><span class="item-title">Auto-add-converter button <span class="tag new">new</span> <span class="lvl lvl-med">Medium</span></span><div class="item-note">On a true signal-mismatch error, a one-click fix drops in a converter device (a sensible default, or a searchable picker) and re-wires like-to-like on both sides. Builds on adapter/converter awareness flagging the mismatch.</div></div></li>
+          <li><input type="checkbox" data-id="p1-undo" checked /><div class="item-body"><span class="item-title">Undo / redo <span class="lvl lvl-hard">Hard</span></span><div class="item-note">Build the history layer early or suffer later.</div></div></li>
+          <li><input type="checkbox" data-id="p1-canvasaffordances" checked /><div class="item-body"><span class="item-title">Snap-to-grid · multi-select · drag-and-drop <span class="tag free">free</span> <span class="lvl lvl-easy">Easy</span></span><div class="item-note">Mostly React Flow props/built-ins.</div></div></li>
+          <li><input type="checkbox" data-id="p1-spawnatmouse" /><div class="item-body"><span class="item-title">New devices spawn at the mouse <span class="tag new">new</span> <span class="lvl lvl-easy">Easy</span></span><div class="item-note">Place a newly added device at the current cursor position (snapped to grid) instead of a fixed/default spot, so it lands where you're looking.</div></div></li>
+          <li><input type="checkbox" data-id="p1-multipatch" /><div class="item-body"><span class="item-title">Patch multiple cables at once <span class="tag new">new</span> <span class="lvl lvl-med">Medium</span></span><div class="item-note">Bulk-wire a fan-out: select source ports 1–8 on the video router, then destination ports 1–8 on the ATEM, and run all eight cables in order in one action — instead of dragging each link by hand. Order-paired (1→1, 2→2…); validate type compatibility per pair as they're drawn.</div></div></li>
+        </ul>
+      </details>
+
+      <details class="phase" open>
+        <summary>
+          <div class="phase-head">
+            <span class="ph-kicker">Navigation</span>
+            <p class="ph-title">Organize &amp; navigate</p>
+          </div>
+        </summary>
+        <div class="progress"><i></i></div>
+        <div class="progress-label"></div>
+        <ul class="items">
+          <li><input type="checkbox" data-id="p2-projects" checked /><div class="item-body"><span class="item-title">Folders / projects <span class="lvl lvl-med">Medium</span></span><div class="item-note">A project holds multiple diagrams. Builds on persistence.</div></div></li>
+          <li><input type="checkbox" data-id="p2-templates" /><div class="item-body"><span class="item-title">Room templates <span class="tag new">new</span> <span class="lvl lvl-med">Medium</span></span><div class="item-note">Huddle room, classroom, streaming rig — fast starts from a pre-built diagram.</div></div></li>
+          <li><input type="checkbox" data-id="p2-revisions" /><div class="item-body"><span class="item-title">Revision history <span class="tag new">new</span> <span class="lvl lvl-hard">Hard</span></span><div class="item-note">Natural with local files — version saved projects over time. <span style="color: var(--accent);">↳ SimpleWires charges for it.</span></div></div></li>
+          <li><input type="checkbox" data-id="p2-zones" checked /><div class="item-body"><span class="item-title">Zones + labels <span class="lvl lvl-med">Medium</span></span><div class="item-note">Color-coded, labeled regions (stage, rack, control room).</div></div></li>
+          <li><input type="checkbox" data-id="p2-autoarrangezones" /><div class="item-body"><span class="item-title">Zone-aware auto-arrange <span class="tag new">new</span> <span class="lvl lvl-hard">Hard</span></span><div class="item-note">Auto-arrange / auto-layout should respect zones — keep items belonging to the same zone grouped together rather than scattering them across the canvas.</div></div></li>
+          <li><input type="checkbox" data-id="p2-movewithzone" /><div class="item-body"><span class="item-title">Move items together with their zone <span class="tag new">new</span> <span class="lvl lvl-med">Medium</span></span><div class="item-note">Dragging a zone moves its contained devices with it, so the zone and its items stay together as one unit.</div></div></li>
+          <li><input type="checkbox" data-id="p2-zonetab" /><div class="item-body"><span class="item-title">Zone ⇄ tab — nested sub-diagrams <span class="tag new">new</span> <span class="lvl lvl-epic">Epic</span></span><div class="item-note">A zone and a tab are two views of the same thing. Build out the control room as its own tab (a full sub-diagram), then drop that tab into the overall event diagram as a single zone block — and conversely promote any zone to its own tab. The inserted block exposes its boundary ports so you can draw connections between zones at the top level (control room → backstage, where backstage is itself another tab). Hierarchical diagrams: edit a room in detail, reference it as one unit elsewhere.</div></div></li>
+          <li><input type="checkbox" data-id="p2-annotations" checked /><div class="item-body"><span class="item-title">Headings / lists / formatted-text annotations <span class="lvl lvl-med">Medium</span></span></div></li>
+          <li><input type="checkbox" data-id="p2-legend" checked /><div class="item-body"><span class="item-title">Legend (cable-type color key) <span class="lvl lvl-easy">Easy</span></span><div class="item-note">Trivial once cable types exist.</div></div></li>
+          <li><input type="checkbox" data-id="p2-lr" checked /><div class="item-body"><span class="item-title">Left-to-right mode · zoom-to-fit <span class="tag free">free</span> · zoom-to-zone <span class="lvl lvl-med">Medium</span></span><div class="item-note">fit is free via fitView; zoom-to-zone needs zones.</div></div></li>
+          <li><input type="checkbox" data-id="p2-rackview" /><div class="item-body"><span class="item-title">Rack elevation view <span class="tag new">new</span> <span class="lvl lvl-epic">Epic</span></span><div class="item-note">A second view (19" front/rear) generated from the same devices. <span style="color: var(--accent);">↳ Stardraw's "one model → many views."</span></div></div></li>
+          <li><input type="checkbox" data-id="p2-theme" checked /><div class="item-body"><span class="item-title">Light / dark mode <span class="tag free">free</span> <span class="lvl lvl-easy">Easy</span></span><div class="item-note">React Flow colorMode; can slide earlier anytime.</div></div></li>
+          <li><input type="checkbox" data-id="p2-gridalign" /><div class="item-body"><span class="item-title">Align grid pitch with port spacing — clean lines <span class="tag new">new</span> <span class="lvl lvl-med">Medium</span></span><div class="item-note">Make the snap grid and the port row spacing share a common unit so ports land on grid intersections and connections route as clean horizontal/orthogonal lines instead of slight diagonals.</div></div></li>
+          <li><input type="checkbox" data-id="p2-cableoffset" /><div class="item-body"><span class="item-title">Parallel cables stay independent — de-overlap or label <span class="tag new">new</span> <span class="lvl lvl-hard">Hard</span></span><div class="item-note">Two cables running parallel currently merge into one visual line. Options to decide between: (a) auto-offset parallel runs so each reads as its own line; (b) a "combine + label" mode that bundles like cables and labels them where they merge and separate; (c) a per-diagram toggle between "every cable independent" and "combine &amp; label." Likely the toggle, defaulting to independent.</div></div></li>
+          <li><input type="checkbox" data-id="p2-sidebars" /><div class="item-body"><span class="item-title">Collapsible left &amp; right sidebars <span class="tag new">new</span> <span class="lvl lvl-easy">Easy</span></span><div class="item-note">Let the panels collapse to reclaim canvas width on smaller screens / dense diagrams.</div></div></li>
+          <li><input type="checkbox" data-id="p2-minimap" /><div class="item-body"><span class="item-title">Minimize / hide the minimap <span class="tag new">new</span> <span class="lvl lvl-easy">Easy</span></span><div class="item-note">Let the user collapse or fully hide the React Flow minimap to reclaim corner space when it's not needed.</div></div></li>
+        </ul>
+      </details>
+
+      <details class="phase" open>
+        <summary>
+          <div class="phase-head">
+            <span class="ph-kicker">Output</span>
+            <p class="ph-title">Documentation &amp; export — the payoff</p>
+          </div>
+        </summary>
+        <div class="progress"><i></i></div>
+        <div class="progress-label"></div>
+        <ul class="items">
+          <li><input type="checkbox" data-id="p3-packlist" checked /><div class="item-body"><span class="item-title">Auto packlists &amp; patch lists <span class="lvl lvl-med">Medium</span></span><div class="item-note">Derive from the complete model. Make patch lists free (H2R gates them).</div></div></li>
+          <li><input type="checkbox" data-id="p3-psupacklist" /><div class="item-body"><span class="item-title">Packlist lists PSUs with their device <span class="tag new">new</span> <span class="lvl lvl-med">Medium</span></span><div class="item-note">A device's power supply is its own line item in the packlist, named for the device it powers — e.g. a Netgear GS308v3 yields "PSU — Netgear GS308v3" so wall-warts / power bricks get packed too and are traceable to their gear.</div></div></li>
+          <li><input type="checkbox" data-id="p3-cableids" /><div class="item-body"><span class="item-title">Cable IDs + lengths + auto-numbering <span class="tag new">new</span> <span class="lvl lvl-med">Medium</span></span><div class="item-note">ConnectCAD-style rules (prefix/source/dest). Lengths feed packlists &amp; schedules. Includes duplicate-cable-ID detection (split out of live validation, which can't flag dupes until IDs exist). <span style="color: var(--accent);">↳ table stakes for pros.</span></div></div></li>
+          <li><input type="checkbox" data-id="p3-cableschedule" /><div class="item-body"><span class="item-title">Cable schedule + BOM export <span class="tag new">new</span> <span class="lvl lvl-med">Medium</span></span><div class="item-note">Port-to-port table (ID, type, length, from→to) and equipment-quantity list. <span style="color: var(--accent);">↳ no indie tool has this.</span></div></div></li>
+          <li><input type="checkbox" data-id="p3-labels" /><div class="item-body"><span class="item-title">Printable cable labels <span class="tag new">new</span> <span class="lvl lvl-med">Medium</span></span><div class="item-note">Brother/Dymo-style label sheets. <span style="color: var(--accent);">↳ indie tools lack it.</span></div></div></li>
+          <li><input type="checkbox" data-id="p3-export" checked /><div class="item-body"><span class="item-title">Export — diagram → PNG/JPG/PDF · lists → CSV/structured <span class="lvl lvl-med">Medium</span></span></div></li>
+        </ul>
+      </details>
+
+      <details class="phase" open>
+        <summary>
+          <div class="phase-head">
+            <span class="ph-kicker">Library</span>
+            <p class="ph-title">Community equipment database</p>
+          </div>
+        </summary>
+        <div class="progress"><i></i></div>
+        <div class="progress-label"></div>
+        <p class="lead" style="margin: 10px 0 2px; font-size: 13.5px;">
+          Full design → <a href="COMMUNITY.html" style="color: var(--accent); text-decoration: none;">Community Library Architecture</a>.
+          Two planes that never touch: a free static read path and a GitHub-PR write path. Git is the database — no Postgres mirror.
+        </p>
+        <ul class="items">
+          <li><input type="checkbox" data-id="p4-library" /><div class="item-body"><span class="item-title">Grab from community library <span class="lvl lvl-hard">Hard</span></span><div class="item-note">Read-mostly local SQLite mirror, synced as a gzipped snapshot from a zero-egress CDN (GitHub Releases → R2). Offline-first; ETag/304 makes no-op updates free. Row <em>contentHash</em> + monotonic <em>rev</em> leave the seam for static deltas later.</div></div></li>
+          <li><input type="checkbox" data-id="p4-seed" /><div class="item-body"><span class="item-title">Seed the catalog — bulk import <span class="tag new">new</span> <span class="lvl lvl-epic">Epic</span></span><div class="item-note">The real hard problem (not hosting): a CSV/JSON bulk-import path + a first pass of common gear, so the catalog is worth syncing on day one. Highest-risk workstream.</div></div></li>
+          <li><input type="checkbox" data-id="p4-contrib" /><div class="item-body"><span class="item-title">Community-updatable — account-free contribution <span class="lvl lvl-hard">Hard</span></span><div class="item-note">In-app Submit / Correct / Report → a stateless Cloudflare Worker validates and opens a GitHub PR via an app token. No GitHub account for users; no secrets shipped. Corrections fork the local copy and send a field-level diff. CC0-licensed.</div></div></li>
+          <li><input type="checkbox" data-id="p4-feedback" /><div class="item-body"><span class="item-title">In-app feedback box <span class="tag new">new</span> <span class="lvl lvl-med">Medium</span></span><div class="item-note">A simple "send feedback" panel in the UI — type a note, it posts to GitHub (as an Issue) via the <em>same</em> stateless Cloudflare Worker + app token as community contributions. No GitHub account for users. Reuse the Worker's validation, rate-limit, and pseudonymous install ID; attach app version / OS for context. Optionally label by type (bug / idea / praise).</div></div></li>
+          <li><input type="checkbox" data-id="p4-edit" checked /><div class="item-body"><span class="item-title">Edit / correct a device <span class="tag new">new</span> <span class="lvl lvl-med">Medium</span></span><div class="item-note">Edit your own custom devices in place; editing a community/built-in device forks a personal copy (with provenance) so you can fix an error without deleting and starting over. The local half of corrections — pushing the fix upstream lights up with the contribution pipeline.</div></div></li>
+          <li><input type="checkbox" data-id="p4-connectors" /><div class="item-body"><span class="item-title">Define custom port/cable types (local connectors) <span class="tag new">new</span> <span class="lvl lvl-hard">Hard</span></span><div class="item-note">Let a user define their own connector (port type = cable type) — id, label, color, group — merged into the registry so exotic gear is modelable locally. Precursor to submitting new connector types to the shared vocabulary (gated, <code>minAppVersion</code>-bumped). Requires refactoring the static CONNECTORS registry into a merged lookup.</div></div></li>
+          <li><input type="checkbox" data-id="p4-moderation" /><div class="item-body"><span class="item-title">Moderation &amp; trust tiers <span class="tag new">new</span> <span class="lvl lvl-hard">Hard</span></span><div class="item-note">GitHub PRs are the queue, diff viewer, and audit log. Pseudonymous install ID + rate-limit + blocklist (the only non-git state) tracks bad actors without logins. Auto-merge trivial fixes from trusted contributors; hold new devices.</div></div></li>
+          <li><input type="checkbox" data-id="p4-northstar" /><div class="item-body"><span class="item-title">North-star: "describe a room → starter diagram" <span class="tag new">new</span> <span class="lvl lvl-epic">Epic</span></span><div class="item-note">XTEN-AV's AI frontier. Sits atop the community DB — prompt → starter diagram. Don't preclude it in the data model. <span style="color: var(--accent);">↳ the long-game capstone.</span></div></div></li>
+        </ul>
+      </details>
+
+      <!-- BUG FIXES -->
+      <h2 class="section">Bug fixes</h2>
+      <p class="lead">Known defects to squash. Checked when fixed &amp; verified.</p>
+      <details class="phase" open>
+        <summary>
+          <div class="phase-head">
+            <span class="ph-kicker">Bugs</span>
+            <p class="ph-title">Open defects</p>
+            <span class="chip next">To fix</span>
+          </div>
+        </summary>
+        <div class="progress"><i></i></div>
+        <div class="progress-label"></div>
+        <ul class="items">
+          <li><input type="checkbox" data-id="bug-zone-multi" /><div class="item-body"><span class="item-title">Adding a zone adds multiple zones <span class="lvl lvl-easy">Easy</span></span><div class="item-note">A single "add zone" action spawns more than one zone. Likely a duplicate event handler / double-fire on the create action.</div></div></li>
+        </ul>
+      </details>
 
       <footer>
         <div><strong>sigpath</strong> · <a href="https://github.com/patricktr/sigpath">github.com/patricktr/sigpath</a></div>
@@ -359,10 +419,20 @@
           document.querySelectorAll("details.phase").forEach(updatePhase);
         }
 
+        // Re-apply `state` to every box. Absent an override, fall back to the box's
+        // committed `checked` attribute — the file is the shared source of truth.
+        function applyState() {
+          boxes.forEach(function (box) {
+            var id = box.getAttribute("data-id");
+            if (Object.prototype.hasOwnProperty.call(state, id)) box.checked = !!state[id];
+            else box.checked = box.hasAttribute("checked");
+            syncLi(box);
+          });
+          updateAll();
+        }
+
         boxes.forEach(function (box) {
           var id = box.getAttribute("data-id");
-          if (Object.prototype.hasOwnProperty.call(state, id)) box.checked = !!state[id];
-          syncLi(box);
           box.addEventListener("change", function () {
             state[id] = box.checked;
             persist();
@@ -370,7 +440,49 @@
             updatePhase(box.closest("details.phase"));
           });
         });
-        updateAll();
+        applyState();
+
+        /* Hide-completed toggle (persisted separately from item state). */
+        var HKEY = "sigpath.roadmap.hideDone";
+        var hideToggle = document.getElementById("toggle-hide-done");
+        function applyHide() { document.body.classList.toggle("hide-done", hideToggle.checked); }
+        try { hideToggle.checked = localStorage.getItem(HKEY) === "1"; } catch (e) {}
+        applyHide();
+        hideToggle.addEventListener("change", function () {
+          try { localStorage.setItem(HKEY, hideToggle.checked ? "1" : "0"); } catch (e) {}
+          applyHide();
+        });
+
+        /* Shared-state sync. localStorage is per-browser and cannot sync on its own,
+           so progress travels as a snapshot you copy/paste (or hand to Claude to bake
+           into the committed file, which everyone then loads identically). */
+        document.getElementById("btn-export").addEventListener("click", function () {
+          var snap = JSON.stringify(state);
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(snap).then(
+              function () { alert("Progress copied to clipboard.\nPaste it in the other browser (Paste progress), or give it to Claude to bake into the file."); },
+              function () { window.prompt("Copy this progress snapshot:", snap); }
+            );
+          } else {
+            window.prompt("Copy this progress snapshot:", snap);
+          }
+        });
+        document.getElementById("btn-import").addEventListener("click", function () {
+          var input = window.prompt("Paste a progress snapshot:");
+          if (!input) return;
+          try {
+            var incoming = JSON.parse(input);
+            Object.keys(incoming).forEach(function (k) { state[k] = !!incoming[k]; });
+            persist();
+            applyState();
+          } catch (e) { alert("Couldn't read that snapshot."); }
+        });
+        document.getElementById("btn-reset").addEventListener("click", function () {
+          if (!window.confirm("Clear local checkmarks and show the state saved in the file?")) return;
+          state = {};
+          try { localStorage.removeItem(KEY); } catch (e) {}
+          applyState();
+        });
       })();
     </script>
   </body>

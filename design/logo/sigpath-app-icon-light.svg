@@ -1,9 +1,14 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
-  <rect width="1024" height="1024" rx="225" fill="#f2f3f7"></rect>
-  <circle cx="379" cy="292" r="94" fill="#3b82f6"></circle>
-  <circle cx="645" cy="292" r="94" fill="#22c55e"></circle>
-  <circle cx="379" cy="512" r="94" fill="#8b5cf6"></circle>
-  <circle cx="645" cy="512" r="94" fill="#06b6d4"></circle>
-  <circle cx="379" cy="732" r="94" fill="#f59e0b"></circle>
-  <circle cx="645" cy="732" r="94" fill="#ef4444"></circle>
+  <!-- Artwork sits at 824x824 centered in the 1024 canvas (Apple macOS icon grid:
+       ~100px transparent margin per side) so it renders the same visual size as
+       system icons in the Dock and Cmd+Tab switcher. -->
+  <g transform="translate(100 100) scale(0.8046875)">
+    <rect width="1024" height="1024" rx="225" fill="#f2f3f7"></rect>
+    <circle cx="379" cy="292" r="94" fill="#3b82f6"></circle>
+    <circle cx="645" cy="292" r="94" fill="#22c55e"></circle>
+    <circle cx="379" cy="512" r="94" fill="#8b5cf6"></circle>
+    <circle cx="645" cy="512" r="94" fill="#06b6d4"></circle>
+    <circle cx="379" cy="732" r="94" fill="#f59e0b"></circle>
+    <circle cx="645" cy="732" r="94" fill="#ef4444"></circle>
+  </g>
 </svg>

@@ -4,6 +4,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import {
   ReactFlow,
+  ReactFlowProvider,
   Background,
   BackgroundVariant,
   Controls,
@@ -12,12 +13,14 @@ import {
   reconnectEdge,
   useNodesState,
   useEdgesState,
+  useUpdateNodeInternals,
   type Connection,
   type ReactFlowInstance,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 
 import { DeviceNode } from "./flow/DeviceNode";
+import { CableEdge } from "./flow/CableEdge";
 import { arrangeLeftToRight } from "./flow/autoLayout";
 import type {
   DeviceNodeType,
@@ -42,6 +45,8 @@ import {
   saveBinary,
 } from "./io/files";
 import { AddDeviceOverlay } from "./ui/AddDevice/AddDeviceOverlay";
+import { CreateWizard } from "./ui/AddDevice/CreateWizard";
+import { addToPersonalLibrary } from "./library/personalLibrary";
 import type { AddSurface } from "./ui/AddDevice/addDevice";
 import { DiagramTabs } from "./ui/DiagramTabs";
 import { ZoneNode, ZoneActionsContext, ZONE_COLORS } from "./ui/ZoneNode";
@@ -57,13 +62,18 @@ import "./App.css";
 
 /** Registered once at module scope so the reference stays stable across renders. */
 const nodeTypes = { device: DeviceNode, zone: ZoneNode, note: NoteNode };
+const edgeTypes = { cable: CableEdge };
 
 /** Grid size (px) for snap-to-grid and the background dots. */
 const GRID = 24;
 
-function App() {
+function AppInner() {
   const [nodes, setNodes, onNodesChange] = useNodesState<SigNode>([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState<CableEdgeType>([]);
+  // React Flow caches each node's handle bounds at mount; editing a device's ports
+  // changes its handles, so we must tell React Flow to re-measure (otherwise a new
+  // port's handle is unknown and a cable dropped on it resolves to a phantom).
+  const updateNodeInternals = useUpdateNodeInternals();
 
   // Always-fresh views of the live canvas for the project hook to snapshot.
   const nodesRef = useRef(nodes);
@@ -106,6 +116,9 @@ function App() {
   const [currentPath, setCurrentPath] = useState<string | null>(null);
   const [status, setStatus] = useState("");
   const [addSurface, setAddSurface] = useState<AddSurface>("none");
+  // Device being edited, and the placed node it came from (if any).
+  const [editModel, setEditModel] = useState<DeviceModel | null>(null);
+  const [editNodeId, setEditNodeId] = useState<string | null>(null);
   const [addToast, setAddToast] = useState<string | null>(null);
   const [listsOpen, setListsOpen] = useState(false);
   const [closePrompt, setClosePrompt] = useState(false);
@@ -157,7 +170,7 @@ function App() {
         target: connection.target,
         sourceHandle: connection.sourceHandle,
         targetHandle: connection.targetHandle,
-        type: "smoothstep",
+        type: "cable",
         style: { stroke: color, strokeWidth: 2 },
         data: { cableTypeId: cableTypeId ?? "" },
       };
@@ -304,14 +317,19 @@ function App() {
   // errors are solid red + animated, warnings are dashed amber. A selected edge
   // is then thickened and given a glow halo on top, so a selected error edge
   // still reads as red AND clearly looks selected.
-  const displayEdges = useMemo(() => {
+  const displayEdges = useMemo<CableEdgeType[]>(() => {
     const { errorEdges, warnEdges } = validation;
-    if (errorEdges.size === 0 && warnEdges.size === 0 && !edges.some((e) => e.selected)) {
-      return edges;
-    }
+    const byId = new Map(nodes.map((n) => [n.id, n]));
+    const portColor = (nodeId: string, handleId: string | null | undefined): string | undefined => {
+      const n = byId.get(nodeId);
+      const port =
+        n?.type === "device" ? n.data.model.ports.find((p) => p.id === handleId) : undefined;
+      return port ? cableColor(port.connector) : undefined;
+    };
     return edges.map((e) => {
       let style: CSSProperties;
       let animated = e.animated;
+      let data = e.data;
       if (errorEdges.has(e.id)) {
         style = { ...e.style, stroke: "#ef4444", strokeWidth: 2.5 };
         animated = true;
@@ -319,6 +337,13 @@ function App() {
         style = { ...e.style, stroke: "#f59e0b", strokeWidth: 2, strokeDasharray: "6 4" };
       } else {
         style = { ...e.style };
+        // A valid run whose two ends differ in color is a transition/adapter cable —
+        // stroke it with a source→target gradient (the cable that is the converter).
+        const from = portColor(e.source, e.sourceHandle);
+        const to = portColor(e.target, e.targetHandle);
+        if (from && to && from !== to) {
+          data = { ...(e.data ?? { cableTypeId: "" }), gradient: { from, to } };
+        }
       }
       if (e.selected) {
         const base = typeof style.strokeWidth === "number" ? style.strokeWidth : 2;
@@ -329,9 +354,9 @@ function App() {
           filter: `drop-shadow(0 0 2px ${glow}) drop-shadow(0 0 6px ${glow})`,
         };
       }
-      return { ...e, style, animated };
+      return { ...e, style, animated, data };
     });
-  }, [edges, validation]);
+  }, [edges, validation, nodes]);
 
   const focusIssue = useCallback(
     (issue: ValidationIssue) => {
@@ -417,22 +442,19 @@ function App() {
 
   const noteActions = useMemo(() => ({ setText: setNoteText }), [setNoteText]);
 
-  // Cable types actually used in the current diagram, for the legend.
+  // Cable legend, transition-aware: straight runs by type + named passive adapter
+  // cables (HDMI→Mini-HDMI, ¼"→3.5mm). Mirrors the Lists-panel "Cables & adapters"
+  // data so the rail and the lists always agree. Converters/PSUs aren't cables.
   const usedCableTypes = useMemo(() => {
-    const counts = new Map<string, number>();
-    for (const e of edges) {
-      const id = e.data?.cableTypeId;
-      if (id) counts.set(id, (counts.get(id) ?? 0) + 1);
-    }
-    const items = [...counts].map(([id, count]) => ({
-      id,
-      label: cableLabel(id),
-      color: cableColor(id),
-      count,
-    }));
+    const items = [
+      ...lists.cables.map((c) => ({ id: c.id, label: c.label, color: c.color, count: c.count })),
+      ...lists.adapters
+        .filter((a) => a.kind !== "converter")
+        .map((a) => ({ id: a.key, label: a.label, color: a.color, count: a.count })),
+    ];
     items.sort((a, b) => a.label.localeCompare(b.label));
     return items;
-  }, [edges]);
+  }, [lists]);
 
   // Current selection drives the contextual action bar shown under the toolbar.
   const selection = useMemo(() => {
@@ -443,6 +465,22 @@ function App() {
     const cables = edges.filter((e) => e.selected);
     return { zones, devices, cables };
   }, [nodes, edges]);
+
+  // The single selected cable: its resolved (transition-aware) type label, and —
+  // only when the source is a combo jack — the connector choices to override it with.
+  const selectedCable = useMemo(() => {
+    if (selection.cables.length !== 1) return null;
+    const e = selection.cables[0];
+    const srcNode = nodes.find((n) => n.id === e.source);
+    const srcPort =
+      srcNode?.type === "device"
+        ? srcNode.data.model.ports.find((p) => p.id === e.sourceHandle)
+        : undefined;
+    const comboOptions =
+      srcPort?.accepts && srcPort.accepts.length ? [srcPort.connector, ...srcPort.accepts] : null;
+    const label = lists.patches.find((p) => p.id === e.id)?.cableType ?? "";
+    return { edge: e, comboOptions, label };
+  }, [selection.cables, nodes, lists.patches]);
 
   const deviceTotal = useMemo(() => nodes.filter((n) => n.type === "device").length, [nodes]);
 
@@ -462,6 +500,75 @@ function App() {
   const selectNode = useCallback(
     (id: string) => setNodes((nds) => nds.map((n) => ({ ...n, selected: n.id === id }))),
     [setNodes],
+  );
+
+  // Open the editor on the single selected device.
+  const editSelectedDevice = useCallback(() => {
+    if (!inspectorDevice) return;
+    setEditModel(inspectorDevice.data.model);
+    setEditNodeId(inspectorDevice.id);
+  }, [inspectorDevice]);
+
+  const cancelEdit = useCallback(() => {
+    setEditModel(null);
+    setEditNodeId(null);
+  }, []);
+
+  // Save an edit: update the placed node's model, re-type cables leaving any
+  // changed port (cable type derives from the source port), and upsert the
+  // (custom) model into the personal library so the fix persists for reuse.
+  const saveEdit = useCallback(
+    (m: DeviceModel) => {
+      takeSnapshot();
+      if (editNodeId) {
+        const nodeId = editNodeId;
+        setNodes((nds) =>
+          nds.map((n) =>
+            n.id === nodeId && n.type === "device" ? { ...n, data: { ...n.data, model: m } } : n,
+          ),
+        );
+        setEdges((eds) =>
+          eds.map((e) => {
+            if (e.source !== nodeId) return e;
+            const port = m.ports.find((p) => p.id === e.sourceHandle);
+            if (!port) return e;
+            return {
+              ...e,
+              style: { ...e.style, stroke: cableColor(port.connector), strokeWidth: 2 },
+              data: { ...e.data, cableTypeId: port.connector },
+            };
+          }),
+        );
+        // The edited model may add, remove, or re-side ports — re-measure the node's
+        // handles so cables can attach to the new ports (and stale ones detach).
+        updateNodeInternals(nodeId);
+      }
+      addToPersonalLibrary(m);
+      setEditModel(null);
+      setEditNodeId(null);
+      setStatus(`Updated ${m.model}`);
+    },
+    [editNodeId, setNodes, setEdges, takeSnapshot, updateNodeInternals],
+  );
+
+  // Override a cable's type (e.g. pick TRS vs XLR on a combo run). Flows into the
+  // pack/patch list via cableTypeId and re-colors the edge.
+  const setCableType = useCallback(
+    (edgeId: string, cableTypeId: string) => {
+      takeSnapshot();
+      setEdges((eds) =>
+        eds.map((e) =>
+          e.id === edgeId
+            ? {
+                ...e,
+                style: { ...e.style, stroke: cableColor(cableTypeId), strokeWidth: 2 },
+                data: { ...e.data, cableTypeId },
+              }
+            : e,
+        ),
+      );
+    },
+    [setEdges, takeSnapshot],
   );
 
   // Reflect the resolved theme on <html> so the token system swaps.
@@ -814,6 +921,11 @@ function App() {
                 {selection.devices.length} device{selection.devices.length === 1 ? "" : "s"} selected
               </span>
               <span className="contextbar__sep" />
+              {selection.devices.length === 1 && (
+                <button type="button" className="contextbar__btn" onClick={editSelectedDevice}>
+                  Edit
+                </button>
+              )}
               <button type="button" className="contextbar__btn" onClick={duplicateSelection}>
                 Duplicate
               </button>
@@ -828,6 +940,33 @@ function App() {
                 {selection.cables.length} cable{selection.cables.length === 1 ? "" : "s"} selected
               </span>
               <span className="contextbar__sep" />
+              {selectedCable &&
+                (selectedCable.comboOptions ? (
+                  <label
+                    className="contextbar__title"
+                    style={{ display: "inline-flex", alignItems: "center", gap: 6, fontWeight: 400 }}
+                  >
+                    Cable type
+                    <select
+                      value={selectedCable.edge.data?.cableTypeId ?? ""}
+                      onChange={(e) => setCableType(selectedCable.edge.id, e.target.value)}
+                    >
+                      {selectedCable.comboOptions.map((c) => (
+                        <option key={c} value={c}>
+                          {cableLabel(c)}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                ) : (
+                  <span
+                    className="contextbar__title"
+                    style={{ display: "inline-flex", alignItems: "center", gap: 6, fontWeight: 400 }}
+                  >
+                    Cable type
+                    <strong style={{ fontWeight: 600 }}>{selectedCable.label}</strong>
+                  </span>
+                ))}
               <button type="button" className="contextbar__btn" onClick={deleteSelection}>
                 Delete
               </button>
@@ -850,6 +989,7 @@ function App() {
                 nodes={nodes}
                 edges={displayEdges}
                 nodeTypes={nodeTypes}
+                edgeTypes={edgeTypes}
                 onNodesChange={onNodesChange}
                 onEdgesChange={onEdgesChange}
                 onConnect={onConnect}
@@ -863,7 +1003,7 @@ function App() {
                 }}
                 snapToGrid={snap}
                 snapGrid={[GRID, GRID]}
-                defaultEdgeOptions={{ type: "smoothstep" }}
+                defaultEdgeOptions={{ type: "cable" }}
                 minZoom={0.1}
                 maxZoom={4}
                 colorMode={theme}
@@ -964,6 +1104,20 @@ function App() {
           onClose={() => setAddSurface("none")}
         />
       )}
+      {editModel && (
+        <div className="adv-scrim" onMouseDown={cancelEdit}>
+          <div className="adv-stop" onMouseDown={(e) => e.stopPropagation()}>
+            <CreateWizard
+              key={editModel.id}
+              initial={editModel}
+              onSave={saveEdit}
+              onCancel={cancelEdit}
+              onSaved={() => {}}
+              onPlace={() => {}}
+            />
+          </div>
+        </div>
+      )}
       {addToast && (
         <div className="adv-toast" role="status">
           {addToast}
@@ -996,4 +1150,12 @@ function App() {
   );
 }
 
-export default App;
+// useUpdateNodeInternals (and React Flow's store) need the provider in an ancestor;
+// App renders the canvas as a child, so wrap the whole app in one.
+export default function App() {
+  return (
+    <ReactFlowProvider>
+      <AppInner />
+    </ReactFlowProvider>
+  );
+}
