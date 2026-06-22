@@ -1,6 +1,7 @@
 import { SIGNAL_META } from "./signals";
 import type { SignalKind } from "./signals";
 import type { PortDirection } from "./device";
+import type { GradeScaleId } from "./grades";
 
 /**
  * A physical connector standard — the PORT TYPE, and the source of truth for the
@@ -25,6 +26,12 @@ export type ConnectorDef = {
   family?: string;
   /** Colloquial search terms for the connector picker (e.g. "ethernet" → RJ45). */
   aliases?: string[];
+  /**
+   * Bandwidth grade family this port type carries (SDI, HDMI, USB…). Omitted ⇒
+   * ungraded (analog audio, power, control) — those connectors are never
+   * grade-checked. Attached from {@link CONNECTOR_GRADE_SCALE} at load. See grades.ts.
+   */
+  gradeScale?: GradeScaleId;
 };
 
 /** Ordered by group (A/V, video, audio, data, network, control, power) for the picker. */
@@ -121,6 +128,34 @@ const CONNECTOR_ALIASES: Record<string, string[]> = {
 for (const [id, aliases] of Object.entries(CONNECTOR_ALIASES)) {
   const def = CONNECTORS[id];
   if (def) def.aliases = aliases;
+}
+
+/**
+ * Which bandwidth ladder each connector rides on. Only families whose throughput
+ * varies behind a single plug shape are listed (SDI/BNC, HDMI, DisplayPort, USB,
+ * copper Ethernet); everything else — analog audio, power, control, fiber/SFP,
+ * HDBaseT, DVI — stays ungraded for now. Attached onto the defs at load, mirroring
+ * the alias attach above so there's one source of truth.
+ */
+const CONNECTOR_GRADE_SCALE: Record<string, GradeScaleId> = {
+  sdi: "sdi",
+  bnc: "sdi",
+  hdmi: "hdmi",
+  "mini-hdmi": "hdmi",
+  "micro-hdmi": "hdmi",
+  dp: "displayport",
+  "mini-dp": "displayport",
+  "usb-c": "usb",
+  "usb-a": "usb",
+  "usb-b": "usb",
+  "usb-micro": "usb",
+  thunderbolt: "usb",
+  rj45: "ethernet",
+  ethercon: "ethernet",
+};
+for (const [id, gradeScale] of Object.entries(CONNECTOR_GRADE_SCALE)) {
+  const def = CONNECTORS[id];
+  if (def) def.gradeScale = gradeScale;
 }
 
 /** Connectors in display order — for the create wizard's port-type picker. */
@@ -226,4 +261,10 @@ export function cableLabel(connectorId: string): string {
 export function groupForConnector(connectorId: string | undefined): SignalKind {
   if (!connectorId) return "av";
   return CONNECTORS[resolve(connectorId)]?.group ?? "av";
+}
+
+/** Bandwidth grade scale for a connector (or legacy cable-type id) — undefined if ungraded. */
+export function gradeScaleForConnector(connectorId: string | undefined): GradeScaleId | undefined {
+  if (!connectorId) return undefined;
+  return CONNECTORS[resolve(connectorId)]?.gradeScale;
 }

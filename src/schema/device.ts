@@ -1,5 +1,6 @@
 import type { SignalKind } from "./signals";
 import type { ConnectorId } from "./connectors";
+import type { GradeId } from "./grades";
 
 export type PortDirection = "input" | "output" | "bidirectional";
 
@@ -19,6 +20,12 @@ export type Port = {
    * still carries one cable at a time.
    */
   accepts?: ConnectorId[];
+  /**
+   * Max bandwidth grade this jack emits/accepts — its *capability* ceiling
+   * (e.g. "sdi-12g", "hdmi-2.1"). Belongs to the connector's {@link gradeScale};
+   * omitted ⇒ unrated, so the run is never grade-checked at this end. See grades.ts.
+   */
+  grade?: GradeId;
   /** Legacy/derived coarse group; the connector is authoritative. Optional. */
   signal?: SignalKind;
   note?: string;
@@ -146,7 +153,7 @@ export type DeviceModel = {
   imageUrl?: string;
   /**
    * Catalog revision this model was synced at (community models only). Lets the
-   * sync client tell which local rows are stale. See COMMUNITY.html §3.
+   * sync client tell which local rows are stale. See design/COMMUNITY.html §3.
    */
   rev?: number;
   /**
@@ -157,7 +164,7 @@ export type DeviceModel = {
   /**
    * Set when a community/built-in model was forked into the personal library to
    * correct it. Records what was forked so a later "submit correction" can diff
-   * against that base instead of overwriting blind. See COMMUNITY.html §5.
+   * against that base instead of overwriting blind. See design/COMMUNITY.html §5.
    */
   forkedFrom?: { id: string; baseRev?: number; baseHash?: string };
 };
@@ -201,11 +208,16 @@ export function deviceTitle(model: DeviceModel, label?: string): string {
 
 /**
  * A stable, dependency-free hash of a model's identity-bearing spec — manufacturer,
- * model, category, type, rack units, and ports (in order). Volatile/identity fields
- * (id, source, rev, contentHash, forkedFrom, imageUrl) and the legacy derived
- * `port.signal` are excluded, as are arbitrary local `port.id`s. Used for per-row
- * change detection, dedup, and sync deltas — NOT a security boundary (the
- * contribution pipeline re-validates), so a fast non-cryptographic FNV-1a is plenty.
+ * model, category, type, rack units, and ports in order (direction, connector, grade,
+ * name, note). Volatile/identity fields (id, source, rev, contentHash, forkedFrom,
+ * imageUrl) and the legacy derived `port.signal` are excluded, as are arbitrary local
+ * `port.id`s. Used for per-row change detection, dedup, and sync deltas — NOT a
+ * security boundary (the contribution pipeline re-validates), so a fast
+ * non-cryptographic FNV-1a is plenty.
+ *
+ * Note: `port.grade` joined the canonical on 2026-06-22 (Phase A of signal-grade).
+ * That one-time change re-hashes every existing row — expected, handled as a single
+ * catalog rev bump, not a sync bug. See design/SIGNAL-GRADE.html §5.
  */
 export function deviceContentHash(model: DeviceModel): string {
   const canonical = JSON.stringify({
@@ -214,7 +226,7 @@ export function deviceContentHash(model: DeviceModel): string {
     category: model.category,
     type: model.type ?? "",
     rackUnits: model.rackUnits ?? null,
-    ports: model.ports.map((p) => [p.direction, p.connector, p.name, p.note ?? ""]),
+    ports: model.ports.map((p) => [p.direction, p.connector, p.grade ?? "", p.name, p.note ?? ""]),
   });
   // FNV-1a (32-bit) → 8-char hex. Deterministic and synchronous; collisions only
   // matter per-row (same id across revs), where 32 bits is ample.
@@ -231,7 +243,7 @@ export function deviceContentHash(model: DeviceModel): string {
  * provenance so a later "submit correction" can compute a field-level diff against
  * the version that was forked rather than overwriting blind. Pure — returns the new
  * model (fresh id, `source: "custom"`, deep-copied ports); persist it via
- * `addToPersonalLibrary` when the user saves their edit. See COMMUNITY.html §5.
+ * `addToPersonalLibrary` when the user saves their edit. See design/COMMUNITY.html §5.
  */
 export function forkCommunityDevice(model: DeviceModel): DeviceModel {
   return {

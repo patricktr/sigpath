@@ -1,6 +1,7 @@
 import type { CableTypeId } from "./cables";
 import type { Port } from "./device";
 import { CONNECTORS } from "./connectors";
+import type { GradeId } from "./grades";
 
 /** Reference to a specific port on a specific placed device. */
 export type PortRef = {
@@ -19,6 +20,17 @@ export type Connection = {
   /** Human cable id/number, e.g. "VID-001". */
   number?: string;
   lengthMeters?: number;
+  /**
+   * The cable's *supported* bandwidth rating (e.g. "sdi-3g") — the "supported" side
+   * of the grade gate. Omitted ⇒ unrated, so this cable hop isn't grade-checked.
+   */
+  cableGrade?: GradeId;
+  /**
+   * Per-run demand override — pins what this run actually carries, regardless of the
+   * project show format (the lone 12G feed in an HD show, or an HD feed in a 4K show).
+   * Omitted ⇒ demand falls back to the project profile clamped by the source. See grades.ts.
+   */
+  signalGrade?: GradeId;
   label?: string;
 };
 

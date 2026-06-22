@@ -2,7 +2,7 @@ import { useCallback, useRef, useState } from "react";
 import type { MutableRefObject } from "react";
 import type { CableEdgeType, SigNode, EditorDiagram } from "../flow/types";
 import { emptyEditorDiagram, fromDocument, toDocument } from "../io/serialize";
-import type { SigpathDocument } from "../schema";
+import type { SigpathDocument, SignalProfile } from "../schema";
 
 type Options = {
   setNodes: (nodes: SigNode[]) => void;
@@ -31,6 +31,9 @@ export function useProject(initial: EditorDiagram[], opts: Options) {
 
   const projectId = useRef<string>(crypto.randomUUID());
   const [projectName, setProjectName] = useState("Untitled");
+  // Project-wide signal demand ceiling for grade validation (schema v2). Held here so
+  // it round-trips through save/load; the show-format selector (Phase C) drives it.
+  const [signalProfile, setSignalProfile] = useState<SignalProfile | undefined>(undefined);
   const [diagrams, setDiagrams] = useState<EditorDiagram[]>(initial);
   const [activeId, setActiveId] = useState<string>(initial[0]?.id ?? "");
 
@@ -157,8 +160,9 @@ export function useProject(initial: EditorDiagram[], opts: Options) {
 
   /** Snapshot the whole project (active diagram synced) for saving. */
   const getDocument = useCallback(
-    (): SigpathDocument => toDocument(synced(), { projectId: projectId.current, projectName }),
-    [synced, projectName],
+    (): SigpathDocument =>
+      toDocument(synced(), { projectId: projectId.current, projectName, signalProfile }),
+    [synced, projectName, signalProfile],
   );
 
   const loadProject = useCallback(
@@ -166,6 +170,7 @@ export function useProject(initial: EditorDiagram[], opts: Options) {
       const parsed = fromDocument(doc);
       projectId.current = parsed.projectId;
       setProjectName(parsed.projectName);
+      setSignalProfile(parsed.signalProfile);
       setDiagrams(parsed.diagrams);
       setActiveId(parsed.diagrams[0].id);
       loadActive(parsed.diagrams, parsed.diagrams[0].id);
@@ -177,6 +182,7 @@ export function useProject(initial: EditorDiagram[], opts: Options) {
   const newProject = useCallback(() => {
     projectId.current = crypto.randomUUID();
     setProjectName("Untitled");
+    setSignalProfile(undefined);
     const fresh = emptyEditorDiagram("Diagram 1");
     setDiagrams([fresh]);
     setActiveId(fresh.id);
@@ -187,6 +193,8 @@ export function useProject(initial: EditorDiagram[], opts: Options) {
   return {
     projectName,
     setProjectName,
+    signalProfile,
+    setSignalProfile,
     diagrams,
     activeId,
     switchDiagram,

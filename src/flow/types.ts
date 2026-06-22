@@ -1,5 +1,5 @@
 import type { Node, Edge } from "@xyflow/react";
-import type { DeviceModel, CableTypeId } from "../schema";
+import type { DeviceModel, CableTypeId, GradeId } from "../schema";
 
 /**
  * React Flow binding types. The domain model lives in `src/schema`; these types
@@ -36,6 +36,10 @@ export type CableEdgeData = {
   cableTypeId: CableTypeId;
   number?: string;
   lengthMeters?: number;
+  /** The cable's supported bandwidth rating (persisted; mirrors Connection.cableGrade). */
+  cableGrade?: GradeId;
+  /** Per-run demand override (persisted; mirrors Connection.signalGrade). */
+  signalGrade?: GradeId;
   /** Derived at render time (not persisted): when a cable's two ends differ in
    *  connector color, the source→target colors to stroke it with a gradient. */
   gradient?: { from: string; to: string };
