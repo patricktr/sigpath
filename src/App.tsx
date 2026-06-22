@@ -30,7 +30,13 @@ import type {
   ZoneNodeType,
   NoteNodeType,
 } from "./flow/types";
-import { cableColor, cableLabel, deviceTitle } from "./schema";
+import {
+  cableColor,
+  cableLabel,
+  deviceTitle,
+  gradeScaleForConnector,
+  gradesForScale,
+} from "./schema";
 import type { DeviceModel } from "./schema";
 import { useProject } from "./project/useProject";
 import { parseDocument } from "./io/serialize";
@@ -546,7 +552,10 @@ function AppInner() {
     const comboOptions =
       srcPort?.accepts && srcPort.accepts.length ? [srcPort.connector, ...srcPort.accepts] : null;
     const label = lists.patches.find((p) => p.id === e.id)?.cableType ?? "";
-    return { edge: e, comboOptions, label };
+    // Grade scale of the run (from the output port's connector) — drives the
+    // cable-grade / signal-override controls; absent for ungraded families.
+    const gradeScale = gradeScaleForConnector(srcPort?.connector);
+    return { edge: e, comboOptions, label, gradeScale };
   }, [selection.cables, nodes, lists.patches]);
 
   // The selected cable's id if it's a convertible mismatch (so the contextbar can
@@ -673,6 +682,33 @@ function AppInner() {
       );
     },
     [setEdges],
+  );
+
+  // Set the cable's supported bandwidth rating on this run (undefined clears it).
+  // Discrete select change → snapshot up front so it's a single undo step.
+  const setCableGrade = useCallback(
+    (edgeId: string, cableGrade: string | undefined) => {
+      takeSnapshot();
+      setEdges((eds) =>
+        eds.map((e) =>
+          e.id === edgeId ? { ...e, data: { ...(e.data ?? { cableTypeId: "" }), cableGrade } } : e,
+        ),
+      );
+    },
+    [setEdges, takeSnapshot],
+  );
+
+  // Override the signal grade this run carries (undefined = follow the show format).
+  const setSignalGrade = useCallback(
+    (edgeId: string, signalGrade: string | undefined) => {
+      takeSnapshot();
+      setEdges((eds) =>
+        eds.map((e) =>
+          e.id === edgeId ? { ...e, data: { ...(e.data ?? { cableTypeId: "" }), signalGrade } } : e,
+        ),
+      );
+    },
+    [setEdges, takeSnapshot],
   );
 
   // Re-sequence every cable's ID by signal group (VID-001, VID-002, AUD-001…).
@@ -1300,6 +1336,50 @@ function AppInner() {
                     <strong style={{ fontWeight: 600 }}>{selectedCable.label}</strong>
                   </span>
                 ))}
+              {selectedCable && selectedCable.gradeScale && (
+                <>
+                  <label
+                    className="contextbar__title"
+                    style={{ display: "inline-flex", alignItems: "center", gap: 6, fontWeight: 400 }}
+                  >
+                    Cable grade
+                    <select
+                      value={selectedCable.edge.data?.cableGrade ?? ""}
+                      onChange={(e) =>
+                        setCableGrade(selectedCable.edge.id, e.target.value || undefined)
+                      }
+                      title="The cable's supported bandwidth rating"
+                    >
+                      <option value="">— any —</option>
+                      {gradesForScale(selectedCable.gradeScale).map((t) => (
+                        <option key={t.id} value={t.id}>
+                          {t.label}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <label
+                    className="contextbar__title"
+                    style={{ display: "inline-flex", alignItems: "center", gap: 6, fontWeight: 400 }}
+                  >
+                    Signal
+                    <select
+                      value={selectedCable.edge.data?.signalGrade ?? ""}
+                      onChange={(e) =>
+                        setSignalGrade(selectedCable.edge.id, e.target.value || undefined)
+                      }
+                      title="Override the grade this run carries (default: the show format)"
+                    >
+                      <option value="">show default</option>
+                      {gradesForScale(selectedCable.gradeScale).map((t) => (
+                        <option key={t.id} value={t.id}>
+                          {t.label}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                </>
+              )}
               {selectedConverterEdgeId && (
                 <button
                   type="button"
