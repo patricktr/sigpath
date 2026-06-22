@@ -22,6 +22,9 @@ type Props = {
   initial?: DeviceModel;
   /** Edit-mode save handler (receives the edited model). */
   onSave?: (model: DeviceModel) => void;
+  /** Pre-fill a *new* device's fields (create mode), e.g. a converter seeded
+   *  with the right in/out ports. Unlike `initial`, save behavior stays "create". */
+  seed?: DeviceModel;
 };
 
 type PortDraft = {
@@ -99,17 +102,20 @@ function DeviceNodePreview({ model }: { model: DeviceModel }) {
   );
 }
 
-export function CreateWizard({ onCancel, onSaved, onPlace, initial, onSave }: Props) {
+export function CreateWizard({ onCancel, onSaved, onPlace, initial, onSave, seed }: Props) {
+  // `initial` (edit) and `seed` (create-prefill) both seed the form; only `initial`
+  // switches save behavior to edit-in-place.
+  const base = initial ?? seed;
   const [step, setStep] = useState<0 | 1 | 2>(0);
-  const [manufacturer, setManufacturer] = useState(initial?.manufacturer ?? "");
-  const [model, setModel] = useState(initial?.model ?? "");
-  const [type, setType] = useState<string>(initial?.type ?? DEVICE_TYPES[0]);
+  const [manufacturer, setManufacturer] = useState(base?.manufacturer ?? "");
+  const [model, setModel] = useState(base?.model ?? "");
+  const [type, setType] = useState<string>(base?.type ?? DEVICE_TYPES[0]);
   const [rackUnits, setRackUnits] = useState(
-    initial?.rackUnits != null ? String(initial.rackUnits) : "",
+    base?.rackUnits != null ? String(base.rackUnits) : "",
   );
   const [ports, setPorts] = useState<PortDraft[]>(() =>
-    initial
-      ? initial.ports.map((p) => ({
+    base
+      ? base.ports.map((p) => ({
           id: p.id,
           name: p.name,
           direction: p.direction,

@@ -144,6 +144,13 @@ function AppInner() {
     srcConn: string;
     tgtConn: string;
   } | null>(null);
+  // When the library has no converter for a mismatch, pre-fill the create wizard.
+  const [converterDraft, setConverterDraft] = useState<{
+    edgeId: string;
+    seed: DeviceModel;
+    srcConn: string;
+    tgtConn: string;
+  } | null>(null);
   // Preferences modal (currently: learned converter defaults).
   const [prefsOpen, setPrefsOpen] = useState(false);
   const [prefRows, setPrefRows] = useState<
@@ -738,7 +745,26 @@ function AppInner() {
       const candidates = findConverters(srcPort, tgtPort, loadCatalog());
       const label = `${cableLabel(srcPort.connector)} → ${cableLabel(tgtPort.connector)}`;
       if (candidates.length === 0) {
-        setAddToast(`No converter in your library bridges ${label}`);
+        // Nothing in the library bridges this — open the create wizard pre-filled
+        // with the right in/out ports so the user can model the converter once.
+        const a = cableLabel(srcPort.connector);
+        const b = cableLabel(tgtPort.connector);
+        setConverterDraft({
+          edgeId,
+          srcConn: srcPort.connector,
+          tgtConn: tgtPort.connector,
+          seed: {
+            id: "draft",
+            model: `${a} → ${b} converter`,
+            category: "converter",
+            type: "Converter",
+            source: "custom",
+            ports: [
+              { id: crypto.randomUUID(), name: `${a} In`, direction: "input", connector: srcPort.connector },
+              { id: crypto.randomUUID(), name: `${b} Out`, direction: "output", connector: tgtPort.connector },
+            ],
+          },
+        });
         return;
       }
       // One-click the learned default if it's still a candidate, else the only
@@ -1428,6 +1454,34 @@ function AppInner() {
               onCancel={cancelEdit}
               onSaved={() => {}}
               onPlace={() => {}}
+            />
+          </div>
+        </div>
+      )}
+      {converterDraft && (
+        <div className="adv-scrim" onMouseDown={() => setConverterDraft(null)}>
+          <div className="adv-stop" onMouseDown={(e) => e.stopPropagation()}>
+            <CreateWizard
+              seed={converterDraft.seed}
+              onCancel={() => setConverterDraft(null)}
+              onSaved={() => {}}
+              onPlace={(m) => {
+                // "Save & add to canvas" → splice the new converter into the run.
+                const inPort =
+                  m.ports.find((p) => p.direction === "input" && p.connector === converterDraft.srcConn) ??
+                  m.ports.find((p) => p.direction === "input");
+                const outPort =
+                  m.ports.find((p) => p.direction === "output" && p.connector === converterDraft.tgtConn) ??
+                  m.ports.find((p) => p.direction === "output");
+                if (inPort && outPort) {
+                  insertConverter(converterDraft.edgeId, { model: m, inPort, outPort, score: 0 });
+                  setConverterDefault(converterDraft.srcConn, converterDraft.tgtConn, m.id);
+                  setAddToast(`Inserted ${m.model}`);
+                } else {
+                  setAddToast(`Saved ${m.model} to your library`);
+                }
+                setConverterDraft(null);
+              }}
             />
           </div>
         </div>
