@@ -429,8 +429,14 @@
 .statusbar__val--error .statusbar__dot {
   background: var(--sig-power);
 }
+/* "Needs show format" — distinct from green/amber/red so it reads as
+   actionable-but-not-broken. Blue (info) avoids colliding with amber warnings. */
+.statusbar__val--needs-format .statusbar__dot {
+  background: var(--sig-video);
+}
 .statusbar__val--error,
-.statusbar__val--warn {
+.statusbar__val--warn,
+.statusbar__val--needs-format {
   color: var(--text);
 }
 .statusbar__item {

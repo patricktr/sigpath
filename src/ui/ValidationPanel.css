@@ -132,6 +132,50 @@
   background: #dbeafe;
 }
 
+/* Show-format selector + the "pick a format" prompt */
+.validation-format {
+  margin: 0 0 12px;
+  padding: 0 0 12px;
+  border-bottom: 1px solid #e2e8f0;
+}
+.validation-format__row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.validation-format__label {
+  font-weight: 600;
+  color: #475569;
+  white-space: nowrap;
+}
+.validation-format__select {
+  flex: 1;
+  min-width: 0;
+  padding: 5px 8px;
+  border: 1px solid #cbd5e1;
+  border-radius: 7px;
+  background: #ffffff;
+  font: inherit;
+  color: #0f172a;
+  cursor: pointer;
+}
+.validation-format__hint {
+  margin: 8px 0 0;
+  color: #475569;
+  font-size: 12px;
+  line-height: 1.45;
+}
+.validation-format--prompt {
+  margin: -2px -6px 12px;
+  padding: 10px;
+  border: 1px solid #bfdbfe;
+  border-radius: 9px;
+  background: #eff6ff;
+}
+.validation-format--prompt .validation-format__label {
+  color: #1d4ed8;
+}
+
 /* Toolbar status pill */
 .validation-pill--ok {
   color: #16a34a;
@@ -182,4 +226,23 @@
 }
 [data-theme="dark"] .validation-item__fix:hover {
   background: #221d3d;
+}
+[data-theme="dark"] .validation-format {
+  border-bottom-color: #25304a;
+}
+[data-theme="dark"] .validation-format__label,
+[data-theme="dark"] .validation-format__hint {
+  color: #94a3b8;
+}
+[data-theme="dark"] .validation-format__select {
+  background: #182235;
+  border-color: #334155;
+  color: #e2e8f0;
+}
+[data-theme="dark"] .validation-format--prompt {
+  background: #1a1830;
+  border-color: #322c5a;
+}
+[data-theme="dark"] .validation-format--prompt .validation-format__label {
+  color: #a99cff;
 }

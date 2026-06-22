@@ -1,6 +1,16 @@
-import { checkPortCompatibility, deviceTitle, groupForConnector } from "../schema";
-import type { SignalKind } from "../schema";
-import type { CableEdgeType, DeviceNodeType, SigNode } from "../flow/types";
+import {
+  checkPortCompatibility,
+  deviceTitle,
+  groupForConnector,
+  gradeScaleForConnector,
+  gradeLabel,
+  meetsDemand,
+  minGrade,
+  scaleOfGrade,
+  videoFormatToGrade,
+} from "../schema";
+import type { GradeId, GradeScaleId, Port, SignalKind, SignalProfile } from "../schema";
+import type { CableEdgeData, CableEdgeType, DeviceNodeType, SigNode } from "../flow/types";
 
 export type Severity = "error" | "warning";
 
@@ -27,14 +37,48 @@ export type ValidationResult = {
   warnEdges: Set<string>;
   errorCount: number;
   warningCount: number;
+  /**
+   * True when graded gear is on the canvas but no show format is set, so grade
+   * checks can't run. Drives the "pick a show format" prompt + status-bar state —
+   * the validator asks rather than guesses a demand. See design/SIGNAL-GRADE.html §6.
+   */
+  needsShowFormat: boolean;
 };
+
+/** Resolved demand for a run, or a signal that it can't be resolved. */
+type DemandResult = { scale: GradeScaleId; demand: GradeId } | "pending" | null;
+
+/**
+ * The grade a run actually carries. A per-run override wins; otherwise the project
+ * ceiling for the source's scale (an explicit target, else the video format), clamped
+ * to what the source can emit (a 3G source in a 4K show still only emits 3G). Returns
+ * "pending" when the run is graded but no ceiling is set yet (→ prompt for a format),
+ * or null when the family is ungraded (→ skip the grade gate entirely).
+ */
+function runDemand(
+  source: Port,
+  data: CableEdgeData | undefined,
+  profile: SignalProfile | undefined,
+): DemandResult {
+  const scale = gradeScaleForConnector(source.connector);
+  if (!scale) return null;
+  const override = data?.signalGrade;
+  if (override && scaleOfGrade(override) === scale) return { scale, demand: override };
+  const ceiling = profile?.targets?.[scale] ?? videoFormatToGrade(profile?.videoFormat, scale);
+  if (!ceiling) return "pending";
+  return { scale, demand: minGrade(source.grade, ceiling) ?? ceiling };
+}
 
 /**
  * Live signal validation over the current diagram. Pure and cheap so it can run
  * on every nodes/edges change. Connection-level rules are grounded in the
  * schema's `checkPortCompatibility`; the rest are structural sanity checks.
  */
-export function validate(nodes: SigNode[], edges: CableEdgeType[]): ValidationResult {
+export function validate(
+  nodes: SigNode[],
+  edges: CableEdgeType[],
+  signalProfile?: SignalProfile,
+): ValidationResult {
   const devices = new Map<string, DeviceNodeType>();
   for (const n of nodes) {
     if (n.type === "device") devices.set(n.id, n);
@@ -43,6 +87,8 @@ export function validate(nodes: SigNode[], edges: CableEdgeType[]): ValidationRe
   const issues: ValidationIssue[] = [];
   const errorEdges = new Set<string>();
   const warnEdges = new Set<string>();
+  // Graded run seen with no resolvable demand ceiling → drives the "pick a format" prompt.
+  let needsShowFormat = false;
   // `${nodeId}:${portId}` -> edge ids touching that physical port (each jack = one cable).
   const portUsage = new Map<string, string[]>();
   const addUse = (key: string, id: string) => {
@@ -118,6 +164,42 @@ export function validate(nodes: SigNode[], edges: CableEdgeType[]): ValidationRe
           focusNodeIds: [e.source, e.target],
         });
       }
+
+      // Gate 2 — bandwidth grade. Only when the connectors aren't already a hard
+      // mismatch (no point grading a broken pairing) and only on graded families.
+      // Capability unknown ⇒ meetsDemand returns undefined ⇒ no flag (never a false
+      // positive). Sink-too-small and cable-under-rated are both hard errors.
+      if (compat.status !== "error") {
+        const dem = runDemand(out, e.data, signalProfile);
+        if (dem === "pending") {
+          // Graded run, no show format: can't check until the user picks one. Only
+          // nag when there's a capability a demand would actually test.
+          if (inp.grade || e.data?.cableGrade) needsShowFormat = true;
+        } else if (dem) {
+          if (meetsDemand(inp.grade, dem.demand) === false) {
+            errorEdges.add(e.id);
+            issues.push({
+              id: `grade-sink:${e.id}`,
+              severity: "error",
+              title: "Signal grade exceeds input",
+              detail: `${path}: the run carries ${gradeLabel(dem.demand)}, but ${inp.name} only supports ${gradeLabel(inp.grade)}.`,
+              edgeId: e.id,
+              focusNodeIds: [e.source, e.target],
+            });
+          }
+          if (meetsDemand(e.data?.cableGrade, dem.demand) === false) {
+            errorEdges.add(e.id);
+            issues.push({
+              id: `grade-cable:${e.id}`,
+              severity: "error",
+              title: "Cable under-rated",
+              detail: `${path}: the run carries ${gradeLabel(dem.demand)}, but the cable is rated ${gradeLabel(e.data?.cableGrade)} — use a ${gradeLabel(dem.demand)} cable.`,
+              edgeId: e.id,
+              focusNodeIds: [e.source, e.target],
+            });
+          }
+        }
+      }
     }
 
     // Every physical jack carries one cable — track both ends of the run.
@@ -191,5 +273,5 @@ export function validate(nodes: SigNode[], edges: CableEdgeType[]): ValidationRe
 
   const errorCount = issues.filter((i) => i.severity === "error").length;
   const warningCount = issues.filter((i) => i.severity === "warning").length;
-  return { issues, errorEdges, warnEdges, errorCount, warningCount };
+  return { issues, errorEdges, warnEdges, errorCount, warningCount, needsShowFormat };
 }

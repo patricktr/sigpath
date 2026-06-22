@@ -1,20 +1,29 @@
 import "./ValidationPanel.css";
+import { VIDEO_FORMATS } from "../schema";
 import type { ValidationIssue, ValidationResult } from "../validation/validate";
 
 /** Read-only right drawer listing live signal-validation issues. */
 export function ValidationPanel({
   result,
+  videoFormat,
+  onSetVideoFormat,
   onFocus,
   onClose,
   onAddConverter,
 }: {
   result: ValidationResult;
+  /** Current project show format (drives grade demand). */
+  videoFormat?: string;
+  /** Set/clear the project show format. */
+  onSetVideoFormat?: (format: string | undefined) => void;
   onFocus: (issue: ValidationIssue) => void;
   onClose: () => void;
   /** One-click fix for a "Converter needed" issue. */
   onAddConverter?: (edgeId: string) => void;
 }) {
-  const { issues, errorCount, warningCount } = result;
+  const { issues, errorCount, warningCount, needsShowFormat } = result;
+  // Show the format control when it's needed (graded gear, unset) or already in use.
+  const showFormatRow = !!onSetVideoFormat && (needsShowFormat || !!videoFormat);
 
   return (
     <aside className="validation-panel">
@@ -25,8 +34,38 @@ export function ValidationPanel({
         </button>
       </div>
       <div className="validation-panel__body">
+        {showFormatRow && (
+          <div
+            className={`validation-format${needsShowFormat ? " validation-format--prompt" : ""}`}
+          >
+            <div className="validation-format__row">
+              <label className="validation-format__label" htmlFor="show-format">
+                Show format
+              </label>
+              <select
+                id="show-format"
+                className="validation-format__select"
+                value={videoFormat ?? ""}
+                onChange={(e) => onSetVideoFormat?.(e.target.value || undefined)}
+              >
+                <option value="">— not set —</option>
+                {VIDEO_FORMATS.map((f) => (
+                  <option key={f} value={f}>
+                    {f}
+                  </option>
+                ))}
+              </select>
+            </div>
+            {needsShowFormat && (
+              <p className="validation-format__hint">
+                Pick a show format so sigpath can check signal grades — it can’t tell a 3G
+                cable from a 12G one until it knows what the show runs at.
+              </p>
+            )}
+          </div>
+        )}
         {issues.length === 0 ? (
-          <p className="validation-ok">✓ All connections look valid.</p>
+          needsShowFormat ? null : <p className="validation-ok">✓ All connections look valid.</p>
         ) : (
           <>
             <p className="validation-summary">

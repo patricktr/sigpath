@@ -158,3 +158,38 @@ export function minGrade(a: GradeId | undefined, b: GradeId | undefined): GradeI
   if (ra === undefined || rb === undefined || scaleOfGrade(a) !== scaleOfGrade(b)) return a;
   return ra <= rb ? a : b;
 }
+
+/**
+ * Common production video formats → the *minimum* grade that reliably carries each
+ * in the image-domain families (SDI/HDMI/DisplayPort). "Minimum that carries", not
+ * "modern default", is deliberate: it's what keeps an HDMI 1.4 link from being
+ * false-flagged in a 1080p59.94 show it genuinely handles. Network and USB demands
+ * are NOT derived from the video format — they come from SignalProfile.targets.
+ *
+ * Curated and meant to be edited — this table is the semantic heart of grade
+ * validation. Rates cross-checked against SMPTE (SDI) and HDMI/DP 8-bit payload
+ * limits. See design/SIGNAL-GRADE.html §3.
+ */
+export const VIDEO_FORMAT_GRADES: Record<string, Partial<Record<GradeScaleId, GradeId>>> = {
+  "720p59.94": { sdi: "sdi-hd", hdmi: "hdmi-1.4", displayport: "dp-1.2" },
+  "1080i59.94": { sdi: "sdi-hd", hdmi: "hdmi-1.4", displayport: "dp-1.2" },
+  "1080p23.98": { sdi: "sdi-hd", hdmi: "hdmi-1.4", displayport: "dp-1.2" },
+  "1080p29.97": { sdi: "sdi-hd", hdmi: "hdmi-1.4", displayport: "dp-1.2" },
+  "1080p59.94": { sdi: "sdi-3g", hdmi: "hdmi-1.4", displayport: "dp-1.2" },
+  "2160p23.98": { sdi: "sdi-6g", hdmi: "hdmi-1.4", displayport: "dp-1.2" },
+  "2160p29.97": { sdi: "sdi-6g", hdmi: "hdmi-1.4", displayport: "dp-1.2" },
+  "2160p59.94": { sdi: "sdi-12g", hdmi: "hdmi-2.0", displayport: "dp-1.2" },
+  "2160p119.88": { sdi: "sdi-24g", hdmi: "hdmi-2.1", displayport: "dp-2.0" },
+};
+
+/** Video formats in ascending-demand order — for the show-format picker. */
+export const VIDEO_FORMATS: string[] = Object.keys(VIDEO_FORMAT_GRADES);
+
+/** Demand a video format imposes on an image-domain scale (sdi/hdmi/displayport). */
+export function videoFormatToGrade(
+  format: string | undefined,
+  scale: GradeScaleId,
+): GradeId | undefined {
+  if (!format) return undefined;
+  return VIDEO_FORMAT_GRADES[format]?.[scale];
+}

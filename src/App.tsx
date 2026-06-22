@@ -118,6 +118,8 @@ function AppInner() {
     deleteDiagram,
     getDocument,
     loadProject,
+    signalProfile,
+    setSignalProfile,
     takeSnapshot,
     undo,
     redo,
@@ -373,7 +375,10 @@ function AppInner() {
   }, []);
 
   const lists = useMemo(() => deriveLists(nodes, edges), [nodes, edges]);
-  const validation = useMemo(() => validate(nodes, edges), [nodes, edges]);
+  const validation = useMemo(
+    () => validate(nodes, edges, signalProfile),
+    [nodes, edges, signalProfile],
+  );
 
   // Overlay validation styling onto the live edges without mutating state:
   // errors are solid red + animated, warnings are dashed amber. A selected edge
@@ -1373,6 +1378,11 @@ function AppInner() {
           {validationOpen && (
             <ValidationPanel
               result={validation}
+              videoFormat={signalProfile?.videoFormat}
+              onSetVideoFormat={(format) => {
+                setSignalProfile((p) => ({ ...p, videoFormat: format }));
+                markDirty();
+              }}
               onFocus={focusIssue}
               onClose={() => setValidationOpen(false)}
               onAddConverter={requestAddConverter}
@@ -1400,9 +1410,11 @@ function AppInner() {
           className={
             validation.errorCount > 0
               ? "statusbar__val statusbar__val--error"
-              : validation.warningCount > 0
-                ? "statusbar__val statusbar__val--warn"
-                : "statusbar__val statusbar__val--ok"
+              : validation.needsShowFormat
+                ? "statusbar__val statusbar__val--needs-format"
+                : validation.warningCount > 0
+                  ? "statusbar__val statusbar__val--warn"
+                  : "statusbar__val statusbar__val--ok"
           }
           onClick={() => {
             setValidationOpen((v) => !v);
@@ -1411,12 +1423,15 @@ function AppInner() {
           title="Live signal validation"
         >
           <span className="statusbar__dot" />
-          {validation.errorCount === 0 && validation.warningCount === 0
+          {validation.errorCount === 0 &&
+          validation.warningCount === 0 &&
+          !validation.needsShowFormat
             ? "0 Errors"
             : [
                 validation.errorCount > 0
                   ? `${validation.errorCount} Error${validation.errorCount === 1 ? "" : "s"}`
                   : null,
+                validation.needsShowFormat ? "Set show format" : null,
                 validation.warningCount > 0
                   ? `${validation.warningCount} Warning${validation.warningCount === 1 ? "" : "s"}`
                   : null,
