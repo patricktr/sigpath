@@ -31,9 +31,19 @@ fn spawn_window(app: &AppHandle, pending: Option<Pending>) {
             .unwrap()
             .insert(label.clone(), p);
     }
+    // Open at the current window's size so a new window matches the one you're in
+    // (in logical px, so HiDPI is handled). Falls back to a comfortable default.
+    let (w, h) = focused_window(app)
+        .or_else(|| app.webview_windows().into_values().next())
+        .and_then(|win| {
+            let size = win.inner_size().ok()?;
+            let scale = win.scale_factor().unwrap_or(1.0);
+            Some((size.width as f64 / scale, size.height as f64 / scale))
+        })
+        .unwrap_or((1200.0, 800.0));
     let _ = WebviewWindowBuilder::new(app, label, WebviewUrl::App("index.html".into()))
         .title("sigpath")
-        .inner_size(980.0, 680.0)
+        .inner_size(w, h)
         .build();
 }
 
@@ -79,6 +89,18 @@ fn take_pending_open(window: WebviewWindow, state: State<PendingOpens>) -> Optio
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
+        // Remember each window's size + position (and maximized state) so the app
+        // reopens where and how you left it instead of a fixed default. The plugin
+        // clamps a restored position back on-screen if the display layout changed.
+        .plugin(
+            tauri_plugin_window_state::Builder::default()
+                .with_state_flags(
+                    tauri_plugin_window_state::StateFlags::SIZE
+                        | tauri_plugin_window_state::StateFlags::POSITION
+                        | tauri_plugin_window_state::StateFlags::MAXIMIZED,
+                )
+                .build(),
+        )
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_opener::init())
         .manage(PendingOpens::default())
