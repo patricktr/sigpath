@@ -62,6 +62,12 @@ import {
 } from "./lists/cableId";
 import { loadCatalog } from "./ui/AddDevice/addDevice";
 import { findConverters, type ConverterCandidate } from "./library/converters";
+import {
+  getConverterDefault,
+  setConverterDefault,
+  loadConverterDefaults,
+  clearConverterDefault,
+} from "./library/userPrefs";
 import { diagramImageBase64, diagramPdfBase64, listsToCsv, type ExportKind } from "./io/export";
 import { ValidationPanel } from "./ui/ValidationPanel";
 import { validate, type ValidationIssue } from "./validation/validate";
@@ -129,12 +135,20 @@ function AppInner() {
   const [editModel, setEditModel] = useState<DeviceModel | null>(null);
   const [editNodeId, setEditNodeId] = useState<string | null>(null);
   const [addToast, setAddToast] = useState<string | null>(null);
-  // When a mismatch has >1 candidate converter, the user picks one here.
+  // When a mismatch has >1 candidate converter (and no learned default), the user
+  // picks one here; the connector pair is kept so the pick can be remembered.
   const [converterChoice, setConverterChoice] = useState<{
     edgeId: string;
     label: string;
     candidates: ConverterCandidate[];
+    srcConn: string;
+    tgtConn: string;
   } | null>(null);
+  // Preferences modal (currently: learned converter defaults).
+  const [prefsOpen, setPrefsOpen] = useState(false);
+  const [prefRows, setPrefRows] = useState<
+    { pairKey: string; pairLabel: string; deviceName: string }[]
+  >([]);
   const [listsOpen, setListsOpen] = useState(false);
   const [closePrompt, setClosePrompt] = useState(false);
   const [validationOpen, setValidationOpen] = useState(false);
@@ -720,19 +734,59 @@ function AppInner() {
     (edgeId: string) => {
       const ctx = cablePorts(edgeId);
       if (!ctx) return;
-      const candidates = findConverters(ctx.srcPort, ctx.tgtPort, loadCatalog());
-      const label = `${cableLabel(ctx.srcPort.connector)} → ${cableLabel(ctx.tgtPort.connector)}`;
+      const { srcPort, tgtPort } = ctx;
+      const candidates = findConverters(srcPort, tgtPort, loadCatalog());
+      const label = `${cableLabel(srcPort.connector)} → ${cableLabel(tgtPort.connector)}`;
       if (candidates.length === 0) {
         setAddToast(`No converter in your library bridges ${label}`);
-      } else if (candidates.length === 1) {
-        insertConverter(edgeId, candidates[0]);
-        setAddToast(`Inserted ${candidates[0].model.model}`);
+        return;
+      }
+      // One-click the learned default if it's still a candidate, else the only
+      // candidate; otherwise open the chooser (and remember that pick).
+      const prefId = getConverterDefault(srcPort.connector, tgtPort.connector);
+      const auto =
+        (prefId && candidates.find((c) => c.model.id === prefId)) ||
+        (candidates.length === 1 ? candidates[0] : undefined);
+      if (auto) {
+        insertConverter(edgeId, auto);
+        setAddToast(`Inserted ${auto.model.model}`);
       } else {
-        setConverterChoice({ edgeId, label, candidates });
+        setConverterChoice({
+          edgeId,
+          label,
+          candidates,
+          srcConn: srcPort.connector,
+          tgtConn: tgtPort.connector,
+        });
       }
     },
     [cablePorts, insertConverter],
   );
+
+  // Preferences: build the learned converter-defaults list (pair → device).
+  const openPreferences = useCallback(() => {
+    const byId = new Map(loadCatalog().map((m) => [m.id, m]));
+    const rows = Object.entries(loadConverterDefaults()).map(([pairKey, modelId]) => {
+      const [src, tgt] = pairKey.split(">");
+      const m = byId.get(modelId);
+      return {
+        pairKey,
+        pairLabel: `${cableLabel(src)} → ${cableLabel(tgt)}`,
+        deviceName: m
+          ? m.manufacturer
+            ? `${m.manufacturer} ${m.model}`
+            : m.model
+          : "(removed device)",
+      };
+    });
+    setPrefRows(rows);
+    setPrefsOpen(true);
+  }, []);
+
+  const clearPref = useCallback((pairKey: string) => {
+    clearConverterDefault(pairKey);
+    setPrefRows((rows) => rows.filter((r) => r.pairKey !== pairKey));
+  }, []);
 
   // Reflect the resolved theme on <html> so the token system swaps.
   useEffect(() => {
@@ -1070,6 +1124,15 @@ function AppInner() {
         </button>
         <button
           type="button"
+          className="tbtn"
+          onClick={openPreferences}
+          title="Preferences"
+          aria-label="Preferences"
+        >
+          ⚙
+        </button>
+        <button
+          type="button"
           className="tbtn tbtn--primary"
           onClick={() => setAddSurface("palette")}
           title="Add device (⌘K)"
@@ -1390,7 +1453,8 @@ function AppInner() {
                     className="cvt-row"
                     onClick={() => {
                       insertConverter(converterChoice.edgeId, c);
-                      setAddToast(`Inserted ${c.model.model}`);
+                      setConverterDefault(converterChoice.srcConn, converterChoice.tgtConn, c.model.id);
+                      setAddToast(`Inserted ${c.model.model} · saved as default`);
                       setConverterChoice(null);
                     }}
                   >
@@ -1407,6 +1471,42 @@ function AppInner() {
             <div className="modal__actions">
               <button type="button" onClick={() => setConverterChoice(null)}>
                 Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {prefsOpen && (
+        <div className="modal-backdrop" onClick={() => setPrefsOpen(false)}>
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
+            <h2 className="modal__title">Preferences</h2>
+            <p className="modal__body">
+              Converter defaults — the device used to auto-fix each mismatch, learned when
+              you pick one from the converter chooser.
+            </p>
+            {prefRows.length === 0 ? (
+              <p className="modal__body" style={{ fontStyle: "italic" }}>
+                No converter defaults yet. Pick a converter once and it’s remembered here.
+              </p>
+            ) : (
+              <ul className="cvt-list">
+                {prefRows.map((r) => (
+                  <li className="pref-row" key={r.pairKey}>
+                    <span className="pref-row__text">
+                      <span className="cvt-row__io">{r.pairLabel}</span>
+                      <span className="cvt-row__name">{r.deviceName}</span>
+                    </span>
+                    <button type="button" className="pref-row__clear" onClick={() => clearPref(r.pairKey)}>
+                      Clear
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+            <div className="modal__actions">
+              <button type="button" onClick={() => setPrefsOpen(false)}>
+                Close
               </button>
             </div>
           </div>
