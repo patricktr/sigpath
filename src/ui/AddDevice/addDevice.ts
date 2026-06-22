@@ -1,5 +1,5 @@
 import { BUILTIN_MODELS } from "../../library/builtins";
-import { COMMUNITY_MODELS } from "../../library/communityLibrary";
+import { getCommunityModels } from "../../library/communityLibrary";
 import { loadPersonalLibrary } from "../../library/personalLibrary";
 import { cableColor } from "../../schema";
 import type { DeviceModel } from "../../schema";
@@ -21,9 +21,10 @@ function modelKey(m: DeviceModel): string {
  * so built-ins act as an offline fallback when the snapshot lacks an equivalent.
  */
 export function loadCatalog(): DeviceModel[] {
-  const communityKeys = new Set(COMMUNITY_MODELS.map(modelKey));
+  const community = getCommunityModels();
+  const communityKeys = new Set(community.map(modelKey));
   const builtinsKept = BUILTIN_MODELS.filter((m) => !communityKeys.has(modelKey(m)));
-  return [...COMMUNITY_MODELS, ...builtinsKept, ...loadPersonalLibrary()];
+  return [...community, ...builtinsKept, ...loadPersonalLibrary()];
 }
 
 /** Friendly type if present, else the coarse category. */

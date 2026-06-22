@@ -70,8 +70,9 @@ export async function diagramPdfBase64(rf: Rf, dark: boolean): Promise<string> {
   return arrayBufferToBase64(pdf.output("arraybuffer"));
 }
 
-function csvCell(value: string): string {
-  return /[",\n]/.test(value) ? `"${value.replace(/"/g, '""')}"` : value;
+function csvCell(value: string | number): string {
+  const s = String(value);
+  return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
 }
 
 /** Pack list + patch list as a single CSV document. */
@@ -86,9 +87,13 @@ export function listsToCsv(lists: DerivedLists): string {
   for (const c of lists.cables) rows.push(`${c.count},${csvCell(c.label)}`);
   rows.push("");
   rows.push("Patch list");
-  rows.push("From device,From port,To device,To port,Cable");
+  rows.push("ID,From device,From port,To device,To port,Cable,Length (m)");
   for (const p of lists.patches) {
-    rows.push([p.fromDevice, p.fromPort, p.toDevice, p.toPort, p.cableType].map(csvCell).join(","));
+    rows.push(
+      [p.cableId, p.fromDevice, p.fromPort, p.toDevice, p.toPort, p.cableType, p.length ?? ""]
+        .map(csvCell)
+        .join(","),
+    );
   }
   return rows.join("\n");
 }

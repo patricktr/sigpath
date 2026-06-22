@@ -2,7 +2,16 @@ import type { DerivedLists } from "../lists/derive";
 import "./ListsPanel.css";
 
 /** Read-only panel showing the auto-generated pack list and patch list. */
-export function ListsPanel({ lists, onClose }: { lists: DerivedLists; onClose: () => void }) {
+export function ListsPanel({
+  lists,
+  onClose,
+  onRenumber,
+}: {
+  lists: DerivedLists;
+  onClose: () => void;
+  /** Re-sequence every cable's ID by signal group. */
+  onRenumber?: () => void;
+}) {
   const { devices, cables, adapters, patches } = lists;
 
   return (
@@ -80,13 +89,21 @@ export function ListsPanel({ lists, onClose }: { lists: DerivedLists; onClose: (
         </section>
 
         <section className="lists-section">
-          <h3>Patch list</h3>
+          <div className="lists-section__head">
+            <h3>Patch list</h3>
+            {onRenumber && patches.length > 0 && (
+              <button type="button" className="lists-section__action" onClick={onRenumber}>
+                Renumber
+              </button>
+            )}
+          </div>
           {patches.length === 0 ? (
             <p className="lists-empty">No connections yet.</p>
           ) : (
             <table className="patchlist">
               <thead>
                 <tr>
+                  <th>ID</th>
                   <th>From</th>
                   <th>To</th>
                   <th>Cable</th>
@@ -95,6 +112,7 @@ export function ListsPanel({ lists, onClose }: { lists: DerivedLists; onClose: (
               <tbody>
                 {patches.map((p) => (
                   <tr key={p.id}>
+                    <td className="patch-id">{p.cableId || "—"}</td>
                     <td>
                       {p.fromDevice} <span className="patch-port">{p.fromPort}</span>
                     </td>
@@ -104,6 +122,7 @@ export function ListsPanel({ lists, onClose }: { lists: DerivedLists; onClose: (
                     <td>
                       <span className="packlist__swatch" style={{ background: p.cableColor }} />
                       {p.cableType}
+                      {p.length != null && <span className="patch-port"> · {p.length} m</span>}
                     </td>
                   </tr>
                 ))}

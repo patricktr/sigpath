@@ -1,0 +1,16 @@
+/* Cable-ID badge riding at a cable's midpoint. Non-interactive so it never
+   swallows clicks meant for the edge or canvas. Themed via the token system. */
+.cable-id-label {
+  position: absolute;
+  pointer-events: none;
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  font-weight: 500;
+  line-height: 1;
+  padding: 1px 4px;
+  border-radius: 3px;
+  background: var(--panel-bg);
+  color: var(--text-muted);
+  border: 1px solid var(--panel-border);
+  white-space: nowrap;
+}

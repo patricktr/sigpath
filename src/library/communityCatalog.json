@@ -722,6 +722,1343 @@
     "contentHash": "1b95968e"
   },
   {
+    "id": "blackmagic-design/atem-1-m-e-constellation-hd",
+    "manufacturer": "Blackmagic Design",
+    "model": "ATEM 1 M/E Constellation HD",
+    "category": "switcher",
+    "type": "Video switcher",
+    "ports": [
+      {
+        "id": "sdi-in-1",
+        "name": "SDI In 1",
+        "direction": "input",
+        "connector": "sdi"
+      },
+      {
+        "id": "sdi-in-2",
+        "name": "SDI In 2",
+        "direction": "input",
+        "connector": "sdi"
+      },
+      {
+        "id": "sdi-in-3",
+        "name": "SDI In 3",
+        "direction": "input",
+        "connector": "sdi"
+      },
+      {
+        "id": "sdi-in-4",
+        "name": "SDI In 4",
+        "direction": "input",
+        "connector": "sdi"
+      },
+      {
+        "id": "sdi-in-5",
+        "name": "SDI In 5",
+        "direction": "input",
+        "connector": "sdi"
+      },
+      {
+        "id": "sdi-in-6",
+        "name": "SDI In 6",
+        "direction": "input",
+        "connector": "sdi"
+      },
+      {
+        "id": "sdi-in-7",
+        "name": "SDI In 7",
+        "direction": "input",
+        "connector": "sdi"
+      },
+      {
+        "id": "sdi-in-8",
+        "name": "SDI In 8",
+        "direction": "input",
+        "connector": "sdi"
+      },
+      {
+        "id": "sdi-in-9",
+        "name": "SDI In 9",
+        "direction": "input",
+        "connector": "sdi"
+      },
+      {
+        "id": "sdi-in-10",
+        "name": "SDI In 10",
+        "direction": "input",
+        "connector": "sdi"
+      },
+      {
+        "id": "flexible-out-1",
+        "name": "Flexible Out 1",
+        "direction": "output",
+        "connector": "sdi",
+        "note": "Configurable as Program, Preview, or Clean Feed"
+      },
+      {
+        "id": "flexible-out-2",
+        "name": "Flexible Out 2",
+        "direction": "output",
+        "connector": "sdi",
+        "note": "Configurable as Program, Preview, or Clean Feed"
+      },
+      {
+        "id": "flexible-out-3",
+        "name": "Flexible Out 3",
+        "direction": "output",
+        "connector": "sdi",
+        "note": "Configurable as Program, Preview, or Clean Feed"
+      },
+      {
+        "id": "flexible-out-4",
+        "name": "Flexible Out 4",
+        "direction": "output",
+        "connector": "sdi",
+        "note": "Configurable as Program, Preview, or Clean Feed"
+      },
+      {
+        "id": "flexible-out-5",
+        "name": "Flexible Out 5",
+        "direction": "output",
+        "connector": "sdi",
+        "note": "Configurable as Program, Preview, or Clean Feed"
+      },
+      {
+        "id": "flexible-out-6",
+        "name": "Flexible Out 6",
+        "direction": "output",
+        "connector": "sdi",
+        "note": "Configurable as Program, Preview, or Clean Feed"
+      },
+      {
+        "id": "multi-view-out",
+        "name": "Multi-View Out",
+        "direction": "output",
+        "connector": "sdi"
+      },
+      {
+        "id": "ref-in",
+        "name": "Ref In",
+        "direction": "input",
+        "connector": "bnc",
+        "note": "Tri-Sync / Black Burst reference input"
+      },
+      {
+        "id": "audio-in-1",
+        "name": "Audio In 1",
+        "direction": "input",
+        "connector": "trs-6.35",
+        "note": "Balanced line level"
+      },
+      {
+        "id": "audio-in-2",
+        "name": "Audio In 2",
+        "direction": "input",
+        "connector": "trs-6.35",
+        "note": "Balanced line level"
+      },
+      {
+        "id": "talkback-headset",
+        "name": "Talkback Headset",
+        "direction": "bidirectional",
+        "connector": "xlr5",
+        "note": "Front panel; 5-pin XLR for headset talkback"
+      },
+      {
+        "id": "talkback-expansion",
+        "name": "Talkback Expansion",
+        "direction": "bidirectional",
+        "connector": "rj45",
+        "note": "Rear panel; 3rd-party talkback system expansion"
+      },
+      {
+        "id": "ethernet",
+        "name": "Ethernet",
+        "direction": "bidirectional",
+        "connector": "rj45",
+        "note": "10/100/1000 Base-T — control / network"
+      },
+      {
+        "id": "usb-c",
+        "name": "USB-C",
+        "direction": "bidirectional",
+        "connector": "usb-c",
+        "note": "USB 3.1 Gen 1 — webcam out / control software"
+      },
+      {
+        "id": "power-in",
+        "name": "Power In",
+        "direction": "input",
+        "connector": "iec",
+        "note": "Internal 100–240V AC supply"
+      }
+    ],
+    "rackUnits": 1,
+    "source": "community",
+    "rev": 1,
+    "contentHash": "a5abd56d"
+  },
+  {
+    "id": "blackmagic-design/atem-2-m-e-constellation-hd",
+    "manufacturer": "Blackmagic Design",
+    "model": "ATEM 2 M/E Constellation HD",
+    "category": "switcher",
+    "type": "Video switcher",
+    "ports": [
+      {
+        "id": "sdi-in-1",
+        "name": "SDI In 1",
+        "direction": "input",
+        "connector": "sdi"
+      },
+      {
+        "id": "sdi-in-2",
+        "name": "SDI In 2",
+        "direction": "input",
+        "connector": "sdi"
+      },
+      {
+        "id": "sdi-in-3",
+        "name": "SDI In 3",
+        "direction": "input",
+        "connector": "sdi"
+      },
+      {
+        "id": "sdi-in-4",
+        "name": "SDI In 4",
+        "direction": "input",
+        "connector": "sdi"
+      },
+      {
+        "id": "sdi-in-5",
+        "name": "SDI In 5",
+        "direction": "input",
+        "connector": "sdi"
+      },
+      {
+        "id": "sdi-in-6",
+        "name": "SDI In 6",
+        "direction": "input",
+        "connector": "sdi"
+      },
+      {
+        "id": "sdi-in-7",
+        "name": "SDI In 7",
+        "direction": "input",
+        "connector": "sdi"
+      },
+      {
+        "id": "sdi-in-8",
+        "name": "SDI In 8",
+        "direction": "input",
+        "connector": "sdi"
+      },
+      {
+        "id": "sdi-in-9",
+        "name": "SDI In 9",
+        "direction": "input",
+        "connector": "sdi"
+      },
+      {
+        "id": "sdi-in-10",
+        "name": "SDI In 10",
+        "direction": "input",
+        "connector": "sdi"
+      },
+      {
+        "id": "sdi-in-11",
+        "name": "SDI In 11",
+        "direction": "input",
+        "connector": "sdi"
+      },
+      {
+        "id": "sdi-in-12",
+        "name": "SDI In 12",
+        "direction": "input",
+        "connector": "sdi"
+      },
+      {
+        "id": "sdi-in-13",
+        "name": "SDI In 13",
+        "direction": "input",
+        "connector": "sdi"
+      },
+      {
+        "id": "sdi-in-14",
+        "name": "SDI In 14",
+        "direction": "input",
+        "connector": "sdi"
+      },
+      {
+        "id": "sdi-in-15",
+        "name": "SDI In 15",
+        "direction": "input",
+        "connector": "sdi"
+      },
+      {
+        "id": "sdi-in-16",
+        "name": "SDI In 16",
+        "direction": "input",
+        "connector": "sdi"
+      },
+      {
+        "id": "sdi-in-17",
+        "name": "SDI In 17",
+        "direction": "input",
+        "connector": "sdi"
+      },
+      {
+        "id": "sdi-in-18",
+        "name": "SDI In 18",
+        "direction": "input",
+        "connector": "sdi"
+      },
+      {
+        "id": "sdi-in-19",
+        "name": "SDI In 19",
+        "direction": "input",
+        "connector": "sdi"
+      },
+      {
+        "id": "sdi-in-20",
+        "name": "SDI In 20",
+        "direction": "input",
+        "connector": "sdi"
+      },
+      {
+        "id": "flexible-out-1",
+        "name": "Flexible Out 1",
+        "direction": "output",
+        "connector": "sdi",
+        "note": "Configurable as Program, Preview, or Clean Feed"
+      },
+      {
+        "id": "flexible-out-2",
+        "name": "Flexible Out 2",
+        "direction": "output",
+        "connector": "sdi",
+        "note": "Configurable as Program, Preview, or Clean Feed"
+      },
+      {
+        "id": "flexible-out-3",
+        "name": "Flexible Out 3",
+        "direction": "output",
+        "connector": "sdi",
+        "note": "Configurable as Program, Preview, or Clean Feed"
+      },
+      {
+        "id": "flexible-out-4",
+        "name": "Flexible Out 4",
+        "direction": "output",
+        "connector": "sdi",
+        "note": "Configurable as Program, Preview, or Clean Feed"
+      },
+      {
+        "id": "flexible-out-5",
+        "name": "Flexible Out 5",
+        "direction": "output",
+        "connector": "sdi",
+        "note": "Configurable as Program, Preview, or Clean Feed"
+      },
+      {
+        "id": "flexible-out-6",
+        "name": "Flexible Out 6",
+        "direction": "output",
+        "connector": "sdi",
+        "note": "Configurable as Program, Preview, or Clean Feed"
+      },
+      {
+        "id": "flexible-out-7",
+        "name": "Flexible Out 7",
+        "direction": "output",
+        "connector": "sdi",
+        "note": "Configurable as Program, Preview, or Clean Feed"
+      },
+      {
+        "id": "flexible-out-8",
+        "name": "Flexible Out 8",
+        "direction": "output",
+        "connector": "sdi",
+        "note": "Configurable as Program, Preview, or Clean Feed"
+      },
+      {
+        "id": "flexible-out-9",
+        "name": "Flexible Out 9",
+        "direction": "output",
+        "connector": "sdi",
+        "note": "Configurable as Program, Preview, or Clean Feed"
+      },
+      {
+        "id": "flexible-out-10",
+        "name": "Flexible Out 10",
+        "direction": "output",
+        "connector": "sdi",
+        "note": "Configurable as Program, Preview, or Clean Feed"
+      },
+      {
+        "id": "flexible-out-11",
+        "name": "Flexible Out 11",
+        "direction": "output",
+        "connector": "sdi",
+        "note": "Configurable as Program, Preview, or Clean Feed"
+      },
+      {
+        "id": "flexible-out-12",
+        "name": "Flexible Out 12",
+        "direction": "output",
+        "connector": "sdi",
+        "note": "Configurable as Program, Preview, or Clean Feed"
+      },
+      {
+        "id": "multi-view-out-1",
+        "name": "Multi-View Out 1",
+        "direction": "output",
+        "connector": "sdi"
+      },
+      {
+        "id": "multi-view-out-2",
+        "name": "Multi-View Out 2",
+        "direction": "output",
+        "connector": "sdi"
+      },
+      {
+        "id": "ref-in",
+        "name": "Ref In",
+        "direction": "input",
+        "connector": "bnc",
+        "note": "Tri-Sync / Black Burst reference input"
+      },
+      {
+        "id": "audio-in-1",
+        "name": "Audio In 1",
+        "direction": "input",
+        "connector": "trs-6.35",
+        "note": "Balanced line level"
+      },
+      {
+        "id": "audio-in-2",
+        "name": "Audio In 2",
+        "direction": "input",
+        "connector": "trs-6.35",
+        "note": "Balanced line level"
+      },
+      {
+        "id": "talkback-headset",
+        "name": "Talkback Headset",
+        "direction": "bidirectional",
+        "connector": "xlr5",
+        "note": "Front panel; 5-pin XLR for headset talkback"
+      },
+      {
+        "id": "talkback-expansion",
+        "name": "Talkback Expansion",
+        "direction": "bidirectional",
+        "connector": "rj45",
+        "note": "Rear panel; 3rd-party talkback system expansion"
+      },
+      {
+        "id": "ethernet",
+        "name": "Ethernet",
+        "direction": "bidirectional",
+        "connector": "rj45",
+        "note": "10/100/1000 Base-T — control / network"
+      },
+      {
+        "id": "usb-c",
+        "name": "USB-C",
+        "direction": "bidirectional",
+        "connector": "usb-c",
+        "note": "USB 2.0 — webcam out / control software"
+      },
+      {
+        "id": "power-in",
+        "name": "Power In",
+        "direction": "input",
+        "connector": "iec",
+        "note": "Internal 100–240V AC supply"
+      }
+    ],
+    "rackUnits": 1,
+    "source": "community",
+    "rev": 1,
+    "contentHash": "9fccbf26"
+  },
+  {
+    "id": "blackmagic-design/atem-4-m-e-broadcast-studio-4k",
+    "manufacturer": "Blackmagic Design",
+    "model": "ATEM 4 M/E Broadcast Studio 4K",
+    "category": "switcher",
+    "type": "Video switcher",
+    "ports": [
+      {
+        "id": "sdi-in-1",
+        "name": "SDI In 1",
+        "direction": "input",
+        "connector": "sdi"
+      },
+      {
+        "id": "sdi-in-2",
+        "name": "SDI In 2",
+        "direction": "input",
+        "connector": "sdi"
+      },
+      {
+        "id": "sdi-in-3",
+        "name": "SDI In 3",
+        "direction": "input",
+        "connector": "sdi"
+      },
+      {
+        "id": "sdi-in-4",
+        "name": "SDI In 4",
+        "direction": "input",
+        "connector": "sdi"
+      },
+      {
+        "id": "sdi-in-5",
+        "name": "SDI In 5",
+        "direction": "input",
+        "connector": "sdi"
+      },
+      {
+        "id": "sdi-in-6",
+        "name": "SDI In 6",
+        "direction": "input",
+        "connector": "sdi"
+      },
+      {
+        "id": "sdi-in-7",
+        "name": "SDI In 7",
+        "direction": "input",
+        "connector": "sdi"
+      },
+      {
+        "id": "sdi-in-8",
+        "name": "SDI In 8",
+        "direction": "input",
+        "connector": "sdi"
+      },
+      {
+        "id": "sdi-in-9",
+        "name": "SDI In 9",
+        "direction": "input",
+        "connector": "sdi"
+      },
+      {
+        "id": "sdi-in-10",
+        "name": "SDI In 10",
+        "direction": "input",
+        "connector": "sdi"
+      },
+      {
+        "id": "sdi-in-11",
+        "name": "SDI In 11",
+        "direction": "input",
+        "connector": "sdi"
+      },
+      {
+        "id": "sdi-in-12",
+        "name": "SDI In 12",
+        "direction": "input",
+        "connector": "sdi"
+      },
+      {
+        "id": "sdi-in-13",
+        "name": "SDI In 13",
+        "direction": "input",
+        "connector": "sdi"
+      },
+      {
+        "id": "sdi-in-14",
+        "name": "SDI In 14",
+        "direction": "input",
+        "connector": "sdi"
+      },
+      {
+        "id": "sdi-in-15",
+        "name": "SDI In 15",
+        "direction": "input",
+        "connector": "sdi"
+      },
+      {
+        "id": "sdi-in-16",
+        "name": "SDI In 16",
+        "direction": "input",
+        "connector": "sdi"
+      },
+      {
+        "id": "sdi-in-17",
+        "name": "SDI In 17",
+        "direction": "input",
+        "connector": "sdi"
+      },
+      {
+        "id": "sdi-in-18",
+        "name": "SDI In 18",
+        "direction": "input",
+        "connector": "sdi"
+      },
+      {
+        "id": "sdi-in-19",
+        "name": "SDI In 19",
+        "direction": "input",
+        "connector": "sdi"
+      },
+      {
+        "id": "sdi-in-20",
+        "name": "SDI In 20",
+        "direction": "input",
+        "connector": "sdi"
+      },
+      {
+        "id": "program-out-1",
+        "name": "Program Out 1",
+        "direction": "output",
+        "connector": "sdi"
+      },
+      {
+        "id": "program-out-2",
+        "name": "Program Out 2",
+        "direction": "output",
+        "connector": "sdi"
+      },
+      {
+        "id": "program-out-3",
+        "name": "Program Out 3",
+        "direction": "output",
+        "connector": "sdi"
+      },
+      {
+        "id": "program-out-down-conv",
+        "name": "Program Out (Down-Conv)",
+        "direction": "output",
+        "connector": "sdi",
+        "note": "HD-SDI down-converted program output"
+      },
+      {
+        "id": "preview-out",
+        "name": "Preview Out",
+        "direction": "output",
+        "connector": "sdi"
+      },
+      {
+        "id": "aux-out-1",
+        "name": "Aux Out 1",
+        "direction": "output",
+        "connector": "sdi"
+      },
+      {
+        "id": "aux-out-2",
+        "name": "Aux Out 2",
+        "direction": "output",
+        "connector": "sdi"
+      },
+      {
+        "id": "aux-out-3",
+        "name": "Aux Out 3",
+        "direction": "output",
+        "connector": "sdi"
+      },
+      {
+        "id": "aux-out-4",
+        "name": "Aux Out 4",
+        "direction": "output",
+        "connector": "sdi"
+      },
+      {
+        "id": "aux-out-5",
+        "name": "Aux Out 5",
+        "direction": "output",
+        "connector": "sdi"
+      },
+      {
+        "id": "aux-out-6",
+        "name": "Aux Out 6",
+        "direction": "output",
+        "connector": "sdi"
+      },
+      {
+        "id": "multi-view-out-1",
+        "name": "Multi-View Out 1",
+        "direction": "output",
+        "connector": "sdi"
+      },
+      {
+        "id": "multi-view-out-2",
+        "name": "Multi-View Out 2",
+        "direction": "output",
+        "connector": "sdi"
+      },
+      {
+        "id": "ref-in",
+        "name": "Ref In",
+        "direction": "input",
+        "connector": "bnc",
+        "note": "Tri-Sync / Black Burst reference input"
+      },
+      {
+        "id": "analog-audio-in-l",
+        "name": "Analog Audio In L",
+        "direction": "input",
+        "connector": "xlr3",
+        "note": "Balanced stereo pair — left channel"
+      },
+      {
+        "id": "analog-audio-in-r",
+        "name": "Analog Audio In R",
+        "direction": "input",
+        "connector": "xlr3",
+        "note": "Balanced stereo pair — right channel"
+      },
+      {
+        "id": "rca-audio-in-l",
+        "name": "RCA Audio In L",
+        "direction": "input",
+        "connector": "rca",
+        "note": "HiFi stereo pair — left channel"
+      },
+      {
+        "id": "rca-audio-in-r",
+        "name": "RCA Audio In R",
+        "direction": "input",
+        "connector": "rca",
+        "note": "HiFi stereo pair — right channel"
+      },
+      {
+        "id": "audio-program-out-l",
+        "name": "Audio Program Out L",
+        "direction": "output",
+        "connector": "xlr3"
+      },
+      {
+        "id": "audio-program-out-r",
+        "name": "Audio Program Out R",
+        "direction": "output",
+        "connector": "xlr3"
+      },
+      {
+        "id": "audio-monitor-out-l",
+        "name": "Audio Monitor Out L",
+        "direction": "output",
+        "connector": "xlr3"
+      },
+      {
+        "id": "audio-monitor-out-r",
+        "name": "Audio Monitor Out R",
+        "direction": "output",
+        "connector": "xlr3"
+      },
+      {
+        "id": "talkback-in",
+        "name": "Talkback In",
+        "direction": "input",
+        "connector": "xlr3"
+      },
+      {
+        "id": "talkback-out",
+        "name": "Talkback Out",
+        "direction": "output",
+        "connector": "xlr3"
+      },
+      {
+        "id": "timecode-in",
+        "name": "Timecode In",
+        "direction": "input",
+        "connector": "xlr3",
+        "note": "LTC timecode input"
+      },
+      {
+        "id": "timecode-out",
+        "name": "Timecode Out",
+        "direction": "output",
+        "connector": "xlr3",
+        "note": "LTC timecode output"
+      },
+      {
+        "id": "ethernet",
+        "name": "Ethernet",
+        "direction": "bidirectional",
+        "connector": "rj45",
+        "note": "10/100/1000 Base-T — control / network"
+      },
+      {
+        "id": "usb",
+        "name": "USB",
+        "direction": "bidirectional",
+        "connector": "usb-b",
+        "note": "USB 2.0 Type-B — firmware / utility"
+      },
+      {
+        "id": "power-in-1",
+        "name": "Power In 1",
+        "direction": "input",
+        "connector": "iec",
+        "note": "Dual internal power supplies"
+      },
+      {
+        "id": "power-in-2",
+        "name": "Power In 2",
+        "direction": "input",
+        "connector": "iec",
+        "note": "Dual internal power supplies"
+      }
+    ],
+    "rackUnits": 2,
+    "source": "community",
+    "rev": 1,
+    "contentHash": "0ece7608"
+  },
+  {
+    "id": "blackmagic-design/atem-4-m-e-constellation-hd",
+    "manufacturer": "Blackmagic Design",
+    "model": "ATEM 4 M/E Constellation HD",
+    "category": "switcher",
+    "type": "Video switcher",
+    "ports": [
+      {
+        "id": "sdi-in-1",
+        "name": "SDI In 1",
+        "direction": "input",
+        "connector": "sdi"
+      },
+      {
+        "id": "sdi-in-2",
+        "name": "SDI In 2",
+        "direction": "input",
+        "connector": "sdi"
+      },
+      {
+        "id": "sdi-in-3",
+        "name": "SDI In 3",
+        "direction": "input",
+        "connector": "sdi"
+      },
+      {
+        "id": "sdi-in-4",
+        "name": "SDI In 4",
+        "direction": "input",
+        "connector": "sdi"
+      },
+      {
+        "id": "sdi-in-5",
+        "name": "SDI In 5",
+        "direction": "input",
+        "connector": "sdi"
+      },
+      {
+        "id": "sdi-in-6",
+        "name": "SDI In 6",
+        "direction": "input",
+        "connector": "sdi"
+      },
+      {
+        "id": "sdi-in-7",
+        "name": "SDI In 7",
+        "direction": "input",
+        "connector": "sdi"
+      },
+      {
+        "id": "sdi-in-8",
+        "name": "SDI In 8",
+        "direction": "input",
+        "connector": "sdi"
+      },
+      {
+        "id": "sdi-in-9",
+        "name": "SDI In 9",
+        "direction": "input",
+        "connector": "sdi"
+      },
+      {
+        "id": "sdi-in-10",
+        "name": "SDI In 10",
+        "direction": "input",
+        "connector": "sdi"
+      },
+      {
+        "id": "sdi-in-11",
+        "name": "SDI In 11",
+        "direction": "input",
+        "connector": "sdi"
+      },
+      {
+        "id": "sdi-in-12",
+        "name": "SDI In 12",
+        "direction": "input",
+        "connector": "sdi"
+      },
+      {
+        "id": "sdi-in-13",
+        "name": "SDI In 13",
+        "direction": "input",
+        "connector": "sdi"
+      },
+      {
+        "id": "sdi-in-14",
+        "name": "SDI In 14",
+        "direction": "input",
+        "connector": "sdi"
+      },
+      {
+        "id": "sdi-in-15",
+        "name": "SDI In 15",
+        "direction": "input",
+        "connector": "sdi"
+      },
+      {
+        "id": "sdi-in-16",
+        "name": "SDI In 16",
+        "direction": "input",
+        "connector": "sdi"
+      },
+      {
+        "id": "sdi-in-17",
+        "name": "SDI In 17",
+        "direction": "input",
+        "connector": "sdi"
+      },
+      {
+        "id": "sdi-in-18",
+        "name": "SDI In 18",
+        "direction": "input",
+        "connector": "sdi"
+      },
+      {
+        "id": "sdi-in-19",
+        "name": "SDI In 19",
+        "direction": "input",
+        "connector": "sdi"
+      },
+      {
+        "id": "sdi-in-20",
+        "name": "SDI In 20",
+        "direction": "input",
+        "connector": "sdi"
+      },
+      {
+        "id": "sdi-in-21",
+        "name": "SDI In 21",
+        "direction": "input",
+        "connector": "sdi"
+      },
+      {
+        "id": "sdi-in-22",
+        "name": "SDI In 22",
+        "direction": "input",
+        "connector": "sdi"
+      },
+      {
+        "id": "sdi-in-23",
+        "name": "SDI In 23",
+        "direction": "input",
+        "connector": "sdi"
+      },
+      {
+        "id": "sdi-in-24",
+        "name": "SDI In 24",
+        "direction": "input",
+        "connector": "sdi"
+      },
+      {
+        "id": "sdi-in-25",
+        "name": "SDI In 25",
+        "direction": "input",
+        "connector": "sdi"
+      },
+      {
+        "id": "sdi-in-26",
+        "name": "SDI In 26",
+        "direction": "input",
+        "connector": "sdi"
+      },
+      {
+        "id": "sdi-in-27",
+        "name": "SDI In 27",
+        "direction": "input",
+        "connector": "sdi"
+      },
+      {
+        "id": "sdi-in-28",
+        "name": "SDI In 28",
+        "direction": "input",
+        "connector": "sdi"
+      },
+      {
+        "id": "sdi-in-29",
+        "name": "SDI In 29",
+        "direction": "input",
+        "connector": "sdi"
+      },
+      {
+        "id": "sdi-in-30",
+        "name": "SDI In 30",
+        "direction": "input",
+        "connector": "sdi"
+      },
+      {
+        "id": "sdi-in-31",
+        "name": "SDI In 31",
+        "direction": "input",
+        "connector": "sdi"
+      },
+      {
+        "id": "sdi-in-32",
+        "name": "SDI In 32",
+        "direction": "input",
+        "connector": "sdi"
+      },
+      {
+        "id": "sdi-in-33",
+        "name": "SDI In 33",
+        "direction": "input",
+        "connector": "sdi"
+      },
+      {
+        "id": "sdi-in-34",
+        "name": "SDI In 34",
+        "direction": "input",
+        "connector": "sdi"
+      },
+      {
+        "id": "sdi-in-35",
+        "name": "SDI In 35",
+        "direction": "input",
+        "connector": "sdi"
+      },
+      {
+        "id": "sdi-in-36",
+        "name": "SDI In 36",
+        "direction": "input",
+        "connector": "sdi"
+      },
+      {
+        "id": "sdi-in-37",
+        "name": "SDI In 37",
+        "direction": "input",
+        "connector": "sdi"
+      },
+      {
+        "id": "sdi-in-38",
+        "name": "SDI In 38",
+        "direction": "input",
+        "connector": "sdi"
+      },
+      {
+        "id": "sdi-in-39",
+        "name": "SDI In 39",
+        "direction": "input",
+        "connector": "sdi"
+      },
+      {
+        "id": "sdi-in-40",
+        "name": "SDI In 40",
+        "direction": "input",
+        "connector": "sdi"
+      },
+      {
+        "id": "flexible-out-1",
+        "name": "Flexible Out 1",
+        "direction": "output",
+        "connector": "sdi",
+        "note": "Configurable as Program, Preview, or Clean Feed"
+      },
+      {
+        "id": "flexible-out-2",
+        "name": "Flexible Out 2",
+        "direction": "output",
+        "connector": "sdi",
+        "note": "Configurable as Program, Preview, or Clean Feed"
+      },
+      {
+        "id": "flexible-out-3",
+        "name": "Flexible Out 3",
+        "direction": "output",
+        "connector": "sdi",
+        "note": "Configurable as Program, Preview, or Clean Feed"
+      },
+      {
+        "id": "flexible-out-4",
+        "name": "Flexible Out 4",
+        "direction": "output",
+        "connector": "sdi",
+        "note": "Configurable as Program, Preview, or Clean Feed"
+      },
+      {
+        "id": "flexible-out-5",
+        "name": "Flexible Out 5",
+        "direction": "output",
+        "connector": "sdi",
+        "note": "Configurable as Program, Preview, or Clean Feed"
+      },
+      {
+        "id": "flexible-out-6",
+        "name": "Flexible Out 6",
+        "direction": "output",
+        "connector": "sdi",
+        "note": "Configurable as Program, Preview, or Clean Feed"
+      },
+      {
+        "id": "flexible-out-7",
+        "name": "Flexible Out 7",
+        "direction": "output",
+        "connector": "sdi",
+        "note": "Configurable as Program, Preview, or Clean Feed"
+      },
+      {
+        "id": "flexible-out-8",
+        "name": "Flexible Out 8",
+        "direction": "output",
+        "connector": "sdi",
+        "note": "Configurable as Program, Preview, or Clean Feed"
+      },
+      {
+        "id": "flexible-out-9",
+        "name": "Flexible Out 9",
+        "direction": "output",
+        "connector": "sdi",
+        "note": "Configurable as Program, Preview, or Clean Feed"
+      },
+      {
+        "id": "flexible-out-10",
+        "name": "Flexible Out 10",
+        "direction": "output",
+        "connector": "sdi",
+        "note": "Configurable as Program, Preview, or Clean Feed"
+      },
+      {
+        "id": "flexible-out-11",
+        "name": "Flexible Out 11",
+        "direction": "output",
+        "connector": "sdi",
+        "note": "Configurable as Program, Preview, or Clean Feed"
+      },
+      {
+        "id": "flexible-out-12",
+        "name": "Flexible Out 12",
+        "direction": "output",
+        "connector": "sdi",
+        "note": "Configurable as Program, Preview, or Clean Feed"
+      },
+      {
+        "id": "flexible-out-13",
+        "name": "Flexible Out 13",
+        "direction": "output",
+        "connector": "sdi",
+        "note": "Configurable as Program, Preview, or Clean Feed"
+      },
+      {
+        "id": "flexible-out-14",
+        "name": "Flexible Out 14",
+        "direction": "output",
+        "connector": "sdi",
+        "note": "Configurable as Program, Preview, or Clean Feed"
+      },
+      {
+        "id": "flexible-out-15",
+        "name": "Flexible Out 15",
+        "direction": "output",
+        "connector": "sdi",
+        "note": "Configurable as Program, Preview, or Clean Feed"
+      },
+      {
+        "id": "flexible-out-16",
+        "name": "Flexible Out 16",
+        "direction": "output",
+        "connector": "sdi",
+        "note": "Configurable as Program, Preview, or Clean Feed"
+      },
+      {
+        "id": "flexible-out-17",
+        "name": "Flexible Out 17",
+        "direction": "output",
+        "connector": "sdi",
+        "note": "Configurable as Program, Preview, or Clean Feed"
+      },
+      {
+        "id": "flexible-out-18",
+        "name": "Flexible Out 18",
+        "direction": "output",
+        "connector": "sdi",
+        "note": "Configurable as Program, Preview, or Clean Feed"
+      },
+      {
+        "id": "flexible-out-19",
+        "name": "Flexible Out 19",
+        "direction": "output",
+        "connector": "sdi",
+        "note": "Configurable as Program, Preview, or Clean Feed"
+      },
+      {
+        "id": "flexible-out-20",
+        "name": "Flexible Out 20",
+        "direction": "output",
+        "connector": "sdi",
+        "note": "Configurable as Program, Preview, or Clean Feed"
+      },
+      {
+        "id": "flexible-out-21",
+        "name": "Flexible Out 21",
+        "direction": "output",
+        "connector": "sdi",
+        "note": "Configurable as Program, Preview, or Clean Feed"
+      },
+      {
+        "id": "flexible-out-22",
+        "name": "Flexible Out 22",
+        "direction": "output",
+        "connector": "sdi",
+        "note": "Configurable as Program, Preview, or Clean Feed"
+      },
+      {
+        "id": "flexible-out-23",
+        "name": "Flexible Out 23",
+        "direction": "output",
+        "connector": "sdi",
+        "note": "Configurable as Program, Preview, or Clean Feed"
+      },
+      {
+        "id": "flexible-out-24",
+        "name": "Flexible Out 24",
+        "direction": "output",
+        "connector": "sdi",
+        "note": "Configurable as Program, Preview, or Clean Feed"
+      },
+      {
+        "id": "multi-view-out-1",
+        "name": "Multi-View Out 1",
+        "direction": "output",
+        "connector": "sdi"
+      },
+      {
+        "id": "multi-view-out-2",
+        "name": "Multi-View Out 2",
+        "direction": "output",
+        "connector": "sdi"
+      },
+      {
+        "id": "multi-view-out-3",
+        "name": "Multi-View Out 3",
+        "direction": "output",
+        "connector": "sdi"
+      },
+      {
+        "id": "multi-view-out-4",
+        "name": "Multi-View Out 4",
+        "direction": "output",
+        "connector": "sdi"
+      },
+      {
+        "id": "ref-in",
+        "name": "Ref In",
+        "direction": "input",
+        "connector": "bnc",
+        "note": "Tri-Sync / Black Burst reference input"
+      },
+      {
+        "id": "audio-in-1",
+        "name": "Audio In 1",
+        "direction": "input",
+        "connector": "trs-6.35",
+        "note": "Balanced line level"
+      },
+      {
+        "id": "audio-in-2",
+        "name": "Audio In 2",
+        "direction": "input",
+        "connector": "trs-6.35",
+        "note": "Balanced line level"
+      },
+      {
+        "id": "audio-out-1",
+        "name": "Audio Out 1",
+        "direction": "output",
+        "connector": "trs-6.35",
+        "note": "Balanced line level"
+      },
+      {
+        "id": "audio-out-2",
+        "name": "Audio Out 2",
+        "direction": "output",
+        "connector": "trs-6.35",
+        "note": "Balanced line level"
+      },
+      {
+        "id": "madi-in",
+        "name": "MADI In",
+        "direction": "input",
+        "connector": "bnc",
+        "note": "Coaxial MADI; 32 stereo channels"
+      },
+      {
+        "id": "madi-out-1",
+        "name": "MADI Out 1",
+        "direction": "output",
+        "connector": "bnc",
+        "note": "Coaxial MADI; 32 stereo channels"
+      },
+      {
+        "id": "madi-out-2",
+        "name": "MADI Out 2",
+        "direction": "output",
+        "connector": "bnc",
+        "note": "Coaxial MADI; 32 stereo channels"
+      },
+      {
+        "id": "talkback-headset",
+        "name": "Talkback Headset",
+        "direction": "bidirectional",
+        "connector": "xlr5",
+        "note": "Front panel; 5-pin XLR for headset talkback"
+      },
+      {
+        "id": "talkback-expansion",
+        "name": "Talkback Expansion",
+        "direction": "bidirectional",
+        "connector": "rj45",
+        "note": "Rear panel; 3rd-party talkback system expansion"
+      },
+      {
+        "id": "ethernet",
+        "name": "Ethernet",
+        "direction": "bidirectional",
+        "connector": "rj45",
+        "note": "10/100/1000 Base-T — control / network"
+      },
+      {
+        "id": "usb-c",
+        "name": "USB-C",
+        "direction": "bidirectional",
+        "connector": "usb-c",
+        "note": "USB 3.1 Gen 1 — webcam out / control software"
+      },
+      {
+        "id": "rs-422",
+        "name": "RS-422",
+        "direction": "bidirectional",
+        "connector": "rs422",
+        "note": "Physical connector is RJ12 (6P6C)"
+      },
+      {
+        "id": "power-in-1",
+        "name": "Power In 1",
+        "direction": "input",
+        "connector": "iec",
+        "note": "Dual internal 100–240V AC supplies for redundancy"
+      },
+      {
+        "id": "power-in-2",
+        "name": "Power In 2",
+        "direction": "input",
+        "connector": "iec",
+        "note": "Dual internal 100–240V AC supplies for redundancy"
+      }
+    ],
+    "rackUnits": 2,
+    "source": "community",
+    "rev": 1,
+    "contentHash": "42399048"
+  },
+  {
     "id": "blackmagic-design/atem-mini-pro",
     "manufacturer": "Blackmagic Design",
     "model": "ATEM Mini Pro",
@@ -795,6 +2132,637 @@
     "source": "community",
     "rev": 1,
     "contentHash": "ddd6eb3d"
+  },
+  {
+    "id": "blackmagic-design/atem-television-studio-4k8",
+    "manufacturer": "Blackmagic Design",
+    "model": "ATEM Television Studio 4K8",
+    "category": "switcher",
+    "type": "Video switcher",
+    "ports": [
+      {
+        "id": "sdi-in-1",
+        "name": "SDI In 1",
+        "direction": "input",
+        "connector": "sdi"
+      },
+      {
+        "id": "sdi-in-2",
+        "name": "SDI In 2",
+        "direction": "input",
+        "connector": "sdi"
+      },
+      {
+        "id": "sdi-in-3",
+        "name": "SDI In 3",
+        "direction": "input",
+        "connector": "sdi"
+      },
+      {
+        "id": "sdi-in-4",
+        "name": "SDI In 4",
+        "direction": "input",
+        "connector": "sdi"
+      },
+      {
+        "id": "sdi-in-5",
+        "name": "SDI In 5",
+        "direction": "input",
+        "connector": "sdi"
+      },
+      {
+        "id": "sdi-in-6",
+        "name": "SDI In 6",
+        "direction": "input",
+        "connector": "sdi"
+      },
+      {
+        "id": "sdi-in-7",
+        "name": "SDI In 7",
+        "direction": "input",
+        "connector": "sdi"
+      },
+      {
+        "id": "sdi-in-8",
+        "name": "SDI In 8",
+        "direction": "input",
+        "connector": "sdi"
+      },
+      {
+        "id": "program-out",
+        "name": "Program Out",
+        "direction": "output",
+        "connector": "sdi"
+      },
+      {
+        "id": "aux-out-1",
+        "name": "Aux Out 1",
+        "direction": "output",
+        "connector": "sdi"
+      },
+      {
+        "id": "aux-out-2",
+        "name": "Aux Out 2",
+        "direction": "output",
+        "connector": "sdi"
+      },
+      {
+        "id": "aux-out-3",
+        "name": "Aux Out 3",
+        "direction": "output",
+        "connector": "sdi"
+      },
+      {
+        "id": "aux-out-4",
+        "name": "Aux Out 4",
+        "direction": "output",
+        "connector": "sdi"
+      },
+      {
+        "id": "aux-out-5",
+        "name": "Aux Out 5",
+        "direction": "output",
+        "connector": "sdi"
+      },
+      {
+        "id": "aux-out-6",
+        "name": "Aux Out 6",
+        "direction": "output",
+        "connector": "sdi"
+      },
+      {
+        "id": "aux-out-7",
+        "name": "Aux Out 7",
+        "direction": "output",
+        "connector": "sdi"
+      },
+      {
+        "id": "aux-out-8",
+        "name": "Aux Out 8",
+        "direction": "output",
+        "connector": "sdi"
+      },
+      {
+        "id": "aux-out-9",
+        "name": "Aux Out 9",
+        "direction": "output",
+        "connector": "sdi"
+      },
+      {
+        "id": "aux-out-10",
+        "name": "Aux Out 10",
+        "direction": "output",
+        "connector": "sdi"
+      },
+      {
+        "id": "multi-view-out-sdi",
+        "name": "Multi-View Out (SDI)",
+        "direction": "output",
+        "connector": "sdi"
+      },
+      {
+        "id": "multi-view-out-hdmi",
+        "name": "Multi-View Out (HDMI)",
+        "direction": "output",
+        "connector": "hdmi",
+        "note": "HDMI 2.0 Type-A"
+      },
+      {
+        "id": "ref-in",
+        "name": "Ref In",
+        "direction": "input",
+        "connector": "bnc",
+        "note": "Tri-Sync / Black Burst reference input"
+      },
+      {
+        "id": "ref-loop-out",
+        "name": "Ref Loop Out",
+        "direction": "output",
+        "connector": "bnc",
+        "note": "Sync loop output"
+      },
+      {
+        "id": "timecode-in",
+        "name": "Timecode In",
+        "direction": "input",
+        "connector": "bnc"
+      },
+      {
+        "id": "timecode-out",
+        "name": "Timecode Out",
+        "direction": "output",
+        "connector": "bnc"
+      },
+      {
+        "id": "analog-audio-in-l",
+        "name": "Analog Audio In L",
+        "direction": "input",
+        "connector": "xlr3",
+        "note": "Balanced XLR line/mic — left channel"
+      },
+      {
+        "id": "analog-audio-in-r",
+        "name": "Analog Audio In R",
+        "direction": "input",
+        "connector": "xlr3",
+        "note": "Balanced XLR line/mic — right channel"
+      },
+      {
+        "id": "rca-audio-in-l",
+        "name": "RCA Audio In L",
+        "direction": "input",
+        "connector": "rca",
+        "note": "HiFi stereo pair — left channel"
+      },
+      {
+        "id": "rca-audio-in-r",
+        "name": "RCA Audio In R",
+        "direction": "input",
+        "connector": "rca",
+        "note": "HiFi stereo pair — right channel"
+      },
+      {
+        "id": "control-room-out-l",
+        "name": "Control Room Out L",
+        "direction": "output",
+        "connector": "trs-6.35",
+        "note": "Balanced analog control room monitor — left channel"
+      },
+      {
+        "id": "control-room-out-r",
+        "name": "Control Room Out R",
+        "direction": "output",
+        "connector": "trs-6.35",
+        "note": "Balanced analog control room monitor — right channel"
+      },
+      {
+        "id": "studio-speaker-out-l",
+        "name": "Studio Speaker Out L",
+        "direction": "output",
+        "connector": "trs-6.35",
+        "note": "Balanced analog studio speakers — left channel"
+      },
+      {
+        "id": "studio-speaker-out-r",
+        "name": "Studio Speaker Out R",
+        "direction": "output",
+        "connector": "trs-6.35",
+        "note": "Balanced analog studio speakers — right channel"
+      },
+      {
+        "id": "madi-in",
+        "name": "MADI In",
+        "direction": "input",
+        "connector": "bnc",
+        "note": "Coaxial MADI; 32 channels"
+      },
+      {
+        "id": "madi-out",
+        "name": "MADI Out",
+        "direction": "output",
+        "connector": "bnc",
+        "note": "Coaxial MADI; 64 channels"
+      },
+      {
+        "id": "talkback-headset",
+        "name": "Talkback Headset",
+        "direction": "bidirectional",
+        "connector": "xlr5",
+        "note": "Front panel; 5-pin XLR for headset talkback"
+      },
+      {
+        "id": "talkback-expansion",
+        "name": "Talkback Expansion",
+        "direction": "bidirectional",
+        "connector": "rj45",
+        "note": "Rear panel; 3rd-party talkback system expansion"
+      },
+      {
+        "id": "network-switch-1",
+        "name": "Network Switch 1",
+        "direction": "bidirectional",
+        "connector": "rj45",
+        "note": "Internal 10/100/1000/10G BASE-T switch"
+      },
+      {
+        "id": "network-switch-2",
+        "name": "Network Switch 2",
+        "direction": "bidirectional",
+        "connector": "rj45",
+        "note": "Internal 10/100/1000/10G BASE-T switch"
+      },
+      {
+        "id": "network-switch-3",
+        "name": "Network Switch 3",
+        "direction": "bidirectional",
+        "connector": "rj45",
+        "note": "Internal 10/100/1000/10G BASE-T switch"
+      },
+      {
+        "id": "network-switch-4",
+        "name": "Network Switch 4",
+        "direction": "bidirectional",
+        "connector": "rj45",
+        "note": "Internal 10/100/1000/10G BASE-T switch"
+      },
+      {
+        "id": "usb-c-1",
+        "name": "USB-C 1",
+        "direction": "bidirectional",
+        "connector": "usb-c",
+        "note": "Recording, software control, webcam out"
+      },
+      {
+        "id": "usb-c-2",
+        "name": "USB-C 2",
+        "direction": "bidirectional",
+        "connector": "usb-c",
+        "note": "Recording, software control, webcam out"
+      },
+      {
+        "id": "rs-422",
+        "name": "RS-422",
+        "direction": "bidirectional",
+        "connector": "rs422",
+        "note": "Physical connector is RJ12 (6P6C); remote camera/deck control"
+      },
+      {
+        "id": "power-in",
+        "name": "Power In",
+        "direction": "input",
+        "connector": "iec",
+        "note": "Internal 100–240V AC supply"
+      },
+      {
+        "id": "dc-backup-in",
+        "name": "DC Backup In",
+        "direction": "input",
+        "connector": "xlr4-dc",
+        "note": "12V DC backup power input"
+      }
+    ],
+    "source": "community",
+    "rev": 1,
+    "contentHash": "abf8c3a4"
+  },
+  {
+    "id": "blackmagic-design/atem-television-studio-hd8-iso",
+    "manufacturer": "Blackmagic Design",
+    "model": "ATEM Television Studio HD8 ISO",
+    "category": "switcher",
+    "type": "Video switcher",
+    "ports": [
+      {
+        "id": "sdi-in-1",
+        "name": "SDI In 1",
+        "direction": "input",
+        "connector": "sdi"
+      },
+      {
+        "id": "sdi-in-2",
+        "name": "SDI In 2",
+        "direction": "input",
+        "connector": "sdi"
+      },
+      {
+        "id": "sdi-in-3",
+        "name": "SDI In 3",
+        "direction": "input",
+        "connector": "sdi"
+      },
+      {
+        "id": "sdi-in-4",
+        "name": "SDI In 4",
+        "direction": "input",
+        "connector": "sdi"
+      },
+      {
+        "id": "sdi-in-5",
+        "name": "SDI In 5",
+        "direction": "input",
+        "connector": "sdi"
+      },
+      {
+        "id": "sdi-in-6",
+        "name": "SDI In 6",
+        "direction": "input",
+        "connector": "sdi"
+      },
+      {
+        "id": "sdi-in-7",
+        "name": "SDI In 7",
+        "direction": "input",
+        "connector": "sdi"
+      },
+      {
+        "id": "sdi-in-8",
+        "name": "SDI In 8",
+        "direction": "input",
+        "connector": "sdi"
+      },
+      {
+        "id": "program-out",
+        "name": "Program Out",
+        "direction": "output",
+        "connector": "sdi"
+      },
+      {
+        "id": "aux-out-1",
+        "name": "Aux Out 1",
+        "direction": "output",
+        "connector": "sdi"
+      },
+      {
+        "id": "aux-out-2",
+        "name": "Aux Out 2",
+        "direction": "output",
+        "connector": "sdi"
+      },
+      {
+        "id": "camera-return-1",
+        "name": "Camera Return 1",
+        "direction": "output",
+        "connector": "sdi",
+        "note": "Dedicated camera return loop for camera 1"
+      },
+      {
+        "id": "camera-return-2",
+        "name": "Camera Return 2",
+        "direction": "output",
+        "connector": "sdi",
+        "note": "Dedicated camera return loop for camera 2"
+      },
+      {
+        "id": "camera-return-3",
+        "name": "Camera Return 3",
+        "direction": "output",
+        "connector": "sdi",
+        "note": "Dedicated camera return loop for camera 3"
+      },
+      {
+        "id": "camera-return-4",
+        "name": "Camera Return 4",
+        "direction": "output",
+        "connector": "sdi",
+        "note": "Dedicated camera return loop for camera 4"
+      },
+      {
+        "id": "camera-return-5",
+        "name": "Camera Return 5",
+        "direction": "output",
+        "connector": "sdi",
+        "note": "Dedicated camera return loop for camera 5"
+      },
+      {
+        "id": "camera-return-6",
+        "name": "Camera Return 6",
+        "direction": "output",
+        "connector": "sdi",
+        "note": "Dedicated camera return loop for camera 6"
+      },
+      {
+        "id": "camera-return-7",
+        "name": "Camera Return 7",
+        "direction": "output",
+        "connector": "sdi",
+        "note": "Dedicated camera return loop for camera 7"
+      },
+      {
+        "id": "camera-return-8",
+        "name": "Camera Return 8",
+        "direction": "output",
+        "connector": "sdi",
+        "note": "Dedicated camera return loop for camera 8"
+      },
+      {
+        "id": "multi-view-out-sdi",
+        "name": "Multi-View Out (SDI)",
+        "direction": "output",
+        "connector": "sdi"
+      },
+      {
+        "id": "multi-view-out-hdmi",
+        "name": "Multi-View Out (HDMI)",
+        "direction": "output",
+        "connector": "hdmi"
+      },
+      {
+        "id": "ref-in",
+        "name": "Ref In",
+        "direction": "input",
+        "connector": "bnc",
+        "note": "Tri-Sync / Black Burst reference input"
+      },
+      {
+        "id": "ref-loop-out",
+        "name": "Ref Loop Out",
+        "direction": "output",
+        "connector": "bnc",
+        "note": "Sync loop output"
+      },
+      {
+        "id": "timecode-in",
+        "name": "Timecode In",
+        "direction": "input",
+        "connector": "bnc"
+      },
+      {
+        "id": "timecode-out",
+        "name": "Timecode Out",
+        "direction": "output",
+        "connector": "bnc"
+      },
+      {
+        "id": "analog-audio-in-l",
+        "name": "Analog Audio In L",
+        "direction": "input",
+        "connector": "xlr3",
+        "note": "Balanced line/mic — left channel"
+      },
+      {
+        "id": "analog-audio-in-r",
+        "name": "Analog Audio In R",
+        "direction": "input",
+        "connector": "xlr3",
+        "note": "Balanced line/mic — right channel"
+      },
+      {
+        "id": "rca-audio-in-l",
+        "name": "RCA Audio In L",
+        "direction": "input",
+        "connector": "rca",
+        "note": "HiFi stereo pair — left channel"
+      },
+      {
+        "id": "rca-audio-in-r",
+        "name": "RCA Audio In R",
+        "direction": "input",
+        "connector": "rca",
+        "note": "HiFi stereo pair — right channel"
+      },
+      {
+        "id": "control-room-out-l",
+        "name": "Control Room Out L",
+        "direction": "output",
+        "connector": "trs-6.35",
+        "note": "Balanced analog control room monitor — left channel"
+      },
+      {
+        "id": "control-room-out-r",
+        "name": "Control Room Out R",
+        "direction": "output",
+        "connector": "trs-6.35",
+        "note": "Balanced analog control room monitor — right channel"
+      },
+      {
+        "id": "studio-speaker-out-l",
+        "name": "Studio Speaker Out L",
+        "direction": "output",
+        "connector": "trs-6.35",
+        "note": "Balanced analog studio speakers — left channel"
+      },
+      {
+        "id": "studio-speaker-out-r",
+        "name": "Studio Speaker Out R",
+        "direction": "output",
+        "connector": "trs-6.35",
+        "note": "Balanced analog studio speakers — right channel"
+      },
+      {
+        "id": "madi-in",
+        "name": "MADI In",
+        "direction": "input",
+        "connector": "bnc",
+        "note": "Coaxial MADI; 32 channels"
+      },
+      {
+        "id": "madi-out",
+        "name": "MADI Out",
+        "direction": "output",
+        "connector": "bnc",
+        "note": "Coaxial MADI; 64 channels"
+      },
+      {
+        "id": "talkback-headset",
+        "name": "Talkback Headset",
+        "direction": "bidirectional",
+        "connector": "xlr5",
+        "note": "Front panel; 5-pin XLR for headset talkback"
+      },
+      {
+        "id": "talkback-expansion",
+        "name": "Talkback Expansion",
+        "direction": "bidirectional",
+        "connector": "rj45",
+        "note": "Rear panel; 3rd-party talkback system expansion"
+      },
+      {
+        "id": "network-switch-1",
+        "name": "Network Switch 1",
+        "direction": "bidirectional",
+        "connector": "rj45",
+        "note": "Internal 10/100/1000 BASE-T switch"
+      },
+      {
+        "id": "network-switch-2",
+        "name": "Network Switch 2",
+        "direction": "bidirectional",
+        "connector": "rj45",
+        "note": "Internal 10/100/1000 BASE-T switch"
+      },
+      {
+        "id": "network-switch-3",
+        "name": "Network Switch 3",
+        "direction": "bidirectional",
+        "connector": "rj45",
+        "note": "Internal 10/100/1000 BASE-T switch"
+      },
+      {
+        "id": "network-switch-4",
+        "name": "Network Switch 4",
+        "direction": "bidirectional",
+        "connector": "rj45",
+        "note": "Internal 10/100/1000 BASE-T switch"
+      },
+      {
+        "id": "usb-c-1",
+        "name": "USB-C 1",
+        "direction": "bidirectional",
+        "connector": "usb-c",
+        "note": "Recording, software control, webcam out"
+      },
+      {
+        "id": "usb-c-2",
+        "name": "USB-C 2",
+        "direction": "bidirectional",
+        "connector": "usb-c",
+        "note": "Recording, software control, webcam out"
+      },
+      {
+        "id": "rs-422",
+        "name": "RS-422",
+        "direction": "bidirectional",
+        "connector": "rs422",
+        "note": "Physical connector is RJ12 (6P6C); remote camera/deck control"
+      },
+      {
+        "id": "power-in",
+        "name": "Power In",
+        "direction": "input",
+        "connector": "iec",
+        "note": "Internal 100–240V AC supply"
+      },
+      {
+        "id": "dc-backup-in",
+        "name": "DC Backup In",
+        "direction": "input",
+        "connector": "xlr4-dc",
+        "note": "12V DC backup power input"
+      }
+    ],
+    "source": "community",
+    "rev": 1,
+    "contentHash": "23f3c045"
   },
   {
     "id": "blackmagic-design/hyperdeck-studio-hd-plus",

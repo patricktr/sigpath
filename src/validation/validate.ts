@@ -150,6 +150,34 @@ export function validate(nodes: SigNode[], edges: CableEdgeType[]): ValidationRe
     });
   }
 
+  // Cable IDs must be unique — you can't pull two different "VID-001"s. Two cables
+  // sharing an ID (case-insensitively) is an error; blank IDs are never flagged.
+  // This is the duplicate-ID half of validation, which needs IDs to exist first.
+  const byCableId = new Map<string, { ids: string[]; label: string; nodeIds: Set<string> }>();
+  for (const e of edges) {
+    const raw = e.data?.number?.trim();
+    if (!raw) continue;
+    const k = raw.toUpperCase();
+    const cur = byCableId.get(k);
+    if (cur) {
+      cur.ids.push(e.id);
+      cur.nodeIds.add(e.source).add(e.target);
+    } else {
+      byCableId.set(k, { ids: [e.id], label: raw, nodeIds: new Set([e.source, e.target]) });
+    }
+  }
+  for (const { ids, label, nodeIds } of byCableId.values()) {
+    if (ids.length < 2) continue;
+    for (const id of ids) errorEdges.add(id);
+    issues.push({
+      id: `dupid:${label.toUpperCase()}`,
+      severity: "error",
+      title: "Duplicate cable ID",
+      detail: `${ids.length} cables share the ID “${label}” — each cable needs a unique ID.`,
+      focusNodeIds: [...nodeIds].filter((id) => devices.has(id)),
+    });
+  }
+
   // An edge that is an error shouldn't also be styled as a warning.
   for (const id of errorEdges) warnEdges.delete(id);
 

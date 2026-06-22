@@ -47,12 +47,19 @@ import {
 import { AddDeviceOverlay } from "./ui/AddDevice/AddDeviceOverlay";
 import { CreateWizard } from "./ui/AddDevice/CreateWizard";
 import { addToPersonalLibrary } from "./library/personalLibrary";
+import { hydrateCatalogFromCache, checkForCatalogUpdate } from "./library/catalogUpdate";
 import type { AddSurface } from "./ui/AddDevice/addDevice";
 import { DiagramTabs } from "./ui/DiagramTabs";
 import { ZoneNode, ZoneActionsContext, ZONE_COLORS } from "./ui/ZoneNode";
 import { NoteNode, NoteActionsContext } from "./ui/NoteNode";
 import { ListsPanel } from "./ui/ListsPanel";
 import { deriveLists } from "./lists/derive";
+import {
+  cablePrefixFromConnector,
+  formatCableId,
+  nextCableNumber,
+  renumberCables,
+} from "./lists/cableId";
 import { diagramImageBase64, diagramPdfBase64, listsToCsv, type ExportKind } from "./io/export";
 import { ValidationPanel } from "./ui/ValidationPanel";
 import { validate, type ValidationIssue } from "./validation/validate";
@@ -164,17 +171,25 @@ function AppInner() {
           : undefined;
       const cableTypeId = port?.connector;
       const color = cableColor(cableTypeId);
-      const edge: CableEdgeType = {
-        id: `cable-${crypto.randomUUID()}`,
-        source: connection.source,
-        target: connection.target,
-        sourceHandle: connection.sourceHandle,
-        targetHandle: connection.targetHandle,
-        type: "cable",
-        style: { stroke: color, strokeWidth: 2 },
-        data: { cableTypeId: cableTypeId ?? "" },
-      };
-      setEdges((eds) => addEdge(edge, eds));
+      // Auto-number the run: next free in its signal group's sequence (VID-001…),
+      // computed against the live edges so rapid draws don't collide.
+      setEdges((eds) => {
+        const prefix = cablePrefixFromConnector(cableTypeId);
+        const edge: CableEdgeType = {
+          id: `cable-${crypto.randomUUID()}`,
+          source: connection.source,
+          target: connection.target,
+          sourceHandle: connection.sourceHandle,
+          targetHandle: connection.targetHandle,
+          type: "cable",
+          style: { stroke: color, strokeWidth: 2 },
+          data: {
+            cableTypeId: cableTypeId ?? "",
+            number: formatCableId(prefix, nextCableNumber(prefix, eds)),
+          },
+        };
+        return addEdge(edge, eds);
+      });
     },
     [nodes, setEdges, takeSnapshot],
   );
@@ -571,6 +586,39 @@ function AppInner() {
     [setEdges, takeSnapshot],
   );
 
+  // Set a cable's human ID. Snapshot is taken on focus (see the input), so typing
+  // a multi-character ID is a single undo step, not one per keystroke.
+  const setCableId = useCallback(
+    (edgeId: string, number: string) => {
+      setEdges((eds) =>
+        eds.map((e) =>
+          e.id === edgeId ? { ...e, data: { ...(e.data ?? { cableTypeId: "" }), number } } : e,
+        ),
+      );
+    },
+    [setEdges],
+  );
+
+  // Set a cable's run length in meters (undefined clears it). Snapshot on focus.
+  const setCableLength = useCallback(
+    (edgeId: string, lengthMeters: number | undefined) => {
+      setEdges((eds) =>
+        eds.map((e) =>
+          e.id === edgeId
+            ? { ...e, data: { ...(e.data ?? { cableTypeId: "" }), lengthMeters } }
+            : e,
+        ),
+      );
+    },
+    [setEdges],
+  );
+
+  // Re-sequence every cable's ID by signal group (VID-001, VID-002, AUD-001…).
+  const renumberAll = useCallback(() => {
+    takeSnapshot();
+    setEdges((eds) => renumberCables(eds, nodesRef.current));
+  }, [setEdges, takeSnapshot]);
+
   // Reflect the resolved theme on <html> so the token system swaps.
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
@@ -713,40 +761,57 @@ function AppInner() {
   // Undo/Redo, like New/Open/Save, are owned by the native menu accelerators
   // (⌘Z / ⌘⇧Z) and arrive as menu:undo / menu:redo events below.
 
-  // Menu commands arrive as events emitted to this (focused) window from Rust.
-  useEffect(() => {
-    const unlisteners = [
-      listen("menu:open", () => void handleOpen()),
-      listen("menu:save", () => void handleSave()),
-      listen("menu:saveAs", () => void handleSaveAs()),
-      listen<ExportKind>("menu:export", (e) => void handleExport(e.payload)),
-      listen("menu:undo", () => undo()),
-      listen("menu:redo", () => redo()),
-      listen("menu:insertDevice", () => setAddSurface("palette")),
-      listen("menu:insertZone", () => addZoneToCanvas()),
-      listen("menu:insertNote", () => addNoteToCanvas()),
-      listen("menu:fitView", () => handleFit()),
-      listen("menu:zoomZone", () => handleZoomToZone()),
-      listen<"system" | "light" | "dark">("menu:theme", (e) => applyTheme(e.payload)),
-      listen("menu:arrange", () => handleArrange()),
-    ];
-    return () => {
-      unlisteners.forEach((p) => p.then((un) => un()));
-    };
-  }, [
-    handleOpen,
-    handleSave,
-    handleSaveAs,
-    handleExport,
+  // Latest menu handlers, read live through a ref so the listener effect can
+  // register exactly once. If the effect instead depended on these callbacks,
+  // it would re-run on every edit (handleExport → lists → nodes/edges) and —
+  // because Tauri's listen()/unlisten are async — leak duplicate listeners, so
+  // one menu command fires N times (e.g. "Insert Zone" spawning several zones).
+  const menuActions = {
+    open: handleOpen,
+    save: handleSave,
+    saveAs: handleSaveAs,
+    export: handleExport,
     undo,
     redo,
-    addZoneToCanvas,
-    addNoteToCanvas,
-    handleFit,
-    handleZoomToZone,
-    applyTheme,
-    handleArrange,
-  ]);
+    insertDevice: () => setAddSurface("palette"),
+    insertZone: addZoneToCanvas,
+    insertNote: addNoteToCanvas,
+    fitView: handleFit,
+    zoomZone: handleZoomToZone,
+    theme: applyTheme,
+    arrange: handleArrange,
+  };
+  const menuActionsRef = useRef(menuActions);
+  menuActionsRef.current = menuActions;
+
+  // Menu commands arrive as events emitted to this (focused) window from Rust.
+  // Registered once; `track` makes the async (un)listen leak-proof under React
+  // StrictMode's mount→unmount→mount — if cleanup runs before listen() resolves,
+  // the resolved unlisten fires immediately instead of being stranded.
+  useEffect(() => {
+    let disposed = false;
+    const cleanups: Array<() => void> = [];
+    const track = (p: Promise<() => void>) => {
+      void p.then((un) => (disposed ? un() : cleanups.push(un)));
+    };
+    track(listen("menu:open", () => void menuActionsRef.current.open()));
+    track(listen("menu:save", () => void menuActionsRef.current.save()));
+    track(listen("menu:saveAs", () => void menuActionsRef.current.saveAs()));
+    track(listen<ExportKind>("menu:export", (e) => void menuActionsRef.current.export(e.payload)));
+    track(listen("menu:undo", () => menuActionsRef.current.undo()));
+    track(listen("menu:redo", () => menuActionsRef.current.redo()));
+    track(listen("menu:insertDevice", () => menuActionsRef.current.insertDevice()));
+    track(listen("menu:insertZone", () => menuActionsRef.current.insertZone()));
+    track(listen("menu:insertNote", () => menuActionsRef.current.insertNote()));
+    track(listen("menu:fitView", () => menuActionsRef.current.fitView()));
+    track(listen("menu:zoomZone", () => menuActionsRef.current.zoomZone()));
+    track(listen<"system" | "light" | "dark">("menu:theme", (e) => menuActionsRef.current.theme(e.payload)));
+    track(listen("menu:arrange", () => menuActionsRef.current.arrange()));
+    return () => {
+      disposed = true;
+      cleanups.forEach((un) => un());
+    };
+  }, []);
 
   // On launch, do what this window was created for: load a file, or (the
   // no-windows ⌘O case) show the open dialog and load into this same window.
@@ -766,6 +831,23 @@ function AppInner() {
         }
       } catch (err) {
         setStatus(`Open failed: ${String(err)}`);
+      }
+    })();
+  }, []);
+
+  // Pull community-catalog updates on launch: a cached snapshot supersedes the
+  // bundled one immediately; then a (non-blocking) network check applies a newer
+  // one if the catalog source is configured. Toast only on an actual update.
+  useEffect(() => {
+    void (async () => {
+      await hydrateCatalogFromCache();
+      try {
+        const r = await checkForCatalogUpdate();
+        if (r.status === "updated") {
+          setAddToast(`Community catalog updated · rev ${r.rev} · ${r.count} devices`);
+        }
+      } catch {
+        /* sync is best-effort — the bundled/cached catalog still works offline */
       }
     })();
   }, []);
@@ -940,6 +1022,44 @@ function AppInner() {
                 {selection.cables.length} cable{selection.cables.length === 1 ? "" : "s"} selected
               </span>
               <span className="contextbar__sep" />
+              {selectedCable && (
+                <>
+                  <label
+                    className="contextbar__title"
+                    style={{ display: "inline-flex", alignItems: "center", gap: 6, fontWeight: 400 }}
+                  >
+                    ID
+                    <input
+                      value={selectedCable.edge.data?.number ?? ""}
+                      placeholder="VID-001"
+                      onFocus={() => takeSnapshot()}
+                      onChange={(e) => setCableId(selectedCable.edge.id, e.target.value)}
+                      style={{ width: 92 }}
+                    />
+                  </label>
+                  <label
+                    className="contextbar__title"
+                    style={{ display: "inline-flex", alignItems: "center", gap: 6, fontWeight: 400 }}
+                  >
+                    Length
+                    <input
+                      type="number"
+                      min={0}
+                      step="0.1"
+                      value={selectedCable.edge.data?.lengthMeters ?? ""}
+                      onFocus={() => takeSnapshot()}
+                      onChange={(e) =>
+                        setCableLength(
+                          selectedCable.edge.id,
+                          e.target.value === "" ? undefined : Number(e.target.value),
+                        )
+                      }
+                      style={{ width: 60 }}
+                    />
+                    m
+                  </label>
+                </>
+              )}
               {selectedCable &&
                 (selectedCable.comboOptions ? (
                   <label
@@ -1026,7 +1146,13 @@ function AppInner() {
               </ReactFlow>
             </NoteActionsContext.Provider>
           </ZoneActionsContext.Provider>
-          {listsOpen && <ListsPanel lists={lists} onClose={() => setListsOpen(false)} />}
+          {listsOpen && (
+            <ListsPanel
+              lists={lists}
+              onClose={() => setListsOpen(false)}
+              onRenumber={renumberAll}
+            />
+          )}
           {validationOpen && (
             <ValidationPanel
               result={validation}

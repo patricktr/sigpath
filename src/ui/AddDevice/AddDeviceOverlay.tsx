@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import type { DeviceModel } from "../../schema";
 import { loadCatalog, type AddSurface } from "./addDevice";
+import { subscribeCommunityModels } from "../../library/communityLibrary";
 import { loadFavorites, loadRecents, pushRecent, saveFavorites } from "../../library/userPrefs";
 import { QuickSwitcher } from "./QuickSwitcher";
 import { EquipmentDatabase } from "./EquipmentDatabase";
@@ -44,6 +45,9 @@ export function AddDeviceOverlay({ surface, onSurface, onPlace, onClose }: Props
   );
 
   const refreshCatalog = useCallback(() => setCatalog(loadCatalog()), []);
+
+  // Re-read the catalog when a background sync swaps in a newer snapshot.
+  useEffect(() => subscribeCommunityModels(refreshCatalog), [refreshCatalog]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {

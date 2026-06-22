@@ -106,6 +106,35 @@
 .patch-port {
   color: #94a3b8;
 }
+.patch-id {
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 11px;
+  color: #475569;
+  white-space: nowrap;
+}
+
+.lists-section__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+.lists-section__head h3 {
+  margin: 0 0 8px;
+}
+.lists-section__action {
+  border: 1px solid #cbd5e1;
+  background: #f8fafc;
+  color: #475569;
+  border-radius: 6px;
+  padding: 2px 9px;
+  font: inherit;
+  font-size: 11px;
+  cursor: pointer;
+}
+.lists-section__action:hover {
+  background: #eef2f7;
+}
 
 [data-theme="dark"] .lists-panel {
   background: #131c2e;
@@ -126,4 +155,15 @@
 }
 [data-theme="dark"] .patchlist td {
   border-bottom-color: #1e293b;
+}
+[data-theme="dark"] .patch-id {
+  color: #94a3b8;
+}
+[data-theme="dark"] .lists-section__action {
+  background: #1e293b;
+  border-color: #334155;
+  color: #cbd5e1;
+}
+[data-theme="dark"] .lists-section__action:hover {
+  background: #25304a;
 }

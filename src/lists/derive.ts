@@ -8,6 +8,10 @@ export type PacklistCable = { id: string; label: string; color: string; count: n
 /** One connection, port-to-port. */
 export type PatchRow = {
   id: string;
+  /** Human cable ID, e.g. "VID-001" (blank until numbered). */
+  cableId: string;
+  /** Run length in meters, if recorded. */
+  length?: number;
   fromDevice: string;
   fromPort: string;
   toDevice: string;
@@ -117,6 +121,8 @@ export function deriveLists(nodes: SigNode[], edges: CableEdgeType[]): DerivedLi
     }
     return {
       id: e.id,
+      cableId: e.data?.number ?? "",
+      length: e.data?.lengthMeters,
       fromDevice: src ? deviceTitle(src.data.model, src.data.label) : "—",
       fromPort: out?.name ?? e.sourceHandle ?? "",
       toDevice: tgt ? deviceTitle(tgt.data.model, tgt.data.label) : "—",
