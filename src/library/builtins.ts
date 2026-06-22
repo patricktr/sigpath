@@ -16,7 +16,7 @@ export const appleTv: DeviceModel = {
   type: "Media source",
   source: "builtin",
   ports: [
-    { id: "hdmi", name: "HDMI", direction: "output", connector: "hdmi" },
+    { id: "hdmi", name: "HDMI", direction: "output", connector: "hdmi", grade: "hdmi-2.1" },
     // Apple TV's inlet is a figure-8 (IEC C7/C8), not a wall plug.
     { id: "power", name: "Power", direction: "input", connector: "iec-c7" },
   ],

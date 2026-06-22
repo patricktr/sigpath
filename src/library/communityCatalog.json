@@ -11,56 +11,64 @@
         "name": "SDI In 1",
         "direction": "input",
         "connector": "bnc",
-        "note": "3G-SDI"
+        "note": "3G-SDI",
+        "grade": "sdi-3g"
       },
       {
         "id": "sdi-in-2",
         "name": "SDI In 2",
         "direction": "input",
         "connector": "bnc",
-        "note": "3G-SDI"
+        "note": "3G-SDI",
+        "grade": "sdi-3g"
       },
       {
         "id": "sdi-in-3",
         "name": "SDI In 3",
         "direction": "input",
         "connector": "bnc",
-        "note": "3G-SDI"
+        "note": "3G-SDI",
+        "grade": "sdi-3g"
       },
       {
         "id": "sdi-in-4",
         "name": "SDI In 4",
         "direction": "input",
         "connector": "bnc",
-        "note": "3G-SDI"
+        "note": "3G-SDI",
+        "grade": "sdi-3g"
       },
       {
         "id": "sdi-out-1",
         "name": "SDI Out 1",
         "direction": "output",
         "connector": "bnc",
-        "note": "3G-SDI"
+        "note": "3G-SDI",
+        "grade": "sdi-3g"
       },
       {
         "id": "sdi-out-2",
         "name": "SDI Out 2",
         "direction": "output",
         "connector": "bnc",
-        "note": "3G-SDI"
+        "note": "3G-SDI",
+        "grade": "sdi-3g"
       },
       {
         "id": "sdi-out-3",
         "name": "SDI Out 3",
         "direction": "output",
         "connector": "bnc",
-        "note": "3G-SDI"
+        "note": "3G-SDI",
+        "grade": "sdi-3g"
       },
       {
         "id": "sdi-out-4",
         "name": "SDI Out 4",
         "direction": "output",
         "connector": "bnc",
-        "note": "3G-SDI"
+        "note": "3G-SDI",
+        "grade": "sdi-3g"
       },
       {
         "id": "fiber-in-1",
@@ -123,14 +131,16 @@
         "name": "HDMI In",
         "direction": "input",
         "connector": "hdmi",
-        "note": "HDMI 2.0 Type A; 8-ch embedded audio"
+        "note": "HDMI 2.0 Type A; 8-ch embedded audio",
+        "grade": "hdmi-2.0"
       },
       {
         "id": "hdmi-out",
         "name": "HDMI Out",
         "direction": "output",
         "connector": "hdmi",
-        "note": "HDMI 2.0 Type A; 8-ch embedded audio"
+        "note": "HDMI 2.0 Type A; 8-ch embedded audio",
+        "grade": "hdmi-2.0"
       },
       {
         "id": "aes-ebu-audio",
@@ -228,7 +238,7 @@
     "sourceUrl": "https://www.aja.com/products/ki-pro-ultra-plus",
     "source": "community",
     "rev": 1,
-    "contentHash": "9f93172d"
+    "contentHash": "01bde10d"
   },
   {
     "id": "akg/akg-c414-xlii",
@@ -248,7 +258,7 @@
     "sourceUrl": "https://www.manua.ls/akg/c414-xlii/manual",
     "source": "community",
     "rev": 1,
-    "contentHash": "72da3560"
+    "contentHash": "533dac70"
   },
   {
     "id": "apple/tv-4k",
@@ -266,7 +276,7 @@
     ],
     "source": "community",
     "rev": 1,
-    "contentHash": "58c47e7e"
+    "contentHash": "8f9f407c"
   },
   {
     "id": "atlona/at-hd4-v41",
@@ -318,7 +328,8 @@
         "name": "LAN",
         "direction": "bidirectional",
         "connector": "rj45",
-        "note": "100 Mbps Ethernet for HEC-capable devices"
+        "note": "100 Mbps Ethernet for HEC-capable devices",
+        "grade": "eth-100m"
       },
       {
         "id": "rs-232",
@@ -345,7 +356,7 @@
     "sourceUrl": "https://www.manualslib.com/manual/748028/Atlona-At-Hd4-V41.html?page=7",
     "source": "community",
     "rev": 1,
-    "contentHash": "fc3d18a5"
+    "contentHash": "923e754b"
   },
   {
     "id": "audio-technica/audio-technica-at2020",
@@ -365,7 +376,7 @@
     "sourceUrl": "https://www.audio-technica.com/en/at2020",
     "source": "community",
     "rev": 1,
-    "contentHash": "1ab27ceb"
+    "contentHash": "2ded2ffb"
   },
   {
     "id": "barco/clickshare-cx-50",
@@ -379,49 +390,56 @@
         "name": "HDMI Output",
         "direction": "output",
         "connector": "hdmi",
-        "note": "HDMI 1.4b, 4K UHD (3840x2160) @ 30Hz"
+        "note": "HDMI 1.4b, 4K UHD (3840x2160) @ 30Hz",
+        "grade": "hdmi-1.4"
       },
       {
         "id": "hdmi-input",
         "name": "HDMI Input",
         "direction": "input",
         "connector": "hdmi",
-        "note": "HDMI 1.4b, up to 1920x1080 @ 30Hz"
+        "note": "HDMI 1.4b, up to 1920x1080 @ 30Hz",
+        "grade": "hdmi-1.4"
       },
       {
         "id": "usb-c-rear",
         "name": "USB-C (Rear)",
         "direction": "bidirectional",
         "connector": "usb-c",
-        "note": "USB 2.0, rear panel; for USB peripherals/cameras"
+        "note": "USB 2.0, rear panel; for USB peripherals/cameras",
+        "grade": "usb-2.0"
       },
       {
         "id": "usb-a-1-rear",
         "name": "USB-A 1 (Rear)",
         "direction": "bidirectional",
         "connector": "usb-a",
-        "note": "USB 2.0, rear panel"
+        "note": "USB 2.0, rear panel",
+        "grade": "usb-2.0"
       },
       {
         "id": "usb-a-2-rear",
         "name": "USB-A 2 (Rear)",
         "direction": "bidirectional",
         "connector": "usb-a",
-        "note": "USB 2.0, rear panel"
+        "note": "USB 2.0, rear panel",
+        "grade": "usb-2.0"
       },
       {
         "id": "usb-a-front",
         "name": "USB-A (Front)",
         "direction": "bidirectional",
         "connector": "usb-a",
-        "note": "USB 2.0, front panel; for ClickShare Button"
+        "note": "USB 2.0, front panel; for ClickShare Button",
+        "grade": "usb-2.0"
       },
       {
         "id": "ethernet-lan",
         "name": "Ethernet LAN",
         "direction": "bidirectional",
         "connector": "rj45",
-        "note": "1 Gbit Ethernet"
+        "note": "1 Gbit Ethernet",
+        "grade": "eth-1g"
       },
       {
         "id": "audio-line-out-analog",
@@ -448,7 +466,7 @@
     "sourceUrl": "https://www.manualslib.com/manual/1797802/Barco-Cx-50.html",
     "source": "community",
     "rev": 1,
-    "contentHash": "9bebe167"
+    "contentHash": "c3e4cc77"
   },
   {
     "id": "belden-hirschmann/hirschmann-spider-8tx",
@@ -462,56 +480,64 @@
         "name": "Port 1",
         "direction": "bidirectional",
         "connector": "rj45",
-        "note": "10/100BASE-TX, auto-negotiation, auto-polarity, autocrossing"
+        "note": "10/100BASE-TX, auto-negotiation, auto-polarity, autocrossing",
+        "grade": "eth-100m"
       },
       {
         "id": "port-2",
         "name": "Port 2",
         "direction": "bidirectional",
         "connector": "rj45",
-        "note": "10/100BASE-TX, auto-negotiation, auto-polarity, autocrossing"
+        "note": "10/100BASE-TX, auto-negotiation, auto-polarity, autocrossing",
+        "grade": "eth-100m"
       },
       {
         "id": "port-3",
         "name": "Port 3",
         "direction": "bidirectional",
         "connector": "rj45",
-        "note": "10/100BASE-TX, auto-negotiation, auto-polarity, autocrossing"
+        "note": "10/100BASE-TX, auto-negotiation, auto-polarity, autocrossing",
+        "grade": "eth-100m"
       },
       {
         "id": "port-4",
         "name": "Port 4",
         "direction": "bidirectional",
         "connector": "rj45",
-        "note": "10/100BASE-TX, auto-negotiation, auto-polarity, autocrossing"
+        "note": "10/100BASE-TX, auto-negotiation, auto-polarity, autocrossing",
+        "grade": "eth-100m"
       },
       {
         "id": "port-5",
         "name": "Port 5",
         "direction": "bidirectional",
         "connector": "rj45",
-        "note": "10/100BASE-TX, auto-negotiation, auto-polarity, autocrossing"
+        "note": "10/100BASE-TX, auto-negotiation, auto-polarity, autocrossing",
+        "grade": "eth-100m"
       },
       {
         "id": "port-6",
         "name": "Port 6",
         "direction": "bidirectional",
         "connector": "rj45",
-        "note": "10/100BASE-TX, auto-negotiation, auto-polarity, autocrossing"
+        "note": "10/100BASE-TX, auto-negotiation, auto-polarity, autocrossing",
+        "grade": "eth-100m"
       },
       {
         "id": "port-7",
         "name": "Port 7",
         "direction": "bidirectional",
         "connector": "rj45",
-        "note": "10/100BASE-TX, auto-negotiation, auto-polarity, autocrossing"
+        "note": "10/100BASE-TX, auto-negotiation, auto-polarity, autocrossing",
+        "grade": "eth-100m"
       },
       {
         "id": "port-8",
         "name": "Port 8",
         "direction": "bidirectional",
         "connector": "rj45",
-        "note": "10/100BASE-TX, auto-negotiation, auto-polarity, autocrossing"
+        "note": "10/100BASE-TX, auto-negotiation, auto-polarity, autocrossing",
+        "grade": "eth-100m"
       },
       {
         "id": "dc-in",
@@ -524,7 +550,7 @@
     "sourceUrl": "https://www.doc.hirschmann.com/pdf/IG_SPIDER_I_05_0618_en_2018-06-22.pdf",
     "source": "community",
     "rev": 1,
-    "contentHash": "f9197c71"
+    "contentHash": "ee7957ef"
   },
   {
     "id": "benq/benq-rp6503",
@@ -538,35 +564,40 @@
         "name": "HDMI In 1",
         "direction": "input",
         "connector": "hdmi",
-        "note": "Rear panel, HDMI 2.0"
+        "note": "Rear panel, HDMI 2.0",
+        "grade": "hdmi-2.0"
       },
       {
         "id": "hdmi-in-2",
         "name": "HDMI In 2",
         "direction": "input",
         "connector": "hdmi",
-        "note": "Rear panel, HDMI 2.0"
+        "note": "Rear panel, HDMI 2.0",
+        "grade": "hdmi-2.0"
       },
       {
         "id": "hdmi-in-3",
         "name": "HDMI In 3",
         "direction": "input",
         "connector": "hdmi",
-        "note": "Front panel, HDMI 2.0"
+        "note": "Front panel, HDMI 2.0",
+        "grade": "hdmi-2.0"
       },
       {
         "id": "hdmi-out",
         "name": "HDMI Out",
         "direction": "output",
         "connector": "hdmi",
-        "note": "Rear panel, HDMI 2.0, 4K@60Hz with audio"
+        "note": "Rear panel, HDMI 2.0, 4K@60Hz with audio",
+        "grade": "hdmi-2.0"
       },
       {
         "id": "displayport-in",
         "name": "DisplayPort In",
         "direction": "input",
         "connector": "dp",
-        "note": "Rear panel, DisplayPort 1.2a"
+        "note": "Rear panel, DisplayPort 1.2a",
+        "grade": "dp-1.2"
       },
       {
         "id": "vga-in",
@@ -608,98 +639,112 @@
         "name": "USB-A 1",
         "direction": "bidirectional",
         "connector": "usb-a",
-        "note": "USB 2.0"
+        "note": "USB 2.0",
+        "grade": "usb-2.0"
       },
       {
         "id": "usb-a-2",
         "name": "USB-A 2",
         "direction": "bidirectional",
         "connector": "usb-a",
-        "note": "USB 2.0"
+        "note": "USB 2.0",
+        "grade": "usb-2.0"
       },
       {
         "id": "usb-a-3",
         "name": "USB-A 3",
         "direction": "bidirectional",
         "connector": "usb-a",
-        "note": "USB 3.2 Gen 1"
+        "note": "USB 3.2 Gen 1",
+        "grade": "usb-5g"
       },
       {
         "id": "usb-a-4",
         "name": "USB-A 4",
         "direction": "bidirectional",
         "connector": "usb-a",
-        "note": "USB 3.2 Gen 1"
+        "note": "USB 3.2 Gen 1",
+        "grade": "usb-5g"
       },
       {
         "id": "usb-a-5",
         "name": "USB-A 5",
         "direction": "bidirectional",
         "connector": "usb-a",
-        "note": "USB 3.2 Gen 1"
+        "note": "USB 3.2 Gen 1",
+        "grade": "usb-5g"
       },
       {
         "id": "usb-a-6",
         "name": "USB-A 6",
         "direction": "bidirectional",
         "connector": "usb-a",
-        "note": "USB 3.2 Gen 1"
+        "note": "USB 3.2 Gen 1",
+        "grade": "usb-5g"
       },
       {
         "id": "usb-a-7",
         "name": "USB-A 7",
         "direction": "bidirectional",
         "connector": "usb-a",
-        "note": "USB 3.2 Gen 1; front panel"
+        "note": "USB 3.2 Gen 1; front panel",
+        "grade": "usb-5g"
       },
       {
         "id": "usb-b-1",
         "name": "USB-B 1",
         "direction": "input",
         "connector": "usb-b",
-        "note": "USB 3.0, touch connection to host PC for rear HDMI inputs"
+        "note": "USB 3.0, touch connection to host PC for rear HDMI inputs",
+        "grade": "usb-5g"
       },
       {
         "id": "usb-b-2",
         "name": "USB-B 2",
         "direction": "input",
         "connector": "usb-b",
-        "note": "USB 3.0, touch connection to host PC"
+        "note": "USB 3.0, touch connection to host PC",
+        "grade": "usb-5g"
       },
       {
         "id": "usb-b-3",
         "name": "USB-B 3",
         "direction": "input",
         "connector": "usb-b",
-        "note": "USB 3.0, touch connection to host PC for front HDMI input"
+        "note": "USB 3.0, touch connection to host PC for front HDMI input",
+        "grade": "usb-5g"
       },
       {
         "id": "usb-c-1",
         "name": "USB-C 1",
         "direction": "bidirectional",
         "connector": "usb-c",
-        "note": "USB 3.0, front panel; supports display input and USB hub"
+        "note": "USB 3.0, front panel; supports display input and USB hub",
+        "grade": "usb-5g"
       },
       {
         "id": "usb-c-2",
         "name": "USB-C 2",
         "direction": "bidirectional",
         "connector": "usb-c",
-        "note": "USB 3.0 with Power Delivery 65W; rear panel"
+        "note": "USB 3.0 with Power Delivery 65W; rear panel",
+        "grade": "usb-5g"
       },
       {
         "id": "lan-1-android",
         "name": "LAN 1 (Android)",
         "direction": "bidirectional",
         "connector": "rj45",
-        "note": "10/100/1000 Mbps, for built-in Android OS"
+        "note": "10/100/1000 Mbps, for built-in Android OS",
+        "grade": "eth-1g"
       },
       {
         "id": "lan-2-ops",
         "name": "LAN 2 (OPS)",
         "direction": "bidirectional",
         "connector": "rj45",
-        "note": "10/100/1000 Mbps, for optional OPS slot-in PC"
+        "note": "10/100/1000 Mbps, for optional OPS slot-in PC",
+        "grade": "eth-1g"
       },
       {
         "id": "rs232",
@@ -719,7 +764,7 @@
     "sourceUrl": "https://www.benq.com/en-me/business/ifp/rp6503/specifications.html",
     "source": "community",
     "rev": 1,
-    "contentHash": "1b95968e"
+    "contentHash": "83f9be6c"
   },
   {
     "id": "blackmagic-design/atem-1-m-e-constellation-hd",
@@ -876,14 +921,16 @@
         "name": "Ethernet",
         "direction": "bidirectional",
         "connector": "rj45",
-        "note": "10/100/1000 Base-T — control / network"
+        "note": "10/100/1000 Base-T — control / network",
+        "grade": "eth-1g"
       },
       {
         "id": "usb-c",
         "name": "USB-C",
         "direction": "bidirectional",
         "connector": "usb-c",
-        "note": "USB 3.1 Gen 1 — webcam out / control software"
+        "note": "USB 3.1 Gen 1 — webcam out / control software",
+        "grade": "usb-5g"
       },
       {
         "id": "power-in",
@@ -896,7 +943,7 @@
     "rackUnits": 1,
     "source": "community",
     "rev": 1,
-    "contentHash": "a5abd56d"
+    "contentHash": "81172830"
   },
   {
     "id": "blackmagic-design/atem-2-m-e-constellation-hd",
@@ -1161,14 +1208,16 @@
         "name": "Ethernet",
         "direction": "bidirectional",
         "connector": "rj45",
-        "note": "10/100/1000 Base-T — control / network"
+        "note": "10/100/1000 Base-T — control / network",
+        "grade": "eth-1g"
       },
       {
         "id": "usb-c",
         "name": "USB-C",
         "direction": "bidirectional",
         "connector": "usb-c",
-        "note": "USB 2.0 — webcam out / control software"
+        "note": "USB 2.0 — webcam out / control software",
+        "grade": "usb-2.0"
       },
       {
         "id": "power-in",
@@ -1181,7 +1230,7 @@
     "rackUnits": 1,
     "source": "community",
     "rev": 1,
-    "contentHash": "9fccbf26"
+    "contentHash": "adb6715d"
   },
   {
     "id": "blackmagic-design/atem-4-m-e-broadcast-studio-4k",
@@ -1333,7 +1382,8 @@
         "name": "Program Out (Down-Conv)",
         "direction": "output",
         "connector": "sdi",
-        "note": "HD-SDI down-converted program output"
+        "note": "HD-SDI down-converted program output",
+        "grade": "sdi-hd"
       },
       {
         "id": "preview-out",
@@ -1479,14 +1529,16 @@
         "name": "Ethernet",
         "direction": "bidirectional",
         "connector": "rj45",
-        "note": "10/100/1000 Base-T — control / network"
+        "note": "10/100/1000 Base-T — control / network",
+        "grade": "eth-1g"
       },
       {
         "id": "usb",
         "name": "USB",
         "direction": "bidirectional",
         "connector": "usb-b",
-        "note": "USB 2.0 Type-B — firmware / utility"
+        "note": "USB 2.0 Type-B — firmware / utility",
+        "grade": "usb-2.0"
       },
       {
         "id": "power-in-1",
@@ -1506,7 +1558,7 @@
     "rackUnits": 2,
     "source": "community",
     "rev": 1,
-    "contentHash": "0ece7608"
+    "contentHash": "5186cfd4"
   },
   {
     "id": "blackmagic-design/atem-4-m-e-constellation-hd",
@@ -2022,14 +2074,16 @@
         "name": "Ethernet",
         "direction": "bidirectional",
         "connector": "rj45",
-        "note": "10/100/1000 Base-T — control / network"
+        "note": "10/100/1000 Base-T — control / network",
+        "grade": "eth-1g"
       },
       {
         "id": "usb-c",
         "name": "USB-C",
         "direction": "bidirectional",
         "connector": "usb-c",
-        "note": "USB 3.1 Gen 1 — webcam out / control software"
+        "note": "USB 3.1 Gen 1 — webcam out / control software",
+        "grade": "usb-5g"
       },
       {
         "id": "rs-422",
@@ -2056,7 +2110,7 @@
     "rackUnits": 2,
     "source": "community",
     "rev": 1,
-    "contentHash": "42399048"
+    "contentHash": "7d431637"
   },
   {
     "id": "blackmagic-design/atem-mini-pro",
@@ -2131,7 +2185,7 @@
     "sourceUrl": "https://www.blackmagicdesign.com/products/atemmini/techspecs",
     "source": "community",
     "rev": 1,
-    "contentHash": "ddd6eb3d"
+    "contentHash": "dac32d07"
   },
   {
     "id": "blackmagic-design/atem-television-studio-4k8",
@@ -2265,7 +2319,8 @@
         "name": "Multi-View Out (HDMI)",
         "direction": "output",
         "connector": "hdmi",
-        "note": "HDMI 2.0 Type-A"
+        "note": "HDMI 2.0 Type-A",
+        "grade": "hdmi-2.0"
       },
       {
         "id": "ref-in",
@@ -2382,28 +2437,32 @@
         "name": "Network Switch 1",
         "direction": "bidirectional",
         "connector": "rj45",
-        "note": "Internal 10/100/1000/10G BASE-T switch"
+        "note": "Internal 10/100/1000/10G BASE-T switch",
+        "grade": "eth-10g"
       },
       {
         "id": "network-switch-2",
         "name": "Network Switch 2",
         "direction": "bidirectional",
         "connector": "rj45",
-        "note": "Internal 10/100/1000/10G BASE-T switch"
+        "note": "Internal 10/100/1000/10G BASE-T switch",
+        "grade": "eth-10g"
       },
       {
         "id": "network-switch-3",
         "name": "Network Switch 3",
         "direction": "bidirectional",
         "connector": "rj45",
-        "note": "Internal 10/100/1000/10G BASE-T switch"
+        "note": "Internal 10/100/1000/10G BASE-T switch",
+        "grade": "eth-10g"
       },
       {
         "id": "network-switch-4",
         "name": "Network Switch 4",
         "direction": "bidirectional",
         "connector": "rj45",
-        "note": "Internal 10/100/1000/10G BASE-T switch"
+        "note": "Internal 10/100/1000/10G BASE-T switch",
+        "grade": "eth-10g"
       },
       {
         "id": "usb-c-1",
@@ -2443,7 +2502,7 @@
     ],
     "source": "community",
     "rev": 1,
-    "contentHash": "abf8c3a4"
+    "contentHash": "dc6730a5"
   },
   {
     "id": "blackmagic-design/atem-television-studio-hd8-iso",
@@ -2701,28 +2760,32 @@
         "name": "Network Switch 1",
         "direction": "bidirectional",
         "connector": "rj45",
-        "note": "Internal 10/100/1000 BASE-T switch"
+        "note": "Internal 10/100/1000 BASE-T switch",
+        "grade": "eth-1g"
       },
       {
         "id": "network-switch-2",
         "name": "Network Switch 2",
         "direction": "bidirectional",
         "connector": "rj45",
-        "note": "Internal 10/100/1000 BASE-T switch"
+        "note": "Internal 10/100/1000 BASE-T switch",
+        "grade": "eth-1g"
       },
       {
         "id": "network-switch-3",
         "name": "Network Switch 3",
         "direction": "bidirectional",
         "connector": "rj45",
-        "note": "Internal 10/100/1000 BASE-T switch"
+        "note": "Internal 10/100/1000 BASE-T switch",
+        "grade": "eth-1g"
       },
       {
         "id": "network-switch-4",
         "name": "Network Switch 4",
         "direction": "bidirectional",
         "connector": "rj45",
-        "note": "Internal 10/100/1000 BASE-T switch"
+        "note": "Internal 10/100/1000 BASE-T switch",
+        "grade": "eth-1g"
       },
       {
         "id": "usb-c-1",
@@ -2762,7 +2825,7 @@
     ],
     "source": "community",
     "rev": 1,
-    "contentHash": "23f3c045"
+    "contentHash": "76d3273b"
   },
   {
     "id": "blackmagic-design/hyperdeck-studio-hd-plus",
@@ -2776,7 +2839,8 @@
         "name": "SDI Input",
         "direction": "input",
         "connector": "bnc",
-        "note": "1x SDI; supports 270Mb, 1.5G, 3G, 6G; 16 channels embedded audio"
+        "note": "1x SDI; supports 270Mb, 1.5G, 3G, 6G; 16 channels embedded audio",
+        "grade": "sdi-6g"
       },
       {
         "id": "sdi-output-1",
@@ -2804,14 +2868,16 @@
         "name": "HDMI Input",
         "direction": "input",
         "connector": "hdmi",
-        "note": "HDMI 2.0; 8 channels embedded audio"
+        "note": "HDMI 2.0; 8 channels embedded audio",
+        "grade": "hdmi-2.0"
       },
       {
         "id": "hdmi-output",
         "name": "HDMI Output",
         "direction": "output",
         "connector": "hdmi",
-        "note": "HDMI 2.0; 8 channels embedded audio"
+        "note": "HDMI 2.0; 8 channels embedded audio",
+        "grade": "hdmi-2.0"
       },
       {
         "id": "timecode-input",
@@ -2860,14 +2926,16 @@
         "name": "Ethernet",
         "direction": "bidirectional",
         "connector": "rj45",
-        "note": "1 Gb/s Ethernet for network control and streaming"
+        "note": "1 Gb/s Ethernet for network control and streaming",
+        "grade": "eth-1g"
       },
       {
         "id": "usb-c",
         "name": "USB-C",
         "direction": "bidirectional",
         "connector": "usb-c",
-        "note": "USB 3.0 Type-C, up to 5 Gb/s; external media recording/expansion"
+        "note": "USB 3.0 Type-C, up to 5 Gb/s; external media recording/expansion",
+        "grade": "usb-5g"
       },
       {
         "id": "headphone",
@@ -2888,7 +2956,7 @@
     "sourceUrl": "https://www.blackmagicdesign.com/products/hyperdeckstudio/techspecs/W-HYD-12",
     "source": "community",
     "rev": 1,
-    "contentHash": "7c638aee"
+    "contentHash": "105c8b4b"
   },
   {
     "id": "blackmagic-design/mini-converter-sdi-to-hdmi-6g",
@@ -2902,7 +2970,8 @@
         "name": "SDI In",
         "direction": "input",
         "connector": "sdi",
-        "note": "Up to 6G-SDI"
+        "note": "Up to 6G-SDI",
+        "grade": "sdi-6g"
       },
       {
         "id": "sdi-loop-out",
@@ -2926,7 +2995,7 @@
     "sourceUrl": "https://www.blackmagicdesign.com/products/miniconverters/techspecs",
     "source": "community",
     "rev": 1,
-    "contentHash": "e83c1f9a"
+    "contentHash": "f841c9fc"
   },
   {
     "id": "cisco/catalyst-9200l-24p-4g",
@@ -2954,7 +3023,8 @@
         "name": "Management Ethernet",
         "direction": "bidirectional",
         "connector": "rj45",
-        "note": "Dedicated out-of-band management Gigabit Ethernet port"
+        "note": "Dedicated out-of-band management Gigabit Ethernet port",
+        "grade": "eth-1g"
       },
       {
         "id": "rj-45-console",
@@ -2989,7 +3059,7 @@
     "sourceUrl": "https://www.manualslib.com/manual/3005287/Cisco-Catalyst-9200-Series.html",
     "source": "community",
     "rev": 1,
-    "contentHash": "eee1fb43"
+    "contentHash": "8566e511"
   },
   {
     "id": "crestron/am-3200",
@@ -3038,28 +3108,32 @@
         "name": "LAN PoE+",
         "direction": "input",
         "connector": "rj45",
-        "note": "100Base-TX/1000Base-T; IEEE 802.3at Class 4 PoE+ powers the unit; primary network connection"
+        "note": "100Base-TX/1000Base-T; IEEE 802.3at Class 4 PoE+ powers the unit; primary network connection",
+        "grade": "eth-1g"
       },
       {
         "id": "lan-aux",
         "name": "LAN AUX",
         "direction": "bidirectional",
         "connector": "rj45",
-        "note": "100Base-TX/1000Base-T; secondary/auxiliary network port"
+        "note": "100Base-TX/1000Base-T; secondary/auxiliary network port",
+        "grade": "eth-1g"
       },
       {
         "id": "usb-type-a-x2",
         "name": "USB Type A (x2)",
         "direction": "bidirectional",
         "connector": "usb-a",
-        "note": "One USB 2.0 host and one USB 3.0 host port for peripherals"
+        "note": "One USB 2.0 host and one USB 3.0 host port for peripherals",
+        "grade": "usb-5g"
       },
       {
         "id": "usb-type-b",
         "name": "USB Type B",
         "direction": "input",
         "connector": "usb-b",
-        "note": "USB 3.0 device port; used as computer console connection"
+        "note": "USB 3.0 device port; used as computer console connection",
+        "grade": "usb-5g"
       },
       {
         "id": "power",
@@ -3072,7 +3146,7 @@
     "sourceUrl": "https://docs.crestron.com/en-us/9020/Content/Topics/QSG_to_PM/AM-3200%20Specs.htm",
     "source": "community",
     "rev": 1,
-    "contentHash": "4989f7b0"
+    "contentHash": "ab5988a0"
   },
   {
     "id": "crestron/cp4-r",
@@ -3086,7 +3160,8 @@
         "name": "LAN",
         "direction": "bidirectional",
         "connector": "rj45",
-        "note": "100BASE-TX/1000BASE-T Ethernet, 8-pin RJ-45 female"
+        "note": "100BASE-TX/1000BASE-T Ethernet, 8-pin RJ-45 female",
+        "grade": "eth-1g"
       },
       {
         "id": "com-1",
@@ -3156,14 +3231,16 @@
         "name": "USB (Rear)",
         "direction": "bidirectional",
         "connector": "usb-a",
-        "note": "USB 2.0 Type-A female; rear panel; for mass storage devices"
+        "note": "USB 2.0 Type-A female; rear panel; for mass storage devices",
+        "grade": "usb-2.0"
       },
       {
         "id": "usb-front",
         "name": "USB (Front)",
         "direction": "bidirectional",
         "connector": "usb-b",
-        "note": "USB 2.0 Type-B female; front panel; console/setup port"
+        "note": "USB 2.0 Type-B female; front panel; console/setup port",
+        "grade": "usb-2.0"
       },
       {
         "id": "power",
@@ -3177,7 +3254,7 @@
     "sourceUrl": "https://docs.crestron.com/en-us/8559/Content/Topics/Specifications/CP4-R-Specifications.htm",
     "source": "community",
     "rev": 1,
-    "contentHash": "45082220"
+    "contentHash": "c7f07582"
   },
   {
     "id": "crestron/dm-md8x8",
@@ -3303,7 +3380,8 @@
         "name": "LAN",
         "direction": "bidirectional",
         "connector": "rj45",
-        "note": "10Base-T/100Base-TX/1000Base-T Gigabit Ethernet"
+        "note": "10Base-T/100Base-TX/1000Base-T Gigabit Ethernet",
+        "grade": "eth-1g"
       },
       {
         "id": "computer-console",
@@ -3324,7 +3402,7 @@
     "sourceUrl": "https://www.manualslib.com/manual/660703/Crestron-8x8-Digitalmedia-Dm-Md8x8.html",
     "source": "community",
     "rev": 1,
-    "contentHash": "c162a768"
+    "contentHash": "73e59932"
   },
   {
     "id": "crestron/tsw-1070",
@@ -3338,27 +3416,30 @@
         "name": "LAN PoE",
         "direction": "bidirectional",
         "connector": "rj45",
-        "note": "8-pin RJ-45 female; 100BASE-TX Ethernet; IEEE 802.3at Type 2 PoE+ PD (receives power, 15–30 W depending on configuration); green and yellow status LEDs"
+        "note": "8-pin RJ-45 female; 100BASE-TX Ethernet; IEEE 802.3at Type 2 PoE+ PD (receives power, 15–30 W depending on configuration); green and yellow status LEDs",
+        "grade": "eth-100m"
       },
       {
         "id": "usb-1",
         "name": "USB 1",
         "direction": "bidirectional",
         "connector": "usb-a",
-        "note": "USB 2.0 host port; for optional room scheduling accessories (light bar, RFID card reader)"
+        "note": "USB 2.0 host port; for optional room scheduling accessories (light bar, RFID card reader)",
+        "grade": "usb-2.0"
       },
       {
         "id": "usb-2",
         "name": "USB 2",
         "direction": "bidirectional",
         "connector": "usb-a",
-        "note": "USB 2.0 host port; for optional room scheduling accessories; USB ports require PoE+ (802.3at Type 2) PSE to function"
+        "note": "USB 2.0 host port; for optional room scheduling accessories; USB ports require PoE+ (802.3at Type 2) PSE to function",
+        "grade": "usb-2.0"
       }
     ],
     "sourceUrl": "https://docs.crestron.com/en-us/8550/Content/Topics/Specifications/Specifications-TSW-1070.htm",
     "source": "community",
     "rev": 1,
-    "contentHash": "9563dfc4"
+    "contentHash": "a185ea8c"
   },
   {
     "id": "cyberpower/pdu15b2f12r",
@@ -3477,7 +3558,7 @@
     "sourceUrl": "https://www.cyberpowersystems.com/product/pdus/basic/pdu15b2f12r/",
     "source": "community",
     "rev": 1,
-    "contentHash": "1f8fe3ca"
+    "contentHash": "5ecd5b62"
   },
   {
     "id": "electro-voice/zlx-15p",
@@ -3531,7 +3612,7 @@
     "sourceUrl": "https://www.manualslib.com/manual/593410/Electro-Voice-Zlx-12p.html",
     "source": "community",
     "rev": 1,
-    "contentHash": "b79b838a"
+    "contentHash": "0012644e"
   },
   {
     "id": "elgato/game-capture-4k-x",
@@ -3559,7 +3640,8 @@
         "name": "USB-C (Data/Power)",
         "direction": "bidirectional",
         "connector": "usb-c",
-        "note": "USB 3.2 Gen 2 Type-C; connects to host computer and powers the device — no separate power supply"
+        "note": "USB 3.2 Gen 2 Type-C; connects to host computer and powers the device — no separate power supply",
+        "grade": "usb-10g"
       },
       {
         "id": "3-5mm-stereo-line-in",
@@ -3572,7 +3654,7 @@
     "sourceUrl": "https://www.elgato.com/us/en/p/game-capture-4k-x",
     "source": "community",
     "rev": 1,
-    "contentHash": "9036666a"
+    "contentHash": "104169a9"
   },
   {
     "id": "extron/dsc-301-hd",
@@ -3655,7 +3737,7 @@
     "sourceUrl": "https://creationnetworks.net/products/extron-dsc-301-hd-three-input-compact-hdcp-compliant-video-scaler",
     "source": "community",
     "rev": 1,
-    "contentHash": "931c803b"
+    "contentHash": "f4191397"
   },
   {
     "id": "extron/dxp-88-hdmi",
@@ -3779,7 +3861,8 @@
         "name": "LAN",
         "direction": "bidirectional",
         "connector": "rj45",
-        "note": "10/100Base-T, supports Telnet, HTTP, DHCP."
+        "note": "10/100Base-T, supports Telnet, HTTP, DHCP.",
+        "grade": "eth-100m"
       },
       {
         "id": "ac-in",
@@ -3793,7 +3876,7 @@
     "sourceUrl": "https://www.cinos.net/wp-content/uploads/resources/extron/matrix-switchers/cinos-extron-dxp-hdmi-series-specifications.pdf",
     "source": "community",
     "rev": 1,
-    "contentHash": "f868487b"
+    "contentHash": "0c677a65"
   },
   {
     "id": "focusrite/rednet-d16r-mkii",
@@ -3897,7 +3980,7 @@
     "sourceUrl": "https://us.focusrite.com/products/rednet-d16r-mkii",
     "source": "community",
     "rev": 1,
-    "contentHash": "97df6ea1"
+    "contentHash": "ba54ca35"
   },
   {
     "id": "focusrite/scarlett-2i2-4th-gen",
@@ -3962,7 +4045,7 @@
     "sourceUrl": "https://focusrite.com/products/scarlett-2i2",
     "source": "community",
     "rev": 1,
-    "contentHash": "33e97a45"
+    "contentHash": "8c8408a5"
   },
   {
     "id": "furman/furman-m-8x2",
@@ -3997,7 +4080,7 @@
     "sourceUrl": "https://furmanpower.com/products/m-8x2",
     "source": "community",
     "rev": 1,
-    "contentHash": "f7bbf3d6"
+    "contentHash": "f92850d4"
   },
   {
     "id": "furman/pl-8c",
@@ -4080,7 +4163,7 @@
     "sourceUrl": "https://www.bhphotovideo.com/c/product/584417-REG/Furman_PL_8C_PL_8_C_Power_Conditioner.html",
     "source": "community",
     "rev": 1,
-    "contentHash": "fbb7c8c9"
+    "contentHash": "1a4cb6cd"
   },
   {
     "id": "jbl-professional/srx835p",
@@ -4148,7 +4231,7 @@
     "sourceUrl": "https://www.jbl.com/on/demandware.static/-/Sites-masterCatalog_Harman/default/dw11bc9856/pdfs/JBL_SRX800_UsersGuide_061515.pdf",
     "source": "community",
     "rev": 1,
-    "contentHash": "49ca1ea2"
+    "contentHash": "88048a6e"
   },
   {
     "id": "jvc/jvc-gy-hc550",
@@ -4162,7 +4245,8 @@
         "name": "SDI Out",
         "direction": "output",
         "connector": "bnc",
-        "note": "3G-SDI, up to 1080/60p 4:2:2 10-bit with embedded audio and timecode"
+        "note": "3G-SDI, up to 1080/60p 4:2:2 10-bit with embedded audio and timecode",
+        "grade": "sdi-3g"
       },
       {
         "id": "hdmi-out",
@@ -4218,14 +4302,16 @@
         "name": "LAN",
         "direction": "bidirectional",
         "connector": "rj45",
-        "note": "1000Base-T Ethernet; used for streaming, IFB, and remote control"
+        "note": "1000Base-T Ethernet; used for streaming, IFB, and remote control",
+        "grade": "eth-1g"
       },
       {
         "id": "usb-host",
         "name": "USB Host",
         "direction": "bidirectional",
         "connector": "usb-a",
-        "note": "USB 3.0 Type-A; supports USB LAN adapters and optional accessories"
+        "note": "USB 3.0 Type-A; supports USB LAN adapters and optional accessories",
+        "grade": "usb-5g"
       },
       {
         "id": "remote",
@@ -4245,7 +4331,7 @@
     "sourceUrl": "https://www.jvc.com/usa/pro/professional-video/handheld-cameras/gy-hc550u/",
     "source": "community",
     "rev": 1,
-    "contentHash": "e7971f00"
+    "contentHash": "5a3f842e"
   },
   {
     "id": "kramer-electronics/kramer-via-go2",
@@ -4273,14 +4359,16 @@
         "name": "USB 3.0",
         "direction": "bidirectional",
         "connector": "usb-a",
-        "note": "Labeled 'USB 3.0 Connector' (item 3). Female Type-A. Used for keyboard, mouse, or other USB peripherals."
+        "note": "Labeled 'USB 3.0 Connector' (item 3). Female Type-A. Used for keyboard, mouse, or other USB peripherals.",
+        "grade": "usb-5g"
       },
       {
         "id": "usb-2-0",
         "name": "USB 2.0",
         "direction": "bidirectional",
         "connector": "usb-a",
-        "note": "Labeled 'USB 2.0 Connector' (item 4). Female Type-A. Used for keyboard, mouse, or other USB peripherals."
+        "note": "Labeled 'USB 2.0 Connector' (item 4). Female Type-A. Used for keyboard, mouse, or other USB peripherals.",
+        "grade": "usb-2.0"
       },
       {
         "id": "power",
@@ -4293,7 +4381,7 @@
     "sourceUrl": "https://www.markertek.com/Attachments/Manuals/Kramer/KR-VIA-GO2_User-Manual.pdf",
     "source": "community",
     "rev": 1,
-    "contentHash": "2641e521"
+    "contentHash": "057a786f"
   },
   {
     "id": "kramer/kramer-vs-84h2",
@@ -4413,7 +4501,7 @@
     "sourceUrl": "https://www.markertek.com/product/kr-vs-84h2/kramer-vs-84h2-8x4-4k-hdr-hdcp-2-2-hdmi-matrix-switcher-with-digital-audio-routing",
     "source": "community",
     "rev": 1,
-    "contentHash": "4dd98e50"
+    "contentHash": "55d9b868"
   },
   {
     "id": "kramer/vs-211h2",
@@ -4468,7 +4556,7 @@
     "sourceUrl": "https://www.manualslib.com/manual/1536717/Kramer-Vs-211h2.html",
     "source": "community",
     "rev": 1,
-    "contentHash": "3df3c9c3"
+    "contentHash": "e39f7fdf"
   },
   {
     "id": "lab-gruppen/lab-gruppen-fp-10000q",
@@ -4559,7 +4647,7 @@
     "sourceUrl": "https://www.manualslib.com/manual/290497/Lab-Gruppen-FpPlus-Series-Fp-10000q.html",
     "source": "community",
     "rev": 1,
-    "contentHash": "bd89db84"
+    "contentHash": "e0b1ccc4"
   },
   {
     "id": "lectrosonics/lectrosonics-src",
@@ -4621,7 +4709,7 @@
     "sourceUrl": "https://www.manualslib.com/manual/1302835/Lectrosonics-Src.html",
     "source": "community",
     "rev": 1,
-    "contentHash": "a9918b3c"
+    "contentHash": "3973d858"
   },
   {
     "id": "lg/86uh5f-h",
@@ -4722,14 +4810,16 @@
         "name": "USB-A 1",
         "direction": "input",
         "connector": "usb-a",
-        "note": "USB 2.0"
+        "note": "USB 2.0",
+        "grade": "usb-2.0"
       },
       {
         "id": "usb-a-2",
         "name": "USB-A 2",
         "direction": "input",
         "connector": "usb-a",
-        "note": "USB 2.0"
+        "note": "USB 2.0",
+        "grade": "usb-2.0"
       },
       {
         "id": "ac-power",
@@ -4742,7 +4832,7 @@
     "sourceUrl": "https://solutions.lg.com/us/digital-signage/lg-86uh5f-h",
     "source": "community",
     "rev": 1,
-    "contentHash": "6355499f"
+    "contentHash": "59ab27f3"
   },
   {
     "id": "lg/oled-c3",
@@ -4793,21 +4883,24 @@
         "name": "USB 1",
         "direction": "bidirectional",
         "connector": "usb-a",
-        "note": "USB 2.0"
+        "note": "USB 2.0",
+        "grade": "usb-2.0"
       },
       {
         "id": "usb-2",
         "name": "USB 2",
         "direction": "bidirectional",
         "connector": "usb-a",
-        "note": "USB 2.0"
+        "note": "USB 2.0",
+        "grade": "usb-2.0"
       },
       {
         "id": "usb-3",
         "name": "USB 3",
         "direction": "bidirectional",
         "connector": "usb-a",
-        "note": "USB 2.0"
+        "note": "USB 2.0",
+        "grade": "usb-2.0"
       },
       {
         "id": "rs-232c",
@@ -4827,7 +4920,7 @@
     "sourceUrl": "https://www.flatpanelshd.com/review.php?subaction=showfull&id=1686299145",
     "source": "community",
     "rev": 1,
-    "contentHash": "ba809beb"
+    "contentHash": "128fac1e"
   },
   {
     "id": "magewell/pro-convert-hdmi-4k-plus",
@@ -4841,7 +4934,8 @@
         "name": "HDMI In",
         "direction": "input",
         "connector": "hdmi",
-        "note": "HDMI 2.0 / HDMI 1.4 / DVI-D; supports up to 4096×2160 60fps 4:4:4; carries up to 8-channel embedded audio"
+        "note": "HDMI 2.0 / HDMI 1.4 / DVI-D; supports up to 4096×2160 60fps 4:4:4; carries up to 8-channel embedded audio",
+        "grade": "hdmi-2.0"
       },
       {
         "id": "hdmi-loop-through",
@@ -4855,14 +4949,16 @@
         "name": "Ethernet",
         "direction": "bidirectional",
         "connector": "rj45",
-        "note": "10/100/1000 Mbps Gigabit; primary NDI output path; also powers the device via IEEE 802.3af PoE"
+        "note": "10/100/1000 Mbps Gigabit; primary NDI output path; also powers the device via IEEE 802.3af PoE",
+        "grade": "eth-1g"
       },
       {
         "id": "usb",
         "name": "USB",
         "direction": "bidirectional",
         "connector": "usb-b",
-        "note": "USB 2.0 Type B; used for device configuration, RNDIS/ECM network access, and as an alternative 5V/2.1A power input via included adapter; no separate DC barrel jack — USB-B is the only discrete power connector"
+        "note": "USB 2.0 Type B; used for device configuration, RNDIS/ECM network access, and as an alternative 5V/2.1A power input via included adapter; no separate DC barrel jack — USB-B is the only discrete power connector",
+        "grade": "usb-2.0"
       },
       {
         "id": "control-tally",
@@ -4875,7 +4971,7 @@
     "sourceUrl": "https://www.magewell.com/tech-specs/pro-convert-hdmi-4k-plus",
     "source": "community",
     "rev": 1,
-    "contentHash": "6c4273d2"
+    "contentHash": "14b3a1e0"
   },
   {
     "id": "mersive/solstice-pod-gen3",
@@ -4889,21 +4985,24 @@
         "name": "HDMI Out 1",
         "direction": "output",
         "connector": "hdmi",
-        "note": "HDMI 2.0; supports up to 4K when used as sole display output"
+        "note": "HDMI 2.0; supports up to 4K when used as sole display output",
+        "grade": "hdmi-2.0"
       },
       {
         "id": "hdmi-out-2",
         "name": "HDMI Out 2",
         "direction": "output",
         "connector": "hdmi",
-        "note": "HDMI 1.4; supports up to 1080p; 4K only available on HDMI Out 1 when used alone"
+        "note": "HDMI 1.4; supports up to 1080p; 4K only available on HDMI Out 1 when used alone",
+        "grade": "hdmi-1.4"
       },
       {
         "id": "hdmi-in",
         "name": "HDMI In",
         "direction": "input",
         "connector": "hdmi",
-        "note": "HDMI 1.4b; HDCP not supported"
+        "note": "HDMI 1.4b; HDCP not supported",
+        "grade": "hdmi-1.4"
       },
       {
         "id": "stereo-out",
@@ -4917,14 +5016,16 @@
         "name": "USB 3.0 (1)",
         "direction": "bidirectional",
         "connector": "usb-a",
-        "note": "USB 3.0 host port"
+        "note": "USB 3.0 host port",
+        "grade": "usb-5g"
       },
       {
         "id": "usb-3-0-2",
         "name": "USB 3.0 (2)",
         "direction": "bidirectional",
         "connector": "usb-a",
-        "note": "USB 3.0 host port"
+        "note": "USB 3.0 host port",
+        "grade": "usb-5g"
       },
       {
         "id": "usb-c",
@@ -4938,7 +5039,8 @@
         "name": "Ethernet",
         "direction": "bidirectional",
         "connector": "rj45",
-        "note": "Gigabit Ethernet with PoE+ support (IEEE 802.3 Type 2); device can be powered via this port instead of DC barrel"
+        "note": "Gigabit Ethernet with PoE+ support (IEEE 802.3 Type 2); device can be powered via this port instead of DC barrel",
+        "grade": "eth-1g"
       },
       {
         "id": "dc-power-in",
@@ -4951,7 +5053,7 @@
     "sourceUrl": "https://documentation.mersive.com/en/solstice/deploy-solstice/solstice-setup/gen3-solstice-pod-specs.html",
     "source": "community",
     "rev": 1,
-    "contentHash": "fe4ad685"
+    "contentHash": "2beb576e"
   },
   {
     "id": "meyer-sound/meyer-sound-leopard",
@@ -4998,7 +5100,7 @@
     "sourceUrl": "https://docs.meyersound.com/products/en/datasheet---leopard---leopard-m80.html",
     "source": "community",
     "rev": 1,
-    "contentHash": "83326dcc"
+    "contentHash": "e05fbe3e"
   },
   {
     "id": "netgear/gs308v3",
@@ -5065,7 +5167,7 @@
     "sourceUrl": "https://www.netgear.com/business/wired/switches/unmanaged/gs308/",
     "source": "community",
     "rev": 1,
-    "contentHash": "d0612094"
+    "contentHash": "b137709a"
   },
   {
     "id": "netgear/m4250-26g4f-poe",
@@ -5079,14 +5181,16 @@
         "name": "Port 1–24 (PoE+)",
         "direction": "bidirectional",
         "connector": "rj45",
-        "note": "24x 10/100/1000BASE-T RJ45 with PoE+ (802.3at), 300W total budget, 30W per port"
+        "note": "24x 10/100/1000BASE-T RJ45 with PoE+ (802.3at), 300W total budget, 30W per port",
+        "grade": "eth-1g"
       },
       {
         "id": "port-25-26",
         "name": "Port 25–26",
         "direction": "bidirectional",
         "connector": "rj45",
-        "note": "2x 10/100/1000BASE-T RJ45 non-PoE uplink ports"
+        "note": "2x 10/100/1000BASE-T RJ45 non-PoE uplink ports",
+        "grade": "eth-1g"
       },
       {
         "id": "sfp-1-4",
@@ -5135,7 +5239,7 @@
     "sourceUrl": "https://www.netguardstore.com/gsm4230p.asp",
     "source": "community",
     "rev": 1,
-    "contentHash": "05ea0d3b"
+    "contentHash": "fcc357fb"
   },
   {
     "id": "netgear/netgear-m4250-40g8xf-poe",
@@ -5149,7 +5253,8 @@
         "name": "PoE+ Port 1–40",
         "direction": "bidirectional",
         "connector": "rj45",
-        "note": "40x 10/100/1000BASE-T PoE+ ports (802.3at), 960W total PoE budget, rear-facing for clean AV rack integration"
+        "note": "40x 10/100/1000BASE-T PoE+ ports (802.3at), 960W total PoE budget, rear-facing for clean AV rack integration",
+        "grade": "eth-1g"
       },
       {
         "id": "sfp-port-1-8",
@@ -5198,7 +5303,7 @@
     "sourceUrl": "https://www.netguardstore.com/gsm4248px.asp",
     "source": "community",
     "rev": 1,
-    "contentHash": "9c32eaaa"
+    "contentHash": "202d4554"
   },
   {
     "id": "panasonic/panasonic-aw-ue150",
@@ -5219,28 +5324,32 @@
         "name": "12G-SDI OUT",
         "direction": "output",
         "connector": "bnc",
-        "note": "SMPTE 2082-1 standard, 75Ω"
+        "note": "SMPTE 2082-1 standard, 75Ω",
+        "grade": "sdi-12g"
       },
       {
         "id": "3g-sdi-out",
         "name": "3G-SDI OUT",
         "direction": "output",
         "connector": "bnc",
-        "note": "SMPTE 424M / SMPTE 292, 75Ω, Level-A/Level-B"
+        "note": "SMPTE 424M / SMPTE 292, 75Ω, Level-A/Level-B",
+        "grade": "sdi-3g"
       },
       {
         "id": "moni-out",
         "name": "MONI OUT",
         "direction": "output",
         "connector": "bnc",
-        "note": "HD-SDI monitor output, SMPTE 292, 75Ω"
+        "note": "HD-SDI monitor output, SMPTE 292, 75Ω",
+        "grade": "sdi-hd"
       },
       {
         "id": "hdmi-out",
         "name": "HDMI OUT",
         "direction": "output",
         "connector": "hdmi",
-        "note": "HDMI 2.0 standard, 4:2:2/10-bit, HDCP not supported"
+        "note": "HDMI 2.0 standard, 4:2:2/10-bit, HDCP not supported",
+        "grade": "hdmi-2.0"
       },
       {
         "id": "optical-fiber",
@@ -5254,7 +5363,8 @@
         "name": "LAN",
         "direction": "bidirectional",
         "connector": "rj45",
-        "note": "100BASE-TX / 1000BASE-T; carries IP video streaming, IP camera control, and PoE++ power input (IEEE802.3bt, 42–57 V DC)"
+        "note": "100BASE-TX / 1000BASE-T; carries IP video streaming, IP camera control, and PoE++ power input (IEEE802.3bt, 42–57 V DC)",
+        "grade": "eth-1g"
       },
       {
         "id": "rs-422-control-in",
@@ -5281,7 +5391,7 @@
     "sourceUrl": "https://pro-av.panasonic.net/en/products/aw-ue150/spec.html",
     "source": "community",
     "rev": 1,
-    "contentHash": "6892d480"
+    "contentHash": "0413ef5e"
   },
   {
     "id": "planar-systems/planar-pct2235",
@@ -5336,7 +5446,7 @@
     "sourceUrl": "https://avlgear.com/products/planar-pct2235-22-inch-full-hd-lcd-touch-screen-monitor",
     "source": "community",
     "rev": 1,
-    "contentHash": "f0be4ebd"
+    "contentHash": "335eb839"
   },
   {
     "id": "powersoft/x4",
@@ -5406,7 +5516,8 @@
         "name": "Network ETH1 (Primary)",
         "direction": "bidirectional",
         "connector": "ethercon",
-        "note": "Neutrik etherCON, primary network port; 100 Mbit/s (IEEE 802.3u) and 1 Gbit/s (IEEE 802.3ab)"
+        "note": "Neutrik etherCON, primary network port; 100 Mbit/s (IEEE 802.3u) and 1 Gbit/s (IEEE 802.3ab)",
+        "grade": "eth-1g"
       },
       {
         "id": "network-eth2-secondary",
@@ -5441,7 +5552,7 @@
     "sourceUrl": "https://www.manualslib.com/manual/869671/Powersoft-X4.html",
     "source": "community",
     "rev": 1,
-    "contentHash": "31e51580"
+    "contentHash": "9eea9126"
   },
   {
     "id": "ptzoptics/pt30x-se-gy-g3",
@@ -5455,21 +5566,24 @@
         "name": "HDMI Out",
         "direction": "output",
         "connector": "hdmi",
-        "note": "HDMI version 1.3"
+        "note": "HDMI version 1.3",
+        "grade": "hdmi-1.4"
       },
       {
         "id": "3g-sdi-out",
         "name": "3G-SDI Out",
         "direction": "output",
         "connector": "bnc",
-        "note": "3G-SDI, 800mVP-p, 75Ω, SMPTE 424M"
+        "note": "3G-SDI, 800mVP-p, 75Ω, SMPTE 424M",
+        "grade": "sdi-3g"
       },
       {
         "id": "usb-3-0-out",
         "name": "USB 3.0 Out",
         "direction": "output",
         "connector": "usb-c",
-        "note": "USB 3.0 Type-C video/UVC output"
+        "note": "USB 3.0 Type-C video/UVC output",
+        "grade": "usb-5g"
       },
       {
         "id": "rj45-ethernet",
@@ -5517,7 +5631,7 @@
     "sourceUrl": "https://ptzoptics.com/move-se/",
     "source": "community",
     "rev": 1,
-    "contentHash": "3d42b5eb"
+    "contentHash": "3ff70c5b"
   },
   {
     "id": "qsc/gx5",
@@ -5614,7 +5728,7 @@
     "sourceUrl": "https://www.qscaudio.com/index.php?id=12667",
     "source": "community",
     "rev": 1,
-    "contentHash": "a3198468"
+    "contentHash": "9df54cbc"
   },
   {
     "id": "rme/fireface-ufx-iii",
@@ -5771,7 +5885,8 @@
         "name": "USB 3.0 Host",
         "direction": "bidirectional",
         "connector": "usb-b",
-        "note": "Rear-panel USB Type-B 3.0 port for computer connection; also supports USB 2.0 mode (limited to non-MADI I/O)"
+        "note": "Rear-panel USB Type-B 3.0 port for computer connection; also supports USB 2.0 mode (limited to non-MADI I/O)",
+        "grade": "usb-5g"
       },
       {
         "id": "usb-a-durec-front",
@@ -5799,7 +5914,7 @@
     "sourceUrl": "https://www.rme-usa.com/fireface-ufx-3.html",
     "source": "community",
     "rev": 1,
-    "contentHash": "4e815297"
+    "contentHash": "f51d5858"
   },
   {
     "id": "roku/roku-express-4k",
@@ -5813,7 +5928,8 @@
         "name": "HDMI Out",
         "direction": "output",
         "connector": "hdmi",
-        "note": "HDMI 2.0, HDCP 2.2; supports up to 4K/60fps, HDR10, HDR10+, HLG. Dolby Vision is NOT supported."
+        "note": "HDMI 2.0, HDCP 2.2; supports up to 4K/60fps, HDR10, HDR10+, HLG. Dolby Vision is NOT supported.",
+        "grade": "hdmi-2.0"
       },
       {
         "id": "power",
@@ -5826,7 +5942,7 @@
     "sourceUrl": "https://www.amazon.com/Roku-Express-Streaming-Wireless-Controls/dp/B0916TKFF2",
     "source": "community",
     "rev": 1,
-    "contentHash": "d7e9e65c"
+    "contentHash": "96fda7b3"
   },
   {
     "id": "roland/roland-vc-1-sc",
@@ -5840,7 +5956,8 @@
         "name": "SDI In",
         "direction": "input",
         "connector": "bnc",
-        "note": "Combined/loopthrough with one of the SDI Out connectors. Supports 3G-SDI (SMPTE 424M/425M-AB), HD-SDI (SMPTE 292M), and SD-SDI (SMPTE 259M-C)."
+        "note": "Combined/loopthrough with one of the SDI Out connectors. Supports 3G-SDI (SMPTE 424M/425M-AB), HD-SDI (SMPTE 292M), and SD-SDI (SMPTE 259M-C).",
+        "grade": "sdi-3g"
       },
       {
         "id": "sdi-out-1",
@@ -5854,7 +5971,8 @@
         "name": "SDI Out 2",
         "direction": "output",
         "connector": "bnc",
-        "note": "Dedicated second SDI output. Supports 3G-SDI (SMPTE 424M/425M-AB), HD-SDI (SMPTE 292M), and SD-SDI (SMPTE 259M-C)."
+        "note": "Dedicated second SDI output. Supports 3G-SDI (SMPTE 424M/425M-AB), HD-SDI (SMPTE 292M), and SD-SDI (SMPTE 259M-C).",
+        "grade": "sdi-3g"
       },
       {
         "id": "hdmi-in",
@@ -5910,7 +6028,8 @@
         "name": "USB",
         "direction": "bidirectional",
         "connector": "usb-b",
-        "note": "Hi-Speed USB Type B. Used for firmware updates and control."
+        "note": "Hi-Speed USB Type B. Used for firmware updates and control.",
+        "grade": "usb-2.0"
       },
       {
         "id": "dc-in",
@@ -5923,7 +6042,7 @@
     "sourceUrl": "https://proav.roland.com/global/products/vc-1-sc/specifications/",
     "source": "community",
     "rev": 1,
-    "contentHash": "55220cda"
+    "contentHash": "f38fa1f5"
   },
   {
     "id": "roland/v-60hd",
@@ -5937,28 +6056,32 @@
         "name": "SDI IN 1",
         "direction": "input",
         "connector": "bnc",
-        "note": "3G-SDI / HD-SDI (SMPTE 424M/425M-AB, 292M)"
+        "note": "3G-SDI / HD-SDI (SMPTE 424M/425M-AB, 292M)",
+        "grade": "sdi-3g"
       },
       {
         "id": "sdi-in-2",
         "name": "SDI IN 2",
         "direction": "input",
         "connector": "bnc",
-        "note": "3G-SDI / HD-SDI (SMPTE 424M/425M-AB, 292M)"
+        "note": "3G-SDI / HD-SDI (SMPTE 424M/425M-AB, 292M)",
+        "grade": "sdi-3g"
       },
       {
         "id": "sdi-in-3",
         "name": "SDI IN 3",
         "direction": "input",
         "connector": "bnc",
-        "note": "3G-SDI / HD-SDI (SMPTE 424M/425M-AB, 292M)"
+        "note": "3G-SDI / HD-SDI (SMPTE 424M/425M-AB, 292M)",
+        "grade": "sdi-3g"
       },
       {
         "id": "sdi-in-4",
         "name": "SDI IN 4",
         "direction": "input",
         "connector": "bnc",
-        "note": "3G-SDI / HD-SDI (SMPTE 424M/425M-AB, 292M)"
+        "note": "3G-SDI / HD-SDI (SMPTE 424M/425M-AB, 292M)",
+        "grade": "sdi-3g"
       },
       {
         "id": "hdmi-in-5",
@@ -5986,14 +6109,16 @@
         "name": "SDI OUT 1",
         "direction": "output",
         "connector": "bnc",
-        "note": "3G-SDI / HD-SDI (SMPTE 424M/425M-AB, 292M)"
+        "note": "3G-SDI / HD-SDI (SMPTE 424M/425M-AB, 292M)",
+        "grade": "sdi-3g"
       },
       {
         "id": "sdi-out-2",
         "name": "SDI OUT 2",
         "direction": "output",
         "connector": "bnc",
-        "note": "3G-SDI / HD-SDI (SMPTE 424M/425M-AB, 292M)"
+        "note": "3G-SDI / HD-SDI (SMPTE 424M/425M-AB, 292M)",
+        "grade": "sdi-3g"
       },
       {
         "id": "hdmi-out-1",
@@ -6110,7 +6235,8 @@
         "name": "CONTROL (LAN)",
         "direction": "bidirectional",
         "connector": "rj45",
-        "note": "100BASE-TX Ethernet; remote control"
+        "note": "100BASE-TX Ethernet; remote control",
+        "grade": "eth-100m"
       },
       {
         "id": "usb-memory",
@@ -6130,7 +6256,7 @@
     "sourceUrl": "https://proav.roland.com/global/products/v-60hd/specifications/",
     "source": "community",
     "rev": 1,
-    "contentHash": "ea24ae20"
+    "contentHash": "2c5bbf2c"
   },
   {
     "id": "samsung/samsung-qm85r",
@@ -6232,7 +6358,7 @@
     "sourceUrl": "https://www.samsung.com/us/business/support/owners/product/qmr-series-digital-signage-qm85r/",
     "source": "community",
     "rev": 1,
-    "contentHash": "9daf3508"
+    "contentHash": "0fa38f66"
   },
   {
     "id": "sony/brc-x400",
@@ -6246,14 +6372,16 @@
         "name": "HDMI OUT",
         "direction": "output",
         "connector": "hdmi",
-        "note": "HDMI Type A × 1; 4K output available via HDMI (and IP); version 1.4b compatible"
+        "note": "HDMI Type A × 1; 4K output available via HDMI (and IP); version 1.4b compatible",
+        "grade": "hdmi-1.4"
       },
       {
         "id": "sdi-out",
         "name": "SDI OUT",
         "direction": "output",
         "connector": "bnc",
-        "note": "BNC × 1; 3G-SDI; HD output only (4K not supported via SDI)"
+        "note": "BNC × 1; 3G-SDI; HD output only (4K not supported via SDI)",
+        "grade": "sdi-3g"
       },
       {
         "id": "ext-sync-in",
@@ -6295,7 +6423,8 @@
         "name": "LAN",
         "direction": "bidirectional",
         "connector": "rj45",
-        "note": "RJ-45; 10/100/1000BASE-T; PoE+ (IEEE802.3at) power input; VISCA over IP, S700PTP, CGI control, and IP video streaming"
+        "note": "RJ-45; 10/100/1000BASE-T; PoE+ (IEEE802.3at) power input; VISCA over IP, S700PTP, CGI control, and IP video streaming",
+        "grade": "eth-1g"
       },
       {
         "id": "dc-in-12v",
@@ -6308,7 +6437,7 @@
     "sourceUrl": "https://www.manualslib.com/manual/1664613/Sony-Brc-X400.html",
     "source": "community",
     "rev": 1,
-    "contentHash": "7055560d"
+    "contentHash": "28b1ec58"
   },
   {
     "id": "sony/uwp-d21",
@@ -6356,7 +6485,7 @@
     "sourceUrl": "https://www.manualslib.com/manual/1740993/Sony-Uwp-D21.html",
     "source": "community",
     "rev": 1,
-    "contentHash": "eb64b1f8"
+    "contentHash": "01b412c6"
   },
   {
     "id": "tp-link/tl-pa7017",
@@ -6370,7 +6499,8 @@
         "name": "Ethernet",
         "direction": "bidirectional",
         "connector": "rj45",
-        "note": "Single Gigabit Ethernet port for connecting a wired device to the powerline network"
+        "note": "Single Gigabit Ethernet port for connecting a wired device to the powerline network",
+        "grade": "eth-1g"
       },
       {
         "id": "power-wall-plug",
@@ -6383,7 +6513,7 @@
     "sourceUrl": "https://www.tp-link.com/us/home-networking/powerline/tl-pa7017/",
     "source": "community",
     "rev": 1,
-    "contentHash": "768aeba2"
+    "contentHash": "5bcb2634"
   },
   {
     "id": "tripp-lite-eaton/tripp-lite-pdumh15",
@@ -6495,6 +6625,6 @@
     "sourceUrl": "https://tripplite.eaton.com/metered-pdu-15a-13-outlet-120v-15ft-cord-1u-rackmount~PDUMH15",
     "source": "community",
     "rev": 1,
-    "contentHash": "ad61a4aa"
+    "contentHash": "31f6a396"
   }
 ]

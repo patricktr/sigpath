@@ -8,8 +8,11 @@ import {
   inputPorts,
   outputPorts,
   bidirectionalPorts,
+  gradeScaleForConnector,
+  gradesForScale,
+  scaleOfGrade,
 } from "../../schema";
-import type { ConnectorId, DeviceModel, PortDirection } from "../../schema";
+import type { ConnectorId, DeviceModel, GradeId, PortDirection } from "../../schema";
 import { addToPersonalLibrary } from "../../library/personalLibrary";
 import { ConnectorPicker } from "./ConnectorPicker";
 import "./AddDevice.css";
@@ -34,6 +37,8 @@ type PortDraft = {
   connector: ConnectorId;
   /** Combo jack: additional connectors this one port also accepts. */
   accepts: ConnectorId[];
+  /** Max bandwidth grade this port supports (only for graded connectors). */
+  grade?: GradeId;
   /** Generate this many numbered copies of the port (e.g. SDI In 1…20). */
   qty: number;
 };
@@ -121,6 +126,7 @@ export function CreateWizard({ onCancel, onSaved, onPlace, initial, onSave, seed
           direction: p.direction,
           connector: p.connector,
           accepts: p.accepts ?? [],
+          grade: p.grade,
           qty: 1,
         }))
       : [newPort("output")],
@@ -147,6 +153,7 @@ export function CreateWizard({ onCancel, onSaved, onPlace, initial, onSave, seed
           direction: p.direction,
           connector: p.connector,
           ...(p.accepts.length ? { accepts: p.accepts } : {}),
+          ...(p.grade ? { grade: p.grade } : {}),
         }));
       }),
     }),
@@ -281,6 +288,7 @@ export function CreateWizard({ onCancel, onSaved, onPlace, initial, onSave, seed
               <span className="adv-ports__col">Dir</span>
               <span className="adv-ports__col">Connector</span>
               <span className="adv-ports__col">Combo jack</span>
+              <span className="adv-ports__col">Grade</span>
               <span className="adv-ports__col">Qty</span>
               <span />
             </div>
@@ -306,7 +314,15 @@ export function CreateWizard({ onCancel, onSaved, onPlace, initial, onSave, seed
                   value={p.connector}
                   direction={p.direction}
                   ariaLabel="Connector (port type)"
-                  onChange={(id) => updatePort(p.id, { connector: id || p.connector })}
+                  onChange={(id) => {
+                    const connector = id || p.connector;
+                    // Drop a grade that no longer belongs to the new connector's scale.
+                    const grade =
+                      p.grade && scaleOfGrade(p.grade) === gradeScaleForConnector(connector)
+                        ? p.grade
+                        : undefined;
+                    updatePort(p.id, { connector, grade });
+                  }}
                 />
                 <ConnectorPicker
                   className="cxp-root--sec"
@@ -318,6 +334,33 @@ export function CreateWizard({ onCancel, onSaved, onPlace, initial, onSave, seed
                   ariaLabel="Combo jack — also accepts this connector"
                   onChange={(id) => updatePort(p.id, { accepts: id ? [id] : [] })}
                 />
+                {(() => {
+                  const scale = gradeScaleForConnector(p.connector);
+                  if (!scale)
+                    return (
+                      <span
+                        className="adv-portrow__nograde"
+                        title="This connector type has no bandwidth grade"
+                      >
+                        —
+                      </span>
+                    );
+                  return (
+                    <select
+                      value={p.grade ?? ""}
+                      onChange={(e) => updatePort(p.id, { grade: e.target.value || undefined })}
+                      aria-label="Bandwidth grade"
+                      title="Max bandwidth grade this port supports"
+                    >
+                      <option value="">— grade —</option>
+                      {gradesForScale(scale).map((t) => (
+                        <option key={t.id} value={t.id}>
+                          {t.label}
+                        </option>
+                      ))}
+                    </select>
+                  );
+                })()}
                 <input
                   className="adv-portrow__qty-input"
                   type="number"

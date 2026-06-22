@@ -1,4 +1,4 @@
-import { cableColor, deviceTitle, getConnector } from "../schema";
+import { cableColor, deviceTitle, getConnector, gradeLabel } from "../schema";
 import type { DeviceModel } from "../schema";
 
 const DIR_LABEL: Record<string, string> = { input: "IN", output: "OUT", bidirectional: "I/O" };
@@ -41,6 +41,7 @@ export function Inspector({ model, label }: { model: DeviceModel | null; label?:
             <span className="inspector__pname">{p.name}</span>
             <span className="inspector__pmeta">
               {DIR_LABEL[p.direction]} · {getConnector(p.connector)?.label ?? p.connector}
+              {p.grade ? ` · ${gradeLabel(p.grade)}` : ""}
             </span>
           </li>
         ))}

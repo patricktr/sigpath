@@ -511,11 +511,11 @@
 .adv-ports__head,
 .adv-portrow {
   display: grid;
-  /* dot · name · dir · connector · combo · qty · delete. Connector stays wide for
-     long power labels; the others are trimmed from the handoff's numbers so the
-     name field keeps a usable width in the real 720px modal (the mock's exact
+  /* dot · name · dir · connector · combo · grade · qty · delete. Connector stays
+     wide for long power labels; the others are trimmed from the handoff's numbers so
+     the name field keeps a usable width in the real 720px modal (the mock's exact
      tracks collapse it to ~30px and wrap the header). */
-  grid-template-columns: 14px minmax(0, 1fr) 76px 216px 120px 46px 18px;
+  grid-template-columns: 14px minmax(0, 1fr) 64px 176px 96px 92px 42px 18px;
   gap: 9px;
   align-items: center;
 }
@@ -560,6 +560,12 @@
   font: inherit;
   font-size: 13px;
   background: #ffffff;
+}
+/* Grade cell placeholder when the connector type is ungraded (analog, power…). */
+.adv-portrow__nograde {
+  text-align: center;
+  color: #94a3b8;
+  font-size: 13px;
 }
 .adv-portrow__qty-input {
   width: 100%;
