@@ -186,10 +186,17 @@ export function ConnectorPicker({
     const spaceAbove = rect.top - 8;
     const openUp = spaceBelow < 220 && spaceAbove > spaceBelow;
     const maxHeight = Math.max(160, Math.min(280, openUp ? spaceAbove : spaceBelow));
+
+    // Grow to fit the longest label instead of locking to the trigger width,
+    // then keep the panel on-screen by shifting left if it would overflow.
+    const want = 288;
+    const left = Math.min(rect.left, Math.max(12, window.innerWidth - 12 - want));
     return {
       position: "fixed",
-      left: rect.left,
-      width: rect.width,
+      left,
+      minWidth: rect.width,
+      width: "max-content",
+      maxWidth: window.innerWidth - 12 - left,
       maxHeight,
       ...(openUp ? { bottom: window.innerHeight - rect.top + 4 } : { top: rect.bottom + 4 }),
     };

@@ -268,6 +268,17 @@ export function CreateWizard({ onCancel, onSaved, onPlace, initial, onSave }: Pr
               Add the device’s inputs and outputs — pick the connector (port type) for each. Set a
               quantity to generate numbered copies (e.g. “SDI In” × 20 → SDI In 1–20).
             </p>
+
+            <div className="adv-ports__head" aria-hidden="true">
+              <span />
+              <span className="adv-ports__col">Port name</span>
+              <span className="adv-ports__col">Dir</span>
+              <span className="adv-ports__col">Connector</span>
+              <span className="adv-ports__col">Combo jack</span>
+              <span className="adv-ports__col">Qty</span>
+              <span />
+            </div>
+
             {ports.map((p) => (
               <div className="adv-portrow" key={p.id}>
                 <span className="adv-portdot" style={{ background: cableColor(p.connector) }} />
@@ -301,18 +312,17 @@ export function CreateWizard({ onCancel, onSaved, onPlace, initial, onSave }: Pr
                   ariaLabel="Combo jack — also accepts this connector"
                   onChange={(id) => updatePort(p.id, { accepts: id ? [id] : [] })}
                 />
-                <label className="adv-portrow__qty" title="Quantity — generates numbered copies">
-                  ×
-                  <input
-                    type="number"
-                    min={1}
-                    value={p.qty}
-                    onChange={(e) =>
-                      updatePort(p.id, { qty: Math.max(1, Number(e.target.value) || 1) })
-                    }
-                    aria-label="Quantity"
-                  />
-                </label>
+                <input
+                  className="adv-portrow__qty-input"
+                  type="number"
+                  min={1}
+                  value={p.qty}
+                  onChange={(e) =>
+                    updatePort(p.id, { qty: Math.max(1, Number(e.target.value) || 1) })
+                  }
+                  aria-label="Quantity"
+                  title="Quantity — generates numbered copies"
+                />
                 <button
                   type="button"
                   className="adv-portrow__del"

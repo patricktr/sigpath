@@ -382,7 +382,7 @@
 
 /* ---- Create Wizard ------------------------------------------------------ */
 .adv-wizard {
-  width: 660px;
+  width: 720px;
   max-width: 92vw;
 }
 .adv-wizard__head {
@@ -485,11 +485,29 @@
   font-size: 13px;
   color: #64748b;
 }
+/* Ports step — labeled grid. Connector track is sized for the longest label.
+   7 tracks: dot · name · direction · connector · combo · qty · delete. */
+.adv-ports__head,
 .adv-portrow {
-  display: flex;
+  display: grid;
+  /* dot · name · dir · connector · combo · qty · delete. Connector stays wide for
+     long power labels; the others are trimmed from the handoff's numbers so the
+     name field keeps a usable width in the real 720px modal (the mock's exact
+     tracks collapse it to ~30px and wrap the header). */
+  grid-template-columns: 14px minmax(0, 1fr) 76px 216px 120px 46px 18px;
+  gap: 9px;
   align-items: center;
-  flex-wrap: wrap;
-  gap: 8px;
+}
+.adv-ports__head {
+  padding: 0 9px 2px;
+}
+.adv-ports__col {
+  font: 700 11px/1 inherit;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: #94a3b8;
+}
+.adv-portrow {
   border: 1px solid #eef2f7;
   border-radius: 9px;
   background: #fbfcfe;
@@ -501,8 +519,9 @@
   border-radius: 50%;
   flex: 0 0 auto;
 }
+/* Grid sizes the cells now — drop the flex-basis / max-width games. */
 .adv-portrow__name {
-  flex: 1 1 96px;
+  width: 100%;
   min-width: 0;
   border: 1px solid #cbd5e1;
   border-radius: 7px;
@@ -510,31 +529,21 @@
   font: inherit;
   font-size: 13px;
 }
-.adv-portrow select {
-  flex: 0 1 auto;
+.adv-portrow > select {
+  width: 100%;
   min-width: 0;
-  max-width: 132px;
+  max-width: none;
   border: 1px solid #cbd5e1;
   border-radius: 7px;
-  padding: 6px 8px;
+  padding: 6px 6px;
   font: inherit;
   font-size: 13px;
   background: #ffffff;
 }
-/* Secondary combo-jack picker — kept compact so the row never needs to scroll. */
-.adv-portrow__combo {
-  max-width: 108px;
-}
-.adv-portrow__qty {
-  display: flex;
-  align-items: center;
-  gap: 3px;
-  flex: 0 0 auto;
-  color: #94a3b8;
-  font-size: 13px;
-}
-.adv-portrow__qty input {
-  width: 46px;
+.adv-portrow__qty-input {
+  width: 100%;
+  min-width: 0;
+  text-align: center;
   border: 1px solid #cbd5e1;
   border-radius: 7px;
   padding: 6px 6px;
@@ -550,17 +559,16 @@
   font-size: 16px;
   cursor: pointer;
   line-height: 1;
+  padding: 0;
 }
 
-/* Connector picker — searchable, grouped combobox with ghost-text autocomplete. */
-.cxp-root {
-  position: relative;
-  flex: 1 1 168px;
-  min-width: 150px;
-}
+/* Connector picker — searchable, grouped combobox with ghost-text autocomplete.
+   The grid track sets each picker's width, so the root doesn't flex-size. */
+.cxp-root,
 .cxp-root--sec {
-  flex: 1 1 138px;
-  min-width: 124px;
+  position: relative;
+  flex: none;
+  min-width: 0;
 }
 .cxp-field {
   display: flex;
@@ -945,7 +953,7 @@
 [data-theme="dark"] .adv-field select,
 [data-theme="dark"] .adv-portrow__name,
 [data-theme="dark"] .adv-portrow select,
-[data-theme="dark"] .adv-portrow__qty input {
+[data-theme="dark"] .adv-portrow__qty-input {
   background: #1e293b;
   border-color: #334155;
   color: #e2e8f0;
