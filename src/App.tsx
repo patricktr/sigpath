@@ -67,6 +67,7 @@ import {
   setConverterDefault,
   loadConverterDefaults,
   clearConverterDefault,
+  converterPairKey,
 } from "./library/userPrefs";
 import { diagramImageBase64, diagramPdfBase64, listsToCsv, type ExportKind } from "./io/export";
 import { ValidationPanel } from "./ui/ValidationPanel";
@@ -143,6 +144,8 @@ function AppInner() {
     candidates: ConverterCandidate[];
     srcConn: string;
     tgtConn: string;
+    /** The remembered default's model id, if any (marked in the chooser). */
+    defaultId?: string;
   } | null>(null);
   // When the library has no converter for a mismatch, pre-fill the create wizard.
   const [converterDraft, setConverterDraft] = useState<{
@@ -767,24 +770,25 @@ function AppInner() {
         });
         return;
       }
-      // One-click the learned default if it's still a candidate, else the only
-      // candidate; otherwise open the chooser (and remember that pick).
-      const prefId = getConverterDefault(srcPort.connector, tgtPort.connector);
-      const auto =
-        (prefId && candidates.find((c) => c.model.id === prefId)) ||
-        (candidates.length === 1 ? candidates[0] : undefined);
-      if (auto) {
-        insertConverter(edgeId, auto);
-        setAddToast(`Inserted ${auto.model.model}`);
-      } else {
-        setConverterChoice({
-          edgeId,
-          label,
-          candidates,
-          srcConn: srcPort.connector,
-          tgtConn: tgtPort.connector,
-        });
+      // Only one bridge — just use it. With a real choice, always open the chooser
+      // so the remembered default can be overridden (the default is marked + first).
+      if (candidates.length === 1) {
+        insertConverter(edgeId, candidates[0]);
+        setAddToast(`Inserted ${candidates[0].model.model}`);
+        return;
       }
+      const defaultId = getConverterDefault(srcPort.connector, tgtPort.connector);
+      const ordered = [...candidates].sort(
+        (a, b) => Number(b.model.id === defaultId) - Number(a.model.id === defaultId),
+      );
+      setConverterChoice({
+        edgeId,
+        label,
+        candidates: ordered,
+        srcConn: srcPort.connector,
+        tgtConn: tgtPort.connector,
+        defaultId,
+      });
     },
     [cablePorts, insertConverter],
   );
@@ -1497,14 +1501,17 @@ function AppInner() {
           <div className="modal" onClick={(e) => e.stopPropagation()}>
             <h2 className="modal__title">Add a converter</h2>
             <p className="modal__body">
-              <strong>{converterChoice.label}</strong> — pick a converter from your library:
+              <strong>{converterChoice.label}</strong> —{" "}
+              {converterChoice.defaultId
+                ? "your default is marked; pick another to override it."
+                : "pick a converter from your library:"}
             </p>
             <ul className="cvt-list">
               {converterChoice.candidates.map((c) => (
                 <li key={c.model.id}>
                   <button
                     type="button"
-                    className="cvt-row"
+                    className={`cvt-row${c.model.id === converterChoice.defaultId ? " cvt-row--default" : ""}`}
                     onClick={() => {
                       insertConverter(converterChoice.edgeId, c);
                       setConverterDefault(converterChoice.srcConn, converterChoice.tgtConn, c.model.id);
@@ -1512,8 +1519,13 @@ function AppInner() {
                       setConverterChoice(null);
                     }}
                   >
-                    <span className="cvt-row__name">
-                      {c.model.manufacturer ? `${c.model.manufacturer} ${c.model.model}` : c.model.model}
+                    <span className="cvt-row__top">
+                      <span className="cvt-row__name">
+                        {c.model.manufacturer ? `${c.model.manufacturer} ${c.model.model}` : c.model.model}
+                      </span>
+                      {c.model.id === converterChoice.defaultId && (
+                        <span className="cvt-row__badge">★ Default</span>
+                      )}
                     </span>
                     <span className="cvt-row__io">
                       {cableLabel(c.inPort.connector)} in → {cableLabel(c.outPort.connector)} out
@@ -1523,6 +1535,20 @@ function AppInner() {
               ))}
             </ul>
             <div className="modal__actions">
+              {converterChoice.defaultId && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    clearConverterDefault(
+                      converterPairKey(converterChoice.srcConn, converterChoice.tgtConn),
+                    );
+                    setConverterChoice((prev) => (prev ? { ...prev, defaultId: undefined } : null));
+                  }}
+                >
+                  Clear default
+                </button>
+              )}
+              <span className="modal__spacer" />
               <button type="button" onClick={() => setConverterChoice(null)}>
                 Cancel
               </button>
