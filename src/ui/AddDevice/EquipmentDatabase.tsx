@@ -19,6 +19,8 @@ type Props = {
   onBack: () => void;
   onCreate: () => void;
   onClose: () => void;
+  /** Delete a custom ("Your library") device. */
+  onDelete?: (model: DeviceModel) => void;
 };
 
 const ALL = "All";
@@ -31,6 +33,7 @@ export function EquipmentDatabase({
   onBack,
   onCreate,
   onClose,
+  onDelete,
 }: Props) {
   const [q, setQ] = useState("");
   const [sortKey, setSortKey] = useState<SortKey>("model");
@@ -152,9 +155,22 @@ export function EquipmentDatabase({
                 <span>
                   <span className={`adv-srcbadge ${badge.cls}`}>{badge.label}</span>
                 </span>
-                <button type="button" className="adv-addbtn" onClick={() => onPlace(m)}>
-                  Add
-                </button>
+                <span className="adv-rowactions">
+                  {m.source === "custom" && onDelete && (
+                    <button
+                      type="button"
+                      className="adv-delbtn"
+                      onClick={() => onDelete(m)}
+                      title="Delete from your library"
+                      aria-label={`Delete ${deviceTitle(m)} from your library`}
+                    >
+                      Delete
+                    </button>
+                  )}
+                  <button type="button" className="adv-addbtn" onClick={() => onPlace(m)}>
+                    Add
+                  </button>
+                </span>
               </div>
             );
           })
