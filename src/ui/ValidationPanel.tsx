@@ -6,10 +6,13 @@ export function ValidationPanel({
   result,
   onFocus,
   onClose,
+  onAddConverter,
 }: {
   result: ValidationResult;
   onFocus: (issue: ValidationIssue) => void;
   onClose: () => void;
+  /** One-click fix for a "Converter needed" issue. */
+  onAddConverter?: (edgeId: string) => void;
 }) {
   const { issues, errorCount, warningCount } = result;
 
@@ -55,6 +58,15 @@ export function ValidationPanel({
                       <span className="validation-item__detail">{iss.detail}</span>
                     </span>
                   </button>
+                  {iss.action?.type === "add-converter" && onAddConverter && (
+                    <button
+                      type="button"
+                      className="validation-item__fix"
+                      onClick={() => onAddConverter(iss.action!.edgeId)}
+                    >
+                      ＋ Add converter
+                    </button>
+                  )}
                 </li>
               ))}
             </ul>

@@ -116,6 +116,21 @@
   font-size: 12px;
   line-height: 1.4;
 }
+.validation-item__fix {
+  margin: 6px 0 2px 26px;
+  border: 1px solid #bfdbfe;
+  background: #eff6ff;
+  color: #1d4ed8;
+  border-radius: 7px;
+  padding: 5px 10px;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.validation-item__fix:hover {
+  background: #dbeafe;
+}
 
 /* Toolbar status pill */
 .validation-pill--ok {
@@ -159,4 +174,12 @@
 }
 [data-theme="dark"] .validation-item__detail {
   color: #94a3b8;
+}
+[data-theme="dark"] .validation-item__fix {
+  background: #1a1830;
+  border-color: #322c5a;
+  color: #a99cff;
+}
+[data-theme="dark"] .validation-item__fix:hover {
+  background: #221d3d;
 }

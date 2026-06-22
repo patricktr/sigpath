@@ -561,6 +561,45 @@
   color: var(--on-accent);
 }
 
+/* Converter chooser — candidate list inside the modal. */
+.cvt-list {
+  list-style: none;
+  margin: 0 0 16px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 300px;
+  overflow-y: auto;
+}
+.cvt-row {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  text-align: left;
+  padding: 8px 10px;
+  border: 1px solid var(--panel-border);
+  border-radius: var(--radius);
+  background: var(--btn-bg);
+  color: var(--text);
+  cursor: pointer;
+  font: inherit;
+}
+.cvt-row:hover {
+  background: var(--row-hover);
+  border-color: var(--accent-soft-border);
+}
+.cvt-row__name {
+  font-size: 13px;
+  font-weight: 600;
+}
+.cvt-row__io {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+}
+
 /* ---- Toast ---- */
 .adv-toast {
   position: fixed;

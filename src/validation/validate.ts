@@ -16,6 +16,8 @@ export type ValidationIssue = {
   edgeId?: string;
   /** Node(s) to frame when the user jumps to this issue. */
   focusNodeIds: string[];
+  /** A one-click fix the UI can offer for this issue. */
+  action?: { type: "add-converter"; edgeId: string };
 };
 
 export type ValidationResult = {
@@ -98,6 +100,12 @@ export function validate(nodes: SigNode[], edges: CableEdgeType[]): ValidationRe
           detail: `${path}: ${compat.reason}`,
           edgeId: e.id,
           focusNodeIds: [e.source, e.target],
+          // A converter mismatch (same signal domain, no passive cable) can be
+          // auto-fixed by splicing in a converter device; a true incompatibility
+          // (different domains) can't, so no action there.
+          ...(compat.kind === "converter"
+            ? { action: { type: "add-converter" as const, edgeId: e.id } }
+            : {}),
         });
       } else if (compat.status === "warn") {
         warnEdges.add(e.id);

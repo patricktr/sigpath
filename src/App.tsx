@@ -60,6 +60,8 @@ import {
   nextCableNumber,
   renumberCables,
 } from "./lists/cableId";
+import { loadCatalog } from "./ui/AddDevice/addDevice";
+import { findConverters, type ConverterCandidate } from "./library/converters";
 import { diagramImageBase64, diagramPdfBase64, listsToCsv, type ExportKind } from "./io/export";
 import { ValidationPanel } from "./ui/ValidationPanel";
 import { validate, type ValidationIssue } from "./validation/validate";
@@ -127,6 +129,12 @@ function AppInner() {
   const [editModel, setEditModel] = useState<DeviceModel | null>(null);
   const [editNodeId, setEditNodeId] = useState<string | null>(null);
   const [addToast, setAddToast] = useState<string | null>(null);
+  // When a mismatch has >1 candidate converter, the user picks one here.
+  const [converterChoice, setConverterChoice] = useState<{
+    edgeId: string;
+    label: string;
+    candidates: ConverterCandidate[];
+  } | null>(null);
   const [listsOpen, setListsOpen] = useState(false);
   const [closePrompt, setClosePrompt] = useState(false);
   const [validationOpen, setValidationOpen] = useState(false);
@@ -512,6 +520,16 @@ function AppInner() {
     return { edge: e, comboOptions, label };
   }, [selection.cables, nodes, lists.patches]);
 
+  // The selected cable's id if it's a convertible mismatch (so the contextbar can
+  // offer "Add converter" too, mirroring the validation panel).
+  const selectedConverterEdgeId = useMemo(() => {
+    if (selection.cables.length !== 1) return null;
+    const id = selection.cables[0].id;
+    return validation.issues.some((i) => i.action?.type === "add-converter" && i.action.edgeId === id)
+      ? id
+      : null;
+  }, [selection.cables, validation.issues]);
+
   const deviceTotal = useMemo(() => nodes.filter((n) => n.type === "device").length, [nodes]);
 
   const railDevices = useMemo(
@@ -633,6 +651,88 @@ function AppInner() {
     takeSnapshot();
     setEdges((eds) => renumberCables(eds, nodesRef.current));
   }, [setEdges, takeSnapshot]);
+
+  // Resolve a cable's two device ports (the input/output it runs between).
+  const cablePorts = useCallback((edgeId: string) => {
+    const edge = edgesRef.current.find((e) => e.id === edgeId);
+    if (!edge) return null;
+    const src = nodesRef.current.find((n) => n.id === edge.source);
+    const tgt = nodesRef.current.find((n) => n.id === edge.target);
+    if (!src || !tgt || src.type !== "device" || tgt.type !== "device") return null;
+    const srcPort = src.data.model.ports.find((p) => p.id === edge.sourceHandle);
+    const tgtPort = tgt.data.model.ports.find((p) => p.id === edge.targetHandle);
+    if (!srcPort || !tgtPort) return null;
+    return { edge, src, tgt, srcPort, tgtPort };
+  }, []);
+
+  // Splice a chosen converter into a mismatched run: drop the device at the run's
+  // midpoint, wire source→converter-in and converter-out→target (like-to-like,
+  // auto-numbered), and delete the original bad cable — all one undo step.
+  const insertConverter = useCallback(
+    (edgeId: string, cand: ConverterCandidate) => {
+      const ctx = cablePorts(edgeId);
+      if (!ctx) return;
+      const { edge, src, tgt, srcPort } = ctx;
+      takeSnapshot();
+      const convId = crypto.randomUUID();
+      const mid = (a: number, b: number) => Math.round((a + b) / 2 / GRID) * GRID;
+      const convNode: DeviceNodeType = {
+        id: convId,
+        type: "device",
+        position: { x: mid(src.position.x, tgt.position.x), y: mid(src.position.y, tgt.position.y) },
+        data: { model: cand.model },
+      };
+      setNodes((nds) => [...nds, convNode]);
+      setEdges((eds) => {
+        const working = eds.filter((e) => e.id !== edgeId);
+        const run = (
+          source: string,
+          sourceHandle: string | null | undefined,
+          target: string,
+          targetHandle: string | null | undefined,
+          connector: string | undefined,
+        ) => {
+          const prefix = cablePrefixFromConnector(connector);
+          working.push({
+            id: `cable-${crypto.randomUUID()}`,
+            source,
+            target,
+            sourceHandle,
+            targetHandle,
+            type: "cable",
+            style: { stroke: cableColor(connector), strokeWidth: 2 },
+            data: { cableTypeId: connector ?? "", number: formatCableId(prefix, nextCableNumber(prefix, working)) },
+          });
+        };
+        run(edge.source, edge.sourceHandle, convId, cand.inPort.id, srcPort.connector);
+        run(convId, cand.outPort.id, edge.target, edge.targetHandle, cand.outPort.connector);
+        return working;
+      });
+      setStatus(`Inserted ${cand.model.model}`);
+    },
+    [cablePorts, setNodes, setEdges, takeSnapshot],
+  );
+
+  // Entry point from the validation panel / contextbar: find candidate converters
+  // for a mismatched cable and either insert the only one, open a chooser, or
+  // report that the library has none.
+  const requestAddConverter = useCallback(
+    (edgeId: string) => {
+      const ctx = cablePorts(edgeId);
+      if (!ctx) return;
+      const candidates = findConverters(ctx.srcPort, ctx.tgtPort, loadCatalog());
+      const label = `${cableLabel(ctx.srcPort.connector)} → ${cableLabel(ctx.tgtPort.connector)}`;
+      if (candidates.length === 0) {
+        setAddToast(`No converter in your library bridges ${label}`);
+      } else if (candidates.length === 1) {
+        insertConverter(edgeId, candidates[0]);
+        setAddToast(`Inserted ${candidates[0].model.model}`);
+      } else {
+        setConverterChoice({ edgeId, label, candidates });
+      }
+    },
+    [cablePorts, insertConverter],
+  );
 
   // Reflect the resolved theme on <html> so the token system swaps.
   useEffect(() => {
@@ -1102,6 +1202,15 @@ function AppInner() {
                     <strong style={{ fontWeight: 600 }}>{selectedCable.label}</strong>
                   </span>
                 ))}
+              {selectedConverterEdgeId && (
+                <button
+                  type="button"
+                  className="contextbar__btn"
+                  onClick={() => requestAddConverter(selectedConverterEdgeId)}
+                >
+                  ＋ Add converter
+                </button>
+              )}
               <button type="button" className="contextbar__btn" onClick={deleteSelection}>
                 Delete
               </button>
@@ -1173,6 +1282,7 @@ function AppInner() {
               result={validation}
               onFocus={focusIssue}
               onClose={() => setValidationOpen(false)}
+              onAddConverter={requestAddConverter}
             />
           )}
         </div>
@@ -1262,6 +1372,44 @@ function AppInner() {
       {addToast && (
         <div className="adv-toast" role="status">
           {addToast}
+        </div>
+      )}
+
+      {converterChoice && (
+        <div className="modal-backdrop" onClick={() => setConverterChoice(null)}>
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
+            <h2 className="modal__title">Add a converter</h2>
+            <p className="modal__body">
+              <strong>{converterChoice.label}</strong> — pick a converter from your library:
+            </p>
+            <ul className="cvt-list">
+              {converterChoice.candidates.map((c) => (
+                <li key={c.model.id}>
+                  <button
+                    type="button"
+                    className="cvt-row"
+                    onClick={() => {
+                      insertConverter(converterChoice.edgeId, c);
+                      setAddToast(`Inserted ${c.model.model}`);
+                      setConverterChoice(null);
+                    }}
+                  >
+                    <span className="cvt-row__name">
+                      {c.model.manufacturer ? `${c.model.manufacturer} ${c.model.model}` : c.model.model}
+                    </span>
+                    <span className="cvt-row__io">
+                      {cableLabel(c.inPort.connector)} in → {cableLabel(c.outPort.connector)} out
+                    </span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+            <div className="modal__actions">
+              <button type="button" onClick={() => setConverterChoice(null)}>
+                Cancel
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
