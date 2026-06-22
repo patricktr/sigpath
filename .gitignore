@@ -23,6 +23,7 @@ dist-ssr
 *.sln
 *.sw?
 
-# Design scratch — keep the brand logos, ignore the handoff bundles
+# Design scratch — keep the brand logos and architecture docs, ignore the handoff bundles
 design/*
 !design/logo/
+!design/*.html

@@ -1,0 +1,514 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>sigpath — Signal Grade vs Cable Bandwidth</title>
+    <style>
+      :root {
+        --bg: #f6f8fb;
+        --panel: #ffffff;
+        --ink: #0f172a;
+        --muted: #64748b;
+        --line: #e2e8f0;
+        --accent: #2563eb;
+        --accent-soft: #dbeafe;
+        --done: #16a34a;
+        --next: #d97706;
+        --planned: #94a3b8;
+        --code-bg: #0f172a;
+        --code-ink: #e2e8f0;
+        --shadow: 0 1px 2px rgba(15, 23, 42, 0.06), 0 8px 24px rgba(15, 23, 42, 0.06);
+        /* signal palette — mirrors the app */
+        --video: #3b82f6;
+        --audio: #22c55e;
+        --av: #8b5cf6;
+        --network: #06b6d4;
+        --control: #f59e0b;
+        --power: #ef4444;
+        --radius: 12px;
+        --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica,
+          Arial, sans-serif;
+        --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas,
+          "Liberation Mono", monospace;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #0b1120;
+          --panel: #131c2e;
+          --ink: #e2e8f0;
+          --muted: #94a3b8;
+          --line: #25304a;
+          --accent: #60a5fa;
+          --accent-soft: #1e293b;
+          --code-bg: #0a1020;
+          --code-ink: #d8e2f1;
+          --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 10px 30px rgba(0, 0, 0, 0.35);
+        }
+      }
+      * { box-sizing: border-box; }
+      html { scroll-behavior: smooth; }
+      body {
+        margin: 0;
+        font-family: var(--font);
+        color: var(--ink);
+        background: var(--bg);
+        line-height: 1.55;
+        -webkit-font-smoothing: antialiased;
+      }
+      .wrap { max-width: 980px; margin: 0 auto; padding: 0 20px 80px; }
+
+      header.hero {
+        background:
+          radial-gradient(1200px 240px at 15% -40%, var(--accent-soft), transparent),
+          var(--panel);
+        border-bottom: 1px solid var(--line);
+        padding: 40px 0 28px;
+        margin-bottom: 28px;
+      }
+      .hero-inner { max-width: 980px; margin: 0 auto; padding: 0 20px; }
+      .wordmark { display: flex; align-items: center; gap: 12px; }
+      .wordmark .logo {
+        display: inline-flex; gap: 4px; align-items: center;
+        padding: 6px 8px; border-radius: 8px; background: var(--ink);
+      }
+      .wordmark .logo span { width: 8px; height: 18px; border-radius: 2px; display: block; }
+      .wordmark h1 { font-size: 26px; margin: 0; letter-spacing: -0.02em; }
+      .hero p.tagline { color: var(--muted); margin: 6px 0 0; font-size: 15px; max-width: 70ch; }
+      .meta { margin-top: 14px; font-size: 13px; color: var(--muted); }
+      .meta a { color: var(--accent); text-decoration: none; }
+      .meta a:hover { text-decoration: underline; }
+
+      h2.section { font-size: 19px; margin: 40px 0 14px; letter-spacing: -0.01em; scroll-margin-top: 16px; }
+      h2.section .num {
+        display: inline-grid; place-items: center; width: 24px; height: 24px;
+        font-size: 13px; border-radius: 7px; background: var(--accent-soft);
+        color: var(--accent); margin-right: 9px; vertical-align: 2px;
+      }
+      h3.sub { font-size: 14.5px; margin: 20px 0 8px; letter-spacing: -0.01em; }
+      p.lead { color: var(--muted); margin: 0 0 18px; max-width: 78ch; }
+      p { max-width: 78ch; }
+
+      .principles { background: var(--accent-soft); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px 20px; }
+      .principles ul { margin: 8px 0 0; padding-left: 18px; }
+      .principles li { margin: 5px 0; }
+      .principles strong { color: var(--ink); }
+
+      .tag { font-size: 11px; padding: 1px 7px; border-radius: 6px; background: var(--accent-soft); color: var(--accent); margin-left: 6px; white-space: nowrap; }
+      .pill {
+        display: inline-block; font-size: 11px; font-weight: 600; letter-spacing: 0.03em;
+        padding: 2px 9px; border-radius: 999px; border: 1px solid var(--line); color: var(--muted);
+      }
+      .pill.cap   { color: var(--accent); border-color: color-mix(in srgb, var(--accent) 40%, var(--line)); }
+      .pill.dem   { color: var(--next); border-color: color-mix(in srgb, var(--next) 40%, var(--line)); }
+
+      /* TWO-GATE DIAGRAM */
+      .diagram { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 6px 0 10px; }
+      @media (max-width: 720px) { .diagram { grid-template-columns: 1fr; } }
+      .lane { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); padding: 14px 14px 16px; border-top-width: 3px; }
+      .lane--g1 { border-top-color: var(--planned); }
+      .lane--g2 { border-top-color: var(--accent); }
+      .lane-head { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+      .node { background: var(--bg); border: 1px solid var(--line); border-radius: 9px; padding: 9px 11px; font-size: 13.5px; font-weight: 600; }
+      .node small { display: block; font-weight: 400; color: var(--muted); font-size: 11.5px; margin-top: 2px; }
+      .node--new { border-style: dashed; border-color: color-mix(in srgb, var(--accent) 45%, var(--line)); }
+      .arrow { text-align: center; color: var(--muted); font-size: 12px; padding: 5px 0; }
+      .diagram-note { font-size: 13px; color: var(--muted); background: var(--accent-soft); border: 1px solid var(--line); border-radius: 9px; padding: 10px 13px; margin: 4px 0 0; }
+      .diagram-note strong { color: var(--ink); }
+
+      ol.flow { list-style: none; counter-reset: step; padding: 0; margin: 12px 0; }
+      ol.flow > li { position: relative; padding: 4px 0 14px 40px; border-left: 2px solid var(--line); margin-left: 13px; }
+      ol.flow > li:last-child { border-left-color: transparent; padding-bottom: 0; }
+      ol.flow > li::before {
+        counter-increment: step; content: counter(step);
+        position: absolute; left: -14px; top: 0; width: 26px; height: 26px;
+        display: grid; place-items: center; border-radius: 50%;
+        background: var(--accent); color: #fff; font-size: 13px; font-weight: 700;
+      }
+      ol.flow .st { font-weight: 600; }
+      ol.flow .sd { color: var(--muted); font-size: 13.5px; }
+
+      pre {
+        background: var(--code-bg); color: var(--code-ink); border-radius: 10px;
+        padding: 13px 15px; overflow-x: auto; font-family: var(--mono);
+        font-size: 12.5px; line-height: 1.5; border: 1px solid var(--line); margin: 12px 0;
+      }
+      pre .c { color: #7e8aa3; }
+      pre .k { color: #7dd3fc; }
+      pre .s { color: #86efac; }
+      pre .n { color: #fcd34d; }
+      code { font-family: var(--mono); font-size: 0.9em; background: color-mix(in srgb, var(--accent-soft) 60%, var(--panel)); padding: 1px 5px; border-radius: 5px; }
+      pre code { background: none; padding: 0; font-size: inherit; }
+
+      .table-scroll { overflow-x: auto; border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); margin: 8px 0; }
+      table { border-collapse: collapse; width: 100%; font-size: 13.5px; background: var(--panel); }
+      th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+      th { background: color-mix(in srgb, var(--accent-soft) 50%, var(--panel)); font-size: 12px; text-transform: uppercase; letter-spacing: 0.03em; color: var(--muted); }
+      tr:last-child td { border-bottom: none; }
+      td strong { color: var(--ink); }
+      td code { white-space: nowrap; }
+      .ok { color: var(--done); font-weight: 600; }
+      .bad { color: var(--power); font-weight: 600; }
+      .mono-cell { font-family: var(--mono); font-size: 12px; white-space: nowrap; }
+
+      .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 12px; margin: 8px 0; }
+      .card { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px 16px; box-shadow: var(--shadow); }
+      .card h4 { margin: 0 0 5px; font-size: 14.5px; display: flex; align-items: center; gap: 8px; }
+      .card p { margin: 0; font-size: 13px; color: var(--muted); }
+      .card .rec { display: inline-block; margin-top: 9px; font-size: 11.5px; font-weight: 600; color: var(--done); }
+      .card .risk { color: var(--power); }
+      .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+
+      .callout { border-left: 3px solid var(--accent); background: color-mix(in srgb, var(--accent-soft) 55%, var(--panel)); padding: 12px 16px; border-radius: 0 10px 10px 0; margin: 14px 0; font-size: 13.5px; }
+      .callout strong { color: var(--ink); }
+      .callout.warn { border-left-color: var(--next); background: color-mix(in srgb, #fde68a 30%, var(--panel)); }
+
+      /* grade ladder chips */
+      .ladder { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 2px 0 0; }
+      .ladder .gname { font-size: 12px; font-weight: 700; color: var(--muted); min-width: 92px; }
+      .ladder .chip { font-size: 11.5px; font-family: var(--mono); padding: 2px 7px; border-radius: 6px; background: var(--bg); border: 1px solid var(--line); }
+      .ladder .lt { color: var(--muted); font-size: 11px; }
+
+      footer { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--line); font-size: 12.5px; color: var(--muted); }
+      footer a { color: var(--accent); }
+    </style>
+  </head>
+  <body>
+    <header class="hero">
+      <div class="hero-inner">
+        <div class="wordmark">
+          <span class="logo" aria-hidden="true">
+            <span style="background: var(--video)"></span>
+            <span style="background: var(--av)"></span>
+            <span style="background: var(--power)"></span>
+          </span>
+          <h1>sigpath</h1>
+        </div>
+        <p class="tagline">
+          <strong>Signal grade vs cable bandwidth — architecture.</strong> Why a matching
+          connector doesn't prove a working link, and how sigpath grows its compatibility
+          primitive from “connectors match” to “connectors match <em>and</em> the rating ≥ the
+          signal's demand.” The design behind roadmap item <code>p1-signalgrade</code>.
+        </p>
+        <div class="meta">
+          Last updated June 22, 2026 ·
+          <a href="../ROADMAP.html">← Product roadmap</a> ·
+          <a href="COMMUNITY.html">Community architecture →</a> ·
+          <a href="https://github.com/patricktr/sigpath">github.com/patricktr/sigpath</a>
+        </div>
+      </div>
+    </header>
+
+    <div class="wrap">
+      <!-- TL;DR -->
+      <h2 class="section">The one idea</h2>
+      <div class="principles">
+        <ul>
+          <li><strong>A connector proves the shape, not the throughput.</strong> Both ends are BNC, but a 3G-SDI cable will not pass a 12G-SDI signal. The validator today stops at “the plugs mate.” That's necessary, not sufficient.</li>
+          <li><strong>Capability and demand are different things.</strong> A 12G port is <em>capable</em> of 12G; it does not <em>demand</em> it — it will happily emit 3G. The link works whenever <strong>demand ≤ capability</strong> at every hop. The asymmetry is real: a higher grade always carries a lower one; never the reverse.</li>
+          <li><strong>The show format sets the demand.</strong> AV folks describe a show as <code>1080p59.94</code> or <code>2160p59.94</code>, not in Gbps. That one project setting is the demand ceiling — and it's what stops a 12G-capable port from nagging for 12G cable across an HD show.</li>
+          <li><strong>Unknown ⇒ silent. No format ⇒ ask.</strong> When a grade is unknown, the check is skipped — turning this on never floods old diagrams with errors. When graded gear exists but no show format is set, the validator doesn't guess: it asks the user to pick one.</li>
+        </ul>
+      </div>
+
+      <!-- 1. TWO-GATE MODEL -->
+      <h2 class="section"><span class="num">1</span>The two-gate model</h2>
+      <p class="lead">
+        Compatibility grows a second gate. <span class="pill cap">Gate 1</span> is today's
+        connector check — does the plug physically mate? <span class="pill dem">Gate 2</span> is
+        new — is the run's <em>demand</em> within the <em>capability</em> of the cable and the
+        sink? Gate 2 only runs if Gate 1 already passed, and only on connectors that <em>have</em>
+        a bandwidth grade (SDI, HDMI, DisplayPort, USB, Ethernet — never analog audio or power).
+      </p>
+
+      <div class="diagram">
+        <div class="lane lane--g1">
+          <div class="lane-head"><span class="dot" style="background: var(--planned)"></span>Gate 1 · connectors mate · today</div>
+          <div class="node">Same connector → straight cable <small>checkPortCompatibility() — unchanged</small></div>
+          <div class="arrow">↓ &nbsp;same family / group → adapter or converter</div>
+          <div class="node">Different group → incompatible <small>BNC↔BNC always passes here</small></div>
+        </div>
+        <div class="lane lane--g2">
+          <div class="lane-head"><span class="dot" style="background: var(--accent)"></span>Gate 2 · grade · new</div>
+          <div class="node node--new">Resolve the run's demand <small>min(source max, show format) — or a per-run override</small></div>
+          <div class="arrow">↓ &nbsp;compare by rank, within one scale</div>
+          <div class="node node--new">demand ≤ cable rating &amp; demand ≤ sink max <small>under either ⇒ hard error</small></div>
+        </div>
+      </div>
+      <p class="diagram-note">
+        <strong>Why split it:</strong> keeping Gate 1 a pure property of two connectors means its
+        three callers — the validator, the cables/adapters list, and the converter finder — keep
+        working untouched. Grade rides alongside as an independent second check, computed where the
+        run and the project are both in scope.
+      </p>
+
+      <!-- 2. THE GOTCHA -->
+      <h2 class="section"><span class="num">2</span>The 12G→3G→12G gotcha, resolved</h2>
+      <p class="lead">
+        The whole design turns on one scenario: a 12G-capable output, a 3G-rated cable, a
+        12G-capable input — all BNC. Whether that's broken depends entirely on what's
+        <em>flowing</em>, which is the show format. The same diagram is fine for an HD show and
+        broken for a 4K60 show, and sigpath should say so.
+      </p>
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr><th>Run (all BNC)</th><th>Show format</th><th>Demand</th><th>Cable 3G</th><th>Sink</th><th>Verdict</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>12G out → 3G cable → 12G in</td>
+              <td>1080p59.94</td>
+              <td class="mono-cell">3G-SDI</td>
+              <td class="ok">≥ ok</td>
+              <td class="ok">≥ ok</td>
+              <td class="ok">Pass — silent</td>
+            </tr>
+            <tr>
+              <td>12G out → 3G cable → 12G in</td>
+              <td>2160p59.94</td>
+              <td class="mono-cell">12G-SDI</td>
+              <td class="bad">3G &lt; 12G</td>
+              <td class="ok">≥ ok</td>
+              <td class="bad">Error — cable under-rated</td>
+            </tr>
+            <tr>
+              <td>12G out → 12G cable → 3G-only in</td>
+              <td>2160p59.94</td>
+              <td class="mono-cell">12G-SDI</td>
+              <td class="ok">≥ ok</td>
+              <td class="bad">3G &lt; 12G</td>
+              <td class="bad">Error — input can't accept</td>
+            </tr>
+            <tr>
+              <td>any graded run</td>
+              <td><em>not set</em></td>
+              <td class="mono-cell">— pending —</td>
+              <td>—</td>
+              <td>—</td>
+              <td style="color: var(--accent); font-weight: 600;">Ask — “pick a show format”</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="callout">
+        <strong>This is the answer to “do we need the user to set a max data rate?”</strong> — yes,
+        and frame size/rate (<code>2160p59.94</code>) is the right surface, not raw Gbps. Without
+        it, demand would have to fall back to each source's own maximum, and every 12G port would
+        demand 12G cable everywhere: the false-positive avalanche. With it, an HD show demands only
+        3G and the gotcha evaporates.
+      </p>
+
+      <!-- 3. DEMAND RESOLUTION -->
+      <h2 class="section"><span class="num">3</span>Where demand comes from</h2>
+      <p class="lead">
+        Demand is per-run, but you almost never set it per-run. It cascades from one project
+        setting, with two escape hatches for how real shows actually behave.
+      </p>
+      <pre><code><span class="c">// Resolve the grade a run actually carries (the "required" rating).</span>
+<span class="k">function</span> demand(run, project): GradeId | <span class="k">undefined</span> | PENDING {
+  <span class="k">const</span> scale = gradeScaleOf(run.source.connector);
+  <span class="k">if</span> (!scale) <span class="k">return</span> <span class="k">undefined</span>;            <span class="c">// ungraded family (XLR, IEC…) — Gate 2 skipped</span>
+
+  <span class="k">if</span> (run.signalGrade) <span class="k">return</span> run.signalGrade;  <span class="c">// per-run override (the one 12G feed in an HD show)</span>
+
+  <span class="k">const</span> ceiling = project.signalProfile?.targets?.[scale]
+              ?? videoFormatToGrade(project.signalProfile?.videoFormat, scale);
+  <span class="k">if</span> (!ceiling) <span class="k">return</span> PENDING;             <span class="c">// graded gear but no show format ⇒ ask the user</span>
+
+  <span class="k">const</span> sourceMax = run.source.grade;          <span class="c">// a source can't emit beyond its own max…</span>
+  <span class="k">return</span> sourceMax ? minByRank(sourceMax, ceiling) : ceiling;  <span class="c">// …nor beyond the show</span>
+}</code></pre>
+      <ul>
+        <li><strong>Per-domain, not one global number.</strong> A show is “1080p59.94” for the <em>image</em> domain (SDI + HDMI + DisplayPort move together), but its network is independently 1G/10G and USB is its own thing. The profile is one video format → image grades, plus optional explicit targets for network and USB/data.</li>
+        <li><strong>Per-run override.</strong> Mixed-rate shows are normal — the PGM feed is 2160p59.94 (12G) while confidence and multiviewer feeds are 1080i (HD). The project sets the default; <code>connection.signalGrade</code> overrides a single run up or down.</li>
+        <li><strong>Clamped by the source.</strong> A 3G camera in a 4K show can only ever emit 3G, so its runs demand 3G — and (phase D) the camera itself earns a soft “below show format” note, not a cable error.</li>
+      </ul>
+
+      <!-- 4. GRADE SCALES -->
+      <h2 class="section"><span class="num">4</span>The grade scales</h2>
+      <p class="lead">
+        A grade is meaningful only <em>within</em> a family — you never compare an SDI grade to an
+        HDMI grade. Each family is an ordered ladder; comparison is by rank. The <code>gbps</code>
+        is carried for display and sorting, and for the rare cross-family converter reasoning.
+      </p>
+      <div class="card" style="margin-bottom: 10px;">
+        <div class="ladder"><span class="gname">sdi</span><span class="chip">SD</span><span class="lt">‹</span><span class="chip">HD&nbsp;1.5G</span><span class="lt">‹</span><span class="chip">3G</span><span class="lt">‹</span><span class="chip">6G</span><span class="lt">‹</span><span class="chip">12G</span><span class="lt">‹</span><span class="chip">24G</span></div>
+      </div>
+      <div class="card" style="margin-bottom: 10px;">
+        <div class="ladder"><span class="gname">hdmi</span><span class="chip">1.4 · 10.2G</span><span class="lt">‹</span><span class="chip">2.0 · 18G</span><span class="lt">‹</span><span class="chip">2.1 · 48G</span></div>
+      </div>
+      <div class="card" style="margin-bottom: 10px;">
+        <div class="ladder"><span class="gname">displayport</span><span class="chip">1.2 · 21.6G</span><span class="lt">‹</span><span class="chip">1.4 · 32.4G</span><span class="lt">‹</span><span class="chip">2.0 · 80G</span></div>
+      </div>
+      <div class="card" style="margin-bottom: 10px;">
+        <div class="ladder"><span class="gname">usb</span><span class="chip">2.0 · 480M</span><span class="lt">‹</span><span class="chip">5G</span><span class="lt">‹</span><span class="chip">10G</span><span class="lt">‹</span><span class="chip">20G</span><span class="lt">‹</span><span class="chip">40G</span><span class="lt">‹</span><span class="chip">80G</span></div>
+      </div>
+      <div class="card">
+        <div class="ladder"><span class="gname">ethernet</span><span class="chip">100M</span><span class="lt">‹</span><span class="chip">1G</span><span class="lt">‹</span><span class="chip">2.5G</span><span class="lt">‹</span><span class="chip">5G</span><span class="lt">‹</span><span class="chip">10G</span><span class="lt">‹</span><span class="chip">25G</span></div>
+      </div>
+      <p style="margin-top: 14px;">
+        Each connector points at its scale via one new optional field. SDI/BNC → <code>sdi</code>;
+        HDMI / Mini / Micro → <code>hdmi</code>; DisplayPort / Mini-DP → <code>displayport</code>;
+        USB-C/A/B / Thunderbolt → <code>usb</code>; RJ45 / etherCON → <code>ethernet</code>.
+        Everything else (XLR, TRS, RCA, IEC, NEMA, RS-232…) has <em>no</em> scale and is never
+        grade-checked.
+      </p>
+
+      <!-- 5. SCHEMA SEAM -->
+      <h2 class="section"><span class="num">5</span>The schema changes</h2>
+      <p class="lead">
+        Additive and optional, in the spirit of the
+        <a href="COMMUNITY.html">community seam</a>. Nothing here breaks an existing
+        <code>.sigpath</code> file — an old file simply has no <code>signalProfile</code>, so Gate 2
+        stays dormant until a format is set.
+      </p>
+      <pre><code><span class="c">// src/schema/grades.ts — NEW: per-family bandwidth ladders</span>
+<span class="k">type</span> GradeScaleId = <span class="s">"sdi"</span> | <span class="s">"hdmi"</span> | <span class="s">"displayport"</span> | <span class="s">"usb"</span> | <span class="s">"ethernet"</span>;
+<span class="k">type</span> GradeId = <span class="k">string</span>;                         <span class="c">// e.g. "sdi-3g", "hdmi-2.1", "eth-10g"</span>
+<span class="k">type</span> GradeTier = { id: GradeId; label: <span class="k">string</span>; rank: <span class="k">number</span>; gbps: <span class="k">number</span> };
+<span class="c">// GRADE_SCALES[scale] = ordered GradeTier[]; compare by rank, only within a scale.</span>
+
+<span class="c">// src/schema/connectors.ts — ConnectorDef gains one optional field</span>
+gradeScale?: GradeScaleId;            <span class="c">// omitted ⇒ ungraded; never grade-checked</span>
+
+<span class="c">// src/schema/device.ts — Port gains its capability ceiling</span>
+grade?: GradeId;                      <span class="c">// max this jack emits/accepts; omitted ⇒ unrated</span>
+
+<span class="c">// src/schema/connection.ts — the run carries the cable's rating + an optional demand override</span>
+cableGrade?: GradeId;                 <span class="c">// the cable's SUPPORTED rating</span>
+signalGrade?: GradeId;                <span class="c">// per-run demand override (mixed-rate shows)</span>
+
+<span class="c">// src/schema/document.ts — Project gains the demand ceiling</span>
+signalProfile?: {
+  videoFormat?: <span class="k">string</span>;               <span class="c">// "1080p59.94" | "2160p59.94" → image domain</span>
+  targets?: Partial&lt;Record&lt;GradeScaleId, GradeId&gt;&gt;;  <span class="c">// explicit network / usb</span>
+};
+<span class="c">// SIGPATH_SCHEMA_VERSION: 1 → 2  (forward migration: old files load with profile undefined)</span></code></pre>
+      <p class="callout warn">
+        <strong>One ripple to plan for:</strong> <code>deviceContentHash()</code> must fold
+        <code>port.grade</code> into its canonical — a 12G port and a 3G port are different
+        identities. That recomputes every hash once, so the first catalog publish after this lands
+        looks like “every row changed.” Handle it as a single intentional rev bump, not a sync bug.
+      </p>
+
+      <!-- 6. VALIDATION -->
+      <h2 class="section"><span class="num">6</span>Validation &amp; the “pick a show format” state</h2>
+      <p class="lead">
+        Gate 2 adds two issue types, and one project-level state. The two issues ride the existing
+        validation rails — the panel, the red/amber edge styling, the status pill — so no
+        structural UI change is needed for them.
+      </p>
+      <div class="table-scroll">
+        <table>
+          <thead><tr><th>Condition</th><th>Severity</th><th>Message</th></tr></thead>
+          <tbody>
+            <tr>
+              <td><strong>Input can't carry signal grade</strong><br /><code>sink.grade &lt; demand</code></td>
+              <td class="bad">Error</td>
+              <td>“{sink} maxes at 3G-SDI; this run carries 12G-SDI.” The destination physically can't accept it.</td>
+            </tr>
+            <tr>
+              <td><strong>Cable under-rated</strong><br /><code>cableGrade &lt; demand</code></td>
+              <td class="bad">Error</td>
+              <td>“Cable rated 3G-SDI; this run carries 12G-SDI — use a 12G-rated cable.” The most fixable failure, but still a failure.</td>
+            </tr>
+            <tr>
+              <td><strong>Source below show format</strong> <span class="tag">phase D</span><br /><code>source.grade &lt; target</code></td>
+              <td style="color: var(--next); font-weight: 600;">Warning</td>
+              <td>“{source} tops out at 3G-SDI; the show is 2160p59.94 (12G).” The source can't make the format — not a cable problem.</td>
+            </tr>
+            <tr>
+              <td><strong>Needs show format</strong><br /><code>hasGradedRuns &amp;&amp; !format</code></td>
+              <td style="color: var(--accent); font-weight: 600;">Prompt</td>
+              <td>One banner at the top of the validation panel, plus a distinct status-dot color. <em>Not</em> per-edge — a single call to action.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <h3 class="sub">The needs-format state, precisely</h3>
+      <ul>
+        <li><strong>Trigger:</strong> the diagram has at least one run on a graded scale <em>and</em> no <code>signalProfile.videoFormat</code> (and no explicit target for that scale). A purely analog/power diagram never triggers it — there's nothing to grade.</li>
+        <li><strong>Status dot:</strong> today's pill in the status bar is green (ok) / amber (warn) / red (error). This adds a fourth state. Recommendation: a <strong>blue “needs setup”</strong> dot rather than orange — amber already means “warnings,” and a second orange would be ambiguous. It reads as actionable-but-not-broken.</li>
+        <li><strong>Banner copy</strong> (near the top of the validation panel, draft for wording):
+          <em>“Set a show format to check signal grades — sigpath can't tell a 3G cable from a 12G one until it knows what the show runs at.”</em> with a button that opens the format selector.</li>
+        <li><strong>Once set:</strong> the banner clears and real per-edge grade errors (if any) appear normally.</li>
+      </ul>
+
+      <!-- 7. DATA ENTRY & MIGRATION -->
+      <h2 class="section"><span class="num">7</span>Data entry &amp; the catalog ripple</h2>
+      <p class="lead">
+        The roadmap's “every port needs a grade” is the bulk of the work — but the catalog already
+        carries most of the answer as free text. Of <strong>840 ports across 60 models, 612 have a
+        note</strong> and ~106 already state a grade (<code>"3G-SDI"</code>, <code>"USB 2.0"</code>,
+        <code>"HDMI 2.0 Type A"</code>, <code>"10/100/1000/10G BASE-T"</code>). The graded families
+        dominate: SDI/BNC 258 ports, HDMI 91, RJ45 72, USB 67.
+      </p>
+      <ol class="flow">
+        <li><span class="st">Parse notes → structured grade.</span> <span class="sd">A one-time script over <code>communityCatalog.json</code> lifts the ~106 explicit hints into <code>port.grade</code>. Free coverage on the highest-value ports.</span></li>
+        <li><span class="st">Connector-era defaults for the rest.</span> <span class="sd">Where no hint exists, infer a conservative per-connector default (bare SDI/BNC → 3G, the modern baseline; RJ45 → 1G). Corrections flow back through the community “Correct” path.</span></li>
+        <li><span class="st">Grade dropdown in the create wizard.</span> <span class="sd">A new column in the port grid that only appears when the chosen connector has a scale, options drawn from that scale. Surfaced read-only in the Inspector.</span></li>
+        <li><span class="st">Project show-format selector.</span> <span class="sd">One control (by Validate / Lists, or in project settings). The highest-leverage element in the whole feature — it's what makes Gate 2 usable instead of noisy.</span></li>
+        <li><span class="st">Per-run cable grade + override.</span> <span class="sd">In the edge inspector / contextbar — set the cable's rating, or override the demand for this one run.</span></li>
+        <li><span class="st">JSON Schema.</span> <span class="sd"><code>device.schema.json</code> (the Phase-4 community CI gate) gains the optional <code>grade</code> enum per scale, so contributions are validated.</span></li>
+      </ol>
+
+      <!-- 8. BUILD ORDER -->
+      <h2 class="section"><span class="num">8</span>Suggested build order</h2>
+      <p class="lead">Each phase is independently shippable. <strong>v1 = A–C.</strong> D is follow-on polish.</p>
+      <div class="table-scroll">
+        <table>
+          <thead><tr><th>#</th><th>Phase</th><th>Why this slot</th></tr></thead>
+          <tbody>
+            <tr><td><strong>A</strong></td><td>Silent plumbing — grade scales, connector→scale, optional fields, schema bump + migration, content-hash fold-in</td><td>Pure groundwork, no behavior change. Mirrors how the rev/contentHash seam landed before Phase 4 needed it.</td></tr>
+            <tr><td><strong>B</strong></td><td>Demand resolution + Gate 2 in <code>validate()</code> — two issue types, the needs-format state, edge messaging</td><td>The logic core. Unknown stays silent; no format prompts. Disturbs no existing diagram.</td></tr>
+            <tr><td><strong>C</strong></td><td>Data entry — note-parse migration, connector backfill, wizard grade column, project format selector, JSON Schema</td><td>Makes it usable and editable end-to-end. The “connector isn't enough” fix, complete.</td></tr>
+            <tr><td><strong>D</strong></td><td>Polish — source-below-format warnings, grade-aware converter suggestions (up-converters are a real device class), grade on edge labels, bulk-set grade</td><td>Add when the core proves out — not before.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- 9. OPEN PROBLEMS -->
+      <h2 class="section"><span class="num">9</span>Open problems &amp; calls already made</h2>
+      <div class="grid">
+        <div class="card">
+          <h4><span class="dot" style="background: var(--done)"></span>Cable under-rating = hard error</h4>
+          <p>Decided: an under-rated cable blocks the run like any other mismatch. It genuinely won't pass the signal reliably; “easiest to fix” doesn't mean “not broken.”</p>
+          <span class="rec">resolved</span>
+        </div>
+        <div class="card">
+          <h4><span class="dot" style="background: var(--done)"></span>No format ⇒ ask, don't guess</h4>
+          <p>Decided: graded gear with no show format surfaces a single “pick a format” prompt and a distinct status-dot state — not silence, not a default that might surprise.</p>
+          <span class="rec">resolved</span>
+        </div>
+        <div class="card">
+          <h4><span class="dot" style="background: var(--next)"></span>Status-dot color</h4>
+          <p>The needs-format state needs a color that isn't green/amber/red. Leaning blue (“needs setup”) over orange to avoid colliding with amber warnings. Final call open.</p>
+          <span class="rec risk">needs a pick</span>
+        </div>
+        <div class="card">
+          <h4><span class="dot" style="background: var(--planned)"></span>Format → grade table</h4>
+          <p><code>videoFormatToGrade()</code> needs a curated map (1080p59.94 → SDI 3G + HDMI 2.0; 2160p59.94 → SDI 12G + HDMI 2.1; etc.). Small, but it's the semantic heart — worth getting exactly right.</p>
+          <span class="rec">phase B</span>
+        </div>
+        <div class="card">
+          <h4><span class="dot" style="background: var(--planned)"></span>Default backfill confidence</h4>
+          <p>Inferred defaults will sometimes be wrong (a “bnc” port that's really HD-only). Acceptable because the community Correct path exists — but worth a “grade: inferred vs stated” flag if corrections lag.</p>
+          <span class="rec">phase C</span>
+        </div>
+        <div class="card">
+          <h4><span class="dot" style="background: var(--av)"></span>Grade-aware converters</h4>
+          <p>An up-converter (3G→12G) is a real, purchasable box. Once grades exist, the converter finder can suggest the <em>right-rated</em> one — a natural extension of the existing finder.</p>
+          <span class="rec">phase D</span>
+        </div>
+      </div>
+
+      <footer>
+        sigpath — local-first AV signal-flow. This document specs roadmap item
+        <code>p1-signalgrade</code> (“Signal grade vs cable bandwidth — connector isn't enough”).
+        Companion to <a href="../ROADMAP.html">the roadmap</a> and
+        <a href="COMMUNITY.html">the community architecture</a>.
+      </footer>
+    </div>
+  </body>
+</html>
