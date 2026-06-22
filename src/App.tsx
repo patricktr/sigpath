@@ -159,6 +159,7 @@ function AppInner() {
   const zoneCount = useRef(0);
   const noteCount = useRef(0);
   const rf = useRef<ReactFlowInstance<SigNode, CableEdgeType> | null>(null);
+  const flowWrapRef = useRef<HTMLDivElement>(null);
 
   // Drawing a connection auto-types the cable from the source port's connector.
   const onConnect = useCallback(
@@ -222,10 +223,24 @@ function AppInner() {
     (model: DeviceModel) => {
       takeSnapshot();
       const i = addCount.current++;
+      // Spawn at the center of the current viewport — when adding, the cursor is
+      // over the device picker, so center-of-view is the useful anchor. Offset by
+      // ~half a node so it lands centered, snap to grid, and drift a little per
+      // add so a rapid burst doesn't stack on one spot.
+      const snap = (v: number) => Math.round(v / GRID) * GRID;
+      const wrap = flowWrapRef.current;
+      const inst = rf.current;
+      let position = { x: 80 + (i % 6) * 32, y: 90 + (i % 6) * 32 };
+      if (wrap && inst) {
+        const r = wrap.getBoundingClientRect();
+        const c = inst.screenToFlowPosition({ x: r.left + r.width / 2, y: r.top + r.height / 2 });
+        const drift = (i % 6) * GRID;
+        position = { x: snap(c.x - 100 + drift), y: snap(c.y - 40 + drift) };
+      }
       const node: DeviceNodeType = {
         id: crypto.randomUUID(),
         type: "device",
-        position: { x: 80 + (i % 6) * 32, y: 90 + (i % 6) * 32 },
+        position,
         data: { model },
       };
       setNodes((nds) => [...nds, node]);
@@ -1102,7 +1117,7 @@ function AppInner() {
           selectedId={selectedNodeId}
           onSelect={selectNode}
         />
-        <div className="canvas-wrap">
+        <div className="canvas-wrap" ref={flowWrapRef}>
           <ZoneActionsContext.Provider value={zoneActions}>
             <NoteActionsContext.Provider value={noteActions}>
               <ReactFlow
