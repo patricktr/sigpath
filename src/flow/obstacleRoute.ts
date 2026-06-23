@@ -27,6 +27,12 @@ const TURN_COST = 100_000;
 /** Bail out (fall back to the straight route) above this many in-play obstacles,
  *  so a pathological diagram can't stall the render. Grids stay small in practice. */
 const MAX_OBSTACLES = 40;
+/** Px that overlapping parallel detour runs are fanned apart (mirrors LANE_GAP). */
+const DETOUR_GAP = 14;
+/** Keep a fanned run at least this far off an obstacle it's threading beside. */
+const DETOUR_CLEAR = 6;
+/** Coords within this are the "same" trunk line for de-overlap grouping. */
+const TRUNK_TOL = 2;
 
 const inflate = (r: Rect, m: number): Rect => ({
   x: r.x - m,
@@ -300,6 +306,149 @@ export function simplifyOrthogonal(points: Pt[]): Pt[] {
       }
     }
     out.push(p);
+  }
+  return out;
+}
+
+// --- Detour-bundle de-overlap --------------------------------------------------
+
+/** One straight run of a routed detour, reduced to what de-overlap grouping needs. */
+type SegRef = {
+  id: string;
+  /** Index of this segment's first point within its route's point list. */
+  pi: number;
+  /** Shared coordinate of the run (x for a vertical run, y for a horizontal one). */
+  pos: number;
+  /** The run's span along its own axis (y-range for vertical, x-range for horizontal). */
+  lo: number;
+  hi: number;
+  /** Midpoint along the axis — orders runs within a cluster so they nest. */
+  mid: number;
+};
+
+const overlap1d = (aLo: number, aHi: number, bLo: number, bHi: number) =>
+  aLo < bHi - 0.5 && bLo < aHi - 0.5;
+
+/**
+ * Fan overlapping parallel detour runs apart so a bundle routing around the same box
+ * reads as separate lines instead of one merged trunk — the lane idea (parallelLanes.ts)
+ * generalized to arbitrary routed segments. Operates on the full routed polylines
+ * (ports included) and returns adjusted INTERIOR waypoints per cable.
+ *
+ * Each cluster of collinear, perpendicular-overlapping runs is spread perpendicular to
+ * itself. The spread window is packed into whatever free space the flanking obstacles
+ * leave (away from a wall, symmetric when clear, compressed if pinched), so a fanned run
+ * never crosses into a box. Port stubs (first/last run of each path) are never moved, so
+ * the cables stay anchored to their ports. Shifting a run only lengthens the horizontals
+ * that meet it; H/V runs alternate, so each point takes at most one x- and one y-shift.
+ */
+export function spreadDetourBundles(
+  routes: { id: string; pts: Pt[] }[],
+  deviceRects: Rect[],
+): Map<string, Pt[]> {
+  const infl = deviceRects.map((r) => inflate(r, OBSTACLE_MARGIN));
+  const deltas = new Map<string, { x: number; y: number }[]>();
+  for (const r of routes) deltas.set(r.id, r.pts.map(() => ({ x: 0, y: 0 })));
+
+  const collect = (axis: "v" | "h"): SegRef[] => {
+    const segs: SegRef[] = [];
+    for (const r of routes) {
+      // Skip the first/last run (port stubs) so ports stay put.
+      for (let i = 1; i < r.pts.length - 2; i++) {
+        const a = r.pts[i];
+        const b = r.pts[i + 1];
+        const isV = Math.abs(a.x - b.x) <= 0.5 && Math.abs(a.y - b.y) > 0.5;
+        const isH = Math.abs(a.y - b.y) <= 0.5 && Math.abs(a.x - b.x) > 0.5;
+        if (axis === "v" && isV) {
+          segs.push({ id: r.id, pi: i, pos: a.x, lo: Math.min(a.y, b.y), hi: Math.max(a.y, b.y), mid: (a.y + b.y) / 2 });
+        } else if (axis === "h" && isH) {
+          segs.push({ id: r.id, pi: i, pos: a.y, lo: Math.min(a.x, b.x), hi: Math.max(a.x, b.x), mid: (a.x + b.x) / 2 });
+        }
+      }
+    }
+    return segs;
+  };
+
+  const process = (axis: "v" | "h") => {
+    const segs = collect(axis);
+    const n = segs.length;
+    if (n < 2) return;
+    const parent = segs.map((_, i) => i);
+    const find = (i: number): number => (parent[i] === i ? i : (parent[i] = find(parent[i])));
+    for (let i = 0; i < n; i++) {
+      for (let j = i + 1; j < n; j++) {
+        if (Math.abs(segs[i].pos - segs[j].pos) <= TRUNK_TOL && overlap1d(segs[i].lo, segs[i].hi, segs[j].lo, segs[j].hi)) {
+          parent[find(i)] = find(j);
+        }
+      }
+    }
+    const groups = new Map<number, number[]>();
+    for (let i = 0; i < n; i++) {
+      const r = find(i);
+      const g = groups.get(r);
+      if (g) g.push(i);
+      else groups.set(r, [i]);
+    }
+
+    for (const idxs of groups.values()) {
+      const count = idxs.length;
+      if (count < 2) continue;
+      const lo = Math.min(...idxs.map((k) => segs[k].lo));
+      const hi = Math.max(...idxs.map((k) => segs[k].hi));
+      const pos = segs[idxs[0]].pos;
+      // Free room on each side of the cluster (perpendicular to the runs), bounded by
+      // the nearest obstacle that spans the same band.
+      let gapNeg = Infinity;
+      let gapPos = Infinity;
+      for (const o of infl) {
+        const bandLo = axis === "v" ? o.y : o.x;
+        const bandHi = axis === "v" ? o.y + o.h : o.x + o.w;
+        if (!overlap1d(lo, hi, bandLo, bandHi)) continue;
+        const edgeNeg = axis === "v" ? o.x : o.y;
+        const edgePos = axis === "v" ? o.x + o.w : o.y + o.h;
+        if (edgeNeg >= pos - 0.5) gapPos = Math.min(gapPos, edgeNeg - pos);
+        if (edgePos <= pos + 0.5) gapNeg = Math.min(gapNeg, pos - edgePos);
+      }
+      const roomNeg = gapNeg === Infinity ? Infinity : Math.max(0, gapNeg - DETOUR_CLEAR);
+      const roomPos = gapPos === Infinity ? Infinity : Math.max(0, gapPos - DETOUR_CLEAR);
+      const totalRoom = roomNeg === Infinity || roomPos === Infinity ? Infinity : roomNeg + roomPos;
+      // Compress the gap if the bundle can't fit between two close walls.
+      const gap = totalRoom !== Infinity && (count - 1) * DETOUR_GAP > totalRoom ? totalRoom / (count - 1) : DETOUR_GAP;
+      const half = ((count - 1) / 2) * gap;
+      // Center the symmetric window, then slide it to sit inside [-roomNeg, +roomPos].
+      const lowBound = roomNeg === Infinity ? -Infinity : -roomNeg + half;
+      const highBound = roomPos === Infinity ? Infinity : roomPos - half;
+      let shift = 0;
+      if (lowBound > highBound) shift = (lowBound + highBound) / 2;
+      else shift = Math.max(lowBound, Math.min(highBound, 0));
+      // Order by midpoint so runs nest; smallest-mid run sits toward +pos (the obstacle
+      // side when one flanks the cluster — see the no-crossing argument in parallelLanes).
+      const order = [...idxs].sort(
+        (a, b) => segs[a].mid - segs[b].mid || (segs[a].id < segs[b].id ? -1 : 1),
+      );
+      order.forEach((segIdx, k) => {
+        const off = ((count - 1) / 2 - k) * gap + shift;
+        const s = segs[segIdx];
+        const d = deltas.get(s.id)!;
+        if (axis === "v") {
+          d[s.pi].x += off;
+          d[s.pi + 1].x += off;
+        } else {
+          d[s.pi].y += off;
+          d[s.pi + 1].y += off;
+        }
+      });
+    }
+  };
+
+  process("v");
+  process("h");
+
+  const out = new Map<string, Pt[]>();
+  for (const r of routes) {
+    const d = deltas.get(r.id)!;
+    const moved = r.pts.map((p, i) => ({ x: p.x + d[i].x, y: p.y + d[i].y }));
+    out.set(r.id, moved.slice(1, -1)); // interior waypoints only
   }
   return out;
 }

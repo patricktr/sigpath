@@ -48,6 +48,7 @@ import {
   routeAroundObstacles,
   pathHitsObstacle,
   defaultRoutePoints,
+  spreadDetourBundles,
 } from "./flow/obstacleRoute";
 import type { Rect, Pt } from "./flow/obstacleRoute";
 import { EdgeMarqueeSelect } from "./flow/EdgeMarqueeSelect";
@@ -550,6 +551,20 @@ function AppInner() {
       }
       const wp = routeAroundObstacles(from, to, obstacles);
       if (wp) waypointsById.set(e.id, wp);
+    }
+
+    // Fan apart detours that share a trunk (a whole bundle routing around one box)
+    // so they read as separate lines instead of one merged trunk.
+    if (waypointsById.size > 1) {
+      const routes = [...waypointsById].map(([id, interior]) => {
+        const ends = endsById.get(id)!;
+        return { id, pts: [{ x: ends.sx, y: ends.sy }, ...interior, { x: ends.tx, y: ends.ty }] };
+      });
+      const spread = spreadDetourBundles(
+        routes,
+        deviceRects.map((d) => d.rect),
+      );
+      for (const [id, interior] of spread) waypointsById.set(id, interior);
     }
 
     // Parallel-cable de-overlap: group clear runs sharing a corridor so CableEdge can
