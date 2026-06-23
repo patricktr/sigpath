@@ -233,6 +233,11 @@
 .contextbar__btn:hover {
   background: var(--row-hover);
 }
+.contextbar__btn.is-on {
+  background: var(--accent-soft-bg);
+  color: var(--accent-soft-text);
+  border-color: var(--accent-soft-border);
+}
 
 /* ---- Workspace: rail | canvas | inspector ---- */
 .workspace {

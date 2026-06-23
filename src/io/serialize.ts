@@ -64,12 +64,14 @@ function editorToDiagram(d: EditorDiagram): Diagram {
       width: z.measured?.width ?? z.width ?? numberOr(z.style?.width, 280),
       height: z.measured?.height ?? z.height ?? numberOr(z.style?.height, 180),
     },
+    obstacle: z.data.obstacle,
   }));
 
   const annotations: Annotation[] = noteNodes.map((n) => ({
     id: n.id,
     text: n.data.text,
     position: n.position,
+    obstacle: n.data.obstacle,
   }));
 
   return { ...emptyDiagram(d.id, d.name), devices, connections, zones, annotations };
@@ -91,14 +93,14 @@ function diagramToEditor(d: Diagram): EditorDiagram {
     height: z.rect.height,
     style: { width: z.rect.width, height: z.rect.height },
     zIndex: -1,
-    data: { label: z.label, color: z.color },
+    data: { label: z.label, color: z.color, obstacle: z.obstacle },
   }));
 
   const noteNodes: SigNode[] = (d.annotations ?? []).map((a) => ({
     id: a.id,
     type: "note",
     position: { x: a.position.x, y: a.position.y },
-    data: { text: a.text },
+    data: { text: a.text, obstacle: a.obstacle },
   }));
 
   const edges: CableEdgeType[] = d.connections.map((c) => ({

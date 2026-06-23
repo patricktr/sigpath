@@ -5,10 +5,11 @@ import type { GradeScaleId, GradeId } from "./grades";
 /**
  * Bumped whenever the persisted shape changes, so a future loader can migrate older
  * `.sigpath` files. v2 (2026-06-22) added the optional `Project.signalProfile` plus
- * optional grade fields on ports and connections — all additive, so a v1 file loads
- * unchanged: with no `signalProfile`, grade validation simply stays dormant.
+ * optional grade fields on ports and connections. v3 (2026-06-23) added the optional
+ * `obstacle` flag on zones and annotations — all additive, so an older file loads
+ * unchanged (a missing flag reads as off).
  */
-export const SIGPATH_SCHEMA_VERSION = 2;
+export const SIGPATH_SCHEMA_VERSION = 3;
 
 /** A labeled, colored region grouping devices (stage, rack, control room). */
 export type Zone = {
@@ -16,6 +17,8 @@ export type Zone = {
   label: string;
   color: string;
   rect: { x: number; y: number; width: number; height: number };
+  /** When set, cables route around this region instead of through it. */
+  obstacle?: boolean;
 };
 
 /** Free-floating note on the canvas (rich text comes later). */
@@ -23,6 +26,8 @@ export type Annotation = {
   id: string;
   text: string;
   position: { x: number; y: number };
+  /** When set, cables route around this note instead of through it. */
+  obstacle?: boolean;
 };
 
 /** A single signal-flow drawing. */

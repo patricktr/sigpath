@@ -41,6 +41,12 @@ const inflate = (r: Rect, m: number): Rect => ({
   h: r.h + 2 * m,
 });
 
+/** Is point `p` inside rect `r`? Used to drop a region-obstacle for a cable that
+ *  starts or ends inside it (it can't be avoided — an endpoint sits within). */
+export function rectContains(r: Rect, p: Pt): boolean {
+  return p.x >= r.x && p.x <= r.x + r.w && p.y >= r.y && p.y <= r.y + r.h;
+}
+
 const uniqSorted = (xs: number[]): number[] => {
   const s = [...xs].sort((a, b) => a - b);
   const out: number[] = [];

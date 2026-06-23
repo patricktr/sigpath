@@ -49,6 +49,7 @@ import {
   pathHitsObstacle,
   defaultRoutePoints,
   spreadDetourBundles,
+  rectContains,
 } from "./flow/obstacleRoute";
 import type { Rect, Pt } from "./flow/obstacleRoute";
 import { EdgeMarqueeSelect } from "./flow/EdgeMarqueeSelect";
@@ -492,22 +493,23 @@ function AppInner() {
       return port ? cableColor(port.connector) : undefined;
     };
 
-    // Device boxes are the cable obstacles — zones are pass-through containers and
-    // notes are annotations, so cables route through them. Height falls back to a
-    // port-count estimate when React Flow hasn't measured the node yet.
-    const deviceRects = nodes
-      .filter((n): n is DeviceNodeType => n.type === "device")
-      .map((n) => {
+    // Cable obstacles: every device box, plus any zone/note explicitly flagged as an
+    // obstacle. Zones are pass-through containers and notes are annotations, so they
+    // only block routing when opted in (data.obstacle). Device height falls back to a
+    // port-count estimate; a region's size needs React Flow's measure (skip until then).
+    const obstacleRects: { id: string; rect: Rect }[] = [];
+    for (const n of nodes) {
+      if (n.type === "device") {
         const w = n.measured?.width ?? n.width ?? 168;
-        const ports = Math.max(
-          inputPorts(n.data.model).length,
-          outputPorts(n.data.model).length,
-          1,
-        );
+        const ports = Math.max(inputPorts(n.data.model).length, outputPorts(n.data.model).length, 1);
         const h = n.measured?.height ?? n.height ?? approxPortY(ports - 1) + 24;
-        const rect: Rect = { x: n.position.x, y: n.position.y, w, h };
-        return { id: n.id, rect };
-      });
+        obstacleRects.push({ id: n.id, rect: { x: n.position.x, y: n.position.y, w, h } });
+      } else if ((n.type === "zone" || n.type === "note") && n.data.obstacle) {
+        const w = n.measured?.width ?? (typeof n.width === "number" ? n.width : undefined);
+        const h = n.measured?.height ?? (typeof n.height === "number" ? n.height : undefined);
+        if (w && h) obstacleRects.push({ id: n.id, rect: { x: n.position.x, y: n.position.y, w, h } });
+      }
+    }
 
     // Approx output→input endpoints per standard horizontal run, shared by obstacle
     // routing and the parallel-lane pass. Only output(right)→input(left) device runs;
@@ -540,12 +542,20 @@ function AppInner() {
     for (const e of edges) {
       const ends = endsById.get(e.id);
       if (!ends) continue;
-      const obstacles = deviceRects
-        .filter((d) => d.id !== e.source && d.id !== e.target)
-        .map((d) => d.rect);
-      if (obstacles.length === 0) continue;
       const from = { x: ends.sx, y: ends.sy };
       const to = { x: ends.tx, y: ends.ty };
+      // Drop a cable's own two devices, and any region-obstacle it starts/ends inside
+      // (a zone wrapping its endpoint can't be routed around).
+      const obstacles = obstacleRects
+        .filter(
+          (d) =>
+            d.id !== e.source &&
+            d.id !== e.target &&
+            !rectContains(d.rect, from) &&
+            !rectContains(d.rect, to),
+        )
+        .map((d) => d.rect);
+      if (obstacles.length === 0) continue;
       if (!pathHitsObstacle(defaultRoutePoints(from, to, (ends.sx + ends.tx) / 2), obstacles)) {
         continue;
       }
@@ -562,7 +572,7 @@ function AppInner() {
       });
       const spread = spreadDetourBundles(
         routes,
-        deviceRects.map((d) => d.rect),
+        obstacleRects.map((d) => d.rect),
       );
       for (const [id, interior] of spread) waypointsById.set(id, interior);
     }
@@ -695,6 +705,22 @@ function AppInner() {
     [setNodes, takeSnapshot],
   );
 
+  // Flip a zone or note between "cables route around me" and pass-through.
+  const toggleObstacle = useCallback(
+    (id: string) => {
+      takeSnapshot();
+      setNodes((nds) =>
+        nds.map((n) => {
+          if (n.id !== id) return n;
+          if (n.type === "zone") return { ...n, data: { ...n.data, obstacle: !n.data.obstacle } };
+          if (n.type === "note") return { ...n, data: { ...n.data, obstacle: !n.data.obstacle } };
+          return n;
+        }),
+      );
+    },
+    [setNodes, takeSnapshot],
+  );
+
   const zoneActions = useMemo(
     () => ({ rename: renameZone, recolor: recolorZone, beginChange: takeSnapshot }),
     [renameZone, recolorZone, takeSnapshot],
@@ -732,8 +758,9 @@ function AppInner() {
     const devices = nodes.filter(
       (n): n is DeviceNodeType => n.selected === true && n.type === "device",
     );
+    const notes = nodes.filter((n): n is NoteNodeType => n.selected === true && n.type === "note");
     const cables = edges.filter((e) => e.selected);
-    return { zones, devices, cables };
+    return { zones, devices, notes, cables };
   }, [nodes, edges]);
 
   // The single selected cable: its resolved (transition-aware) type label, and —
@@ -1061,15 +1088,18 @@ function AppInner() {
     document.documentElement.dataset.theme = theme;
   }, [theme]);
 
-  const contextKind: "zone" | "device" | "edge" | null =
+  const contextKind: "zone" | "device" | "edge" | "note" | null =
     selection.zones.length === 1 && selection.devices.length === 0 && selection.cables.length === 0
       ? "zone"
       : selection.devices.length > 0
         ? "device"
         : selection.cables.length > 0
           ? "edge"
-          : null;
+          : selection.notes.length === 1 && selection.zones.length === 0
+            ? "note"
+            : null;
   const activeZone = selection.zones[0];
+  const activeNote = selection.notes[0];
 
   const deleteSelection = useCallback(() => {
     const delNodes = nodesRef.current.filter((n) => n.selected).map((n) => ({ id: n.id }));
@@ -1501,6 +1531,15 @@ function AppInner() {
               <button type="button" className="contextbar__btn" onClick={handleZoomToZone}>
                 ⤢ Zoom to zone
               </button>
+              <button
+                type="button"
+                className={activeZone.data.obstacle ? "contextbar__btn is-on" : "contextbar__btn"}
+                onClick={() => toggleObstacle(activeZone.id)}
+                aria-pressed={!!activeZone.data.obstacle}
+                title="Route cables around this zone instead of through it"
+              >
+                {activeZone.data.obstacle ? "⤬ Cables avoid ✓" : "⤬ Cables avoid"}
+              </button>
               <button type="button" className="contextbar__btn" onClick={deleteSelection}>
                 Delete
               </button>
@@ -1649,6 +1688,24 @@ function AppInner() {
                   ＋ Add converter
                 </button>
               )}
+              <button type="button" className="contextbar__btn" onClick={deleteSelection}>
+                Delete
+              </button>
+            </>
+          )}
+          {contextKind === "note" && activeNote && (
+            <>
+              <span className="contextbar__title">Note</span>
+              <span className="contextbar__sep" />
+              <button
+                type="button"
+                className={activeNote.data.obstacle ? "contextbar__btn is-on" : "contextbar__btn"}
+                onClick={() => toggleObstacle(activeNote.id)}
+                aria-pressed={!!activeNote.data.obstacle}
+                title="Route cables around this note instead of through it"
+              >
+                {activeNote.data.obstacle ? "⤬ Cables avoid ✓" : "⤬ Cables avoid"}
+              </button>
               <button type="button" className="contextbar__btn" onClick={deleteSelection}>
                 Delete
               </button>

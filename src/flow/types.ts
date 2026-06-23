@@ -20,6 +20,8 @@ export type DeviceNodeType = Node<DeviceNodeData, "device">;
 export type ZoneData = {
   label: string;
   color: string;
+  /** Opt-in: cables route around this region instead of through it. Default off. */
+  obstacle?: boolean;
 };
 
 export type ZoneNodeType = Node<ZoneData, "zone">;
@@ -27,6 +29,8 @@ export type ZoneNodeType = Node<ZoneData, "zone">;
 /** A free-floating Markdown text annotation on the canvas. */
 export type NoteData = {
   text: string;
+  /** Opt-in: cables route around this note instead of through it. Default off. */
+  obstacle?: boolean;
 };
 
 export type NoteNodeType = Node<NoteData, "note">;
