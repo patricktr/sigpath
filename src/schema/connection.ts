@@ -64,14 +64,26 @@ const domain = (g: string) => DOMAIN[g] ?? g;
 /** DC-side power connectors — an AC↔DC transition is a device PSU, not a stock cable. */
 const DC_POWER = new Set<string>(["dc-barrel", "xlr4-dc", "euroblock-dc"]);
 
-/** Unordered key for a connector pair. */
-const pairKey = (a: string, b: string) => [a, b].sort().join("|");
+/**
+ * Beyond same-`family`, sets of connectors that are all mutually bridgeable by a single
+ * PASSIVE cable/adapter — no active electronics. Analog audio is the big one: XLR, TRS, TS,
+ * RCA and Euroblock all carry the same line/mic-level analog signal, so any pairing is just
+ * a cable (balanced↔unbalanced is a wiring choice, not a converter — e.g. a TRS 1/4" → XLR
+ * cable). Speaker-level connectors form their own group. Digital audio (AES3, TOSLINK) is
+ * deliberately excluded — bridging it to analog needs an active A/D–D/A converter.
+ */
+const PASSIVE_GROUPS: readonly string[][] = [
+  ["xlr3", "trs-6.35", "trs-3.5", "ts-6.35", "rca", "euroblock"], // analog line / mic level
+  ["speakon", "banana"], // speaker level
+];
+const PASSIVE_GROUP_OF = new Map<string, number>();
+PASSIVE_GROUPS.forEach((g, i) => g.forEach((id) => PASSIVE_GROUP_OF.set(id, i)));
 
-/** Cross-family pairs bridged by a single passive cable/adapter (beyond same-`family`). */
-const PASSIVE_TRANSITIONS = new Set<string>([
-  pairKey("rca", "trs-3.5"),
-  pairKey("rca", "trs-6.35"),
-]);
+/** True when two connectors sit in the same passive-cable group (e.g. TRS ↔ XLR). */
+function samePassiveGroup(a: string, b: string): boolean {
+  const ga = PASSIVE_GROUP_OF.get(a);
+  return ga !== undefined && ga === PASSIVE_GROUP_OF.get(b);
+}
 
 /**
  * Compatibility between two specific connector ids (one output, one input),
@@ -99,8 +111,9 @@ function compatByConnector(outId: string, inId: string): CompatResult {
     return { status: "ok", kind: "adapter", reason: `${a.label} → ${b.label} power cable` };
   }
 
-  // Same family (HDMI ↔ Mini-HDMI), or a known cross-family pair → one passive cable.
-  if ((a.family && a.family === b.family) || PASSIVE_TRANSITIONS.has(pairKey(outId, inId))) {
+  // Same family (HDMI ↔ Mini-HDMI), or two connectors in the same passive-cable group
+  // (analog audio TRS ↔ XLR ↔ RCA…, or speaker speakON ↔ banana) → one passive cable.
+  if ((a.family && a.family === b.family) || samePassiveGroup(outId, inId)) {
     return { status: "ok", kind: "adapter", reason: `Use a ${a.label} → ${b.label} cable` };
   }
 
