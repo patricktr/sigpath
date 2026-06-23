@@ -5,6 +5,7 @@ import {
   type EdgeProps,
 } from "@xyflow/react";
 import type { CableEdgeType } from "./types";
+import { LANE_GAP } from "./parallelLanes";
 import "./CableEdge.css";
 
 /**
@@ -29,6 +30,22 @@ export function CableEdge({
   data,
   markerEnd,
 }: EdgeProps<CableEdgeType>) {
+  // One of a bundle of parallel runs? Fan its smooth-step jog into its own lane.
+  // For a horizontal run the jog is set by centerX (centerY only moves the label),
+  // so we offset centerX for "h" and centerY for "v". The returned labelX/labelY
+  // already follow the offset path — no separate label math. (Verified against
+  // @xyflow/system getSmoothStepPath; see parallelLanes.ts.)
+  const lane = data?.parallel;
+  let center: { centerX?: number; centerY?: number } = {};
+  if (lane) {
+    const off = (lane.index - (lane.count - 1) / 2) * LANE_GAP;
+    if (off !== 0) {
+      center =
+        lane.axis === "h"
+          ? { centerX: (sourceX + targetX) / 2 + off }
+          : { centerY: (sourceY + targetY) / 2 + off };
+    }
+  }
   const [path, labelX, labelY] = getSmoothStepPath({
     sourceX,
     sourceY,
@@ -36,6 +53,7 @@ export function CableEdge({
     targetX,
     targetY,
     targetPosition,
+    ...center,
   });
 
   const gradient = data?.gradient;

@@ -38,8 +38,12 @@ import {
   deviceTitle,
   gradeScaleForConnector,
   gradesForScale,
+  inputPorts,
+  outputPorts,
   VIDEO_FORMATS,
 } from "./schema";
+import { assignLanes, approxPortY } from "./flow/parallelLanes";
+import type { LaneInput } from "./flow/parallelLanes";
 import type { DeviceModel } from "./schema";
 import { useProject } from "./project/useProject";
 import { parseDocument } from "./io/serialize";
@@ -478,6 +482,38 @@ function AppInner() {
         n?.type === "device" ? n.data.model.ports.find((p) => p.id === handleId) : undefined;
       return port ? cableColor(port.connector) : undefined;
     };
+
+    // Parallel-cable de-overlap: approximate each output→input run's geometry, then
+    // group runs sharing a corridor so CableEdge can fan their jogs into lanes. Only
+    // the standard horizontal run (output on the right → input on the left); bidi
+    // (bottom) ports are deferred. Approximation is fine — the real offset is computed
+    // from exact endpoints in CableEdge; this only decides grouping + order.
+    const laneInputs: LaneInput[] = [];
+    for (const e of edges) {
+      const src = byId.get(e.source);
+      const tgt = byId.get(e.target);
+      if (src?.type !== "device" || tgt?.type !== "device") continue;
+      const sp = src.data.model.ports.find((p) => p.id === e.sourceHandle);
+      const tp = tgt.data.model.ports.find((p) => p.id === e.targetHandle);
+      if (sp?.direction !== "output" || tp?.direction !== "input") continue;
+      const si = outputPorts(src.data.model).findIndex((p) => p.id === sp.id);
+      const ti = inputPorts(tgt.data.model).findIndex((p) => p.id === tp.id);
+      const srcW = src.measured?.width ?? src.width ?? 168;
+      const sx = src.position.x + srcW;
+      const sy = src.position.y + approxPortY(si < 0 ? 0 : si);
+      const tx = tgt.position.x;
+      const ty = tgt.position.y + approxPortY(ti < 0 ? 0 : ti);
+      laneInputs.push({
+        id: e.id,
+        axis: "h",
+        jog: (sx + tx) / 2,
+        lo: Math.min(sy, ty),
+        hi: Math.max(sy, ty),
+        order: sy,
+      });
+    }
+    const laneMap = assignLanes(laneInputs);
+
     return edges.map((e) => {
       let style: CSSProperties;
       let animated = e.animated;
@@ -506,6 +542,9 @@ function AppInner() {
           filter: `drop-shadow(0 0 2px ${glow}) drop-shadow(0 0 6px ${glow})`,
         };
       }
+      // Parallel lane (geometry only) — independent of validation styling above.
+      const lane = laneMap.get(e.id);
+      if (lane) data = { ...(data ?? { cableTypeId: "" }), parallel: lane };
       return { ...e, style, animated, data };
     });
   }, [edges, validation, nodes]);

@@ -1,5 +1,6 @@
 import type { Node, Edge } from "@xyflow/react";
 import type { DeviceModel, CableTypeId, GradeId } from "../schema";
+import type { Lane } from "./parallelLanes";
 
 /**
  * React Flow binding types. The domain model lives in `src/schema`; these types
@@ -43,6 +44,9 @@ export type CableEdgeData = {
   /** Derived at render time (not persisted): when a cable's two ends differ in
    *  connector color, the source→target colors to stroke it with a gradient. */
   gradient?: { from: string; to: string };
+  /** Derived at render time (not persisted): this run's lane within a bundle of
+   *  parallel cables sharing a corridor — CableEdge turns it into a jog offset. */
+  parallel?: Lane;
 };
 
 export type CableEdgeType = Edge<CableEdgeData>;
