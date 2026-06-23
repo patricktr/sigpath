@@ -27,6 +27,10 @@ export type LaneInput = {
   hi: number;
   /** Stable ordering within a cluster (top→bottom for h, left→right for v). */
   order: number;
+  /** Travel sign along the run: +1 when the target sits past the source in the
+   *  ordering axis (h: target below source — run goes down), -1 when it runs back.
+   *  Drives the lane-order flip so a downward fan nests instead of self-crossing. */
+  dir: number;
 };
 
 export type Lane = { index: number; count: number; axis: LaneAxis };
@@ -85,6 +89,16 @@ export function assignLanes(inputs: LaneInput[]): Map<string, Lane> {
   for (const idxs of groups.values()) {
     if (idxs.length < 2) continue;
     idxs.sort((x, y) => inputs[x].order - inputs[y].order || (inputs[x].id < inputs[y].id ? -1 : 1));
+    // Lane index maps to jog position (lane 0 → leftmost jog for "h"). With the
+    // runs ordered top→bottom, the topmost run jogs leftmost: that nests cleanly
+    // when the bundle runs UP (target above source) — each lower run fans out
+    // below the one before without crossing it. When the bundle runs DOWN the same
+    // order self-crosses (every lower run's lead-in cuts across the descending
+    // verticals above it), so flip the order: the BOTTOM run takes the leftmost
+    // jog and the fan nests downward instead. Direction is the cluster's majority
+    // sign — a clean device-to-device fan is unanimous; ties keep the up layout.
+    const downward = idxs.reduce((sum, i) => sum + inputs[i].dir, 0) > 0;
+    if (downward) idxs.reverse();
     const count = idxs.length;
     idxs.forEach((idx, lane) =>
       lanes.set(inputs[idx].id, { index: lane, count, axis: inputs[idx].axis }),

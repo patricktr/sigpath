@@ -512,6 +512,7 @@ function AppInner() {
         lo: Math.min(sy, ty),
         hi: Math.max(sy, ty),
         order: sy,
+        dir: ty > sy ? 1 : -1,
       });
     }
     const laneMap = assignLanes(laneInputs);
