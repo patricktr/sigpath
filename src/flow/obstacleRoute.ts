@@ -600,17 +600,18 @@ function rebuildWithHops(pts: Pt[], off: (i: number) => number): Pt[] {
  * here and are returned untouched.
  */
 export function nudgeCollinearOverlaps(routes: { id: string; pts: Pt[] }[]): Map<string, Pt[]> {
-  type Seg = { id: string; si: number; axis: "h" | "v"; pos: number; lo: number; hi: number; rank: number };
+  type Seg = { id: string; si: number; axis: "h" | "v"; pos: number; lo: number; hi: number; rank: number; down: boolean };
   const segs: Seg[] = [];
   for (const r of routes) {
     const rank = (r.pts[0].y + r.pts[r.pts.length - 1].y) / 2;
+    const down = r.pts[r.pts.length - 1].y > r.pts[0].y; // target below source?
     for (let i = 0; i < r.pts.length - 1; i++) {
       const a = r.pts[i];
       const b = r.pts[i + 1];
       const ax = segAxis(a, b);
       if (!ax) continue;
-      if (ax === "h") segs.push({ id: r.id, si: i, axis: "h", pos: a.y, lo: Math.min(a.x, b.x), hi: Math.max(a.x, b.x), rank });
-      else segs.push({ id: r.id, si: i, axis: "v", pos: a.x, lo: Math.min(a.y, b.y), hi: Math.max(a.y, b.y), rank });
+      if (ax === "h") segs.push({ id: r.id, si: i, axis: "h", pos: a.y, lo: Math.min(a.x, b.x), hi: Math.max(a.x, b.x), rank, down });
+      else segs.push({ id: r.id, si: i, axis: "v", pos: a.x, lo: Math.min(a.y, b.y), hi: Math.max(a.y, b.y), rank, down });
     }
   }
 
@@ -643,6 +644,14 @@ export function nudgeCollinearOverlaps(routes: { id: string; pts: Pt[] }[]): Map
     const ordered = [...idxs].sort(
       (a, b) => segs[a].rank - segs[b].rank || (segs[a].id < segs[b].id ? -1 : 1),
     );
+    // A cluster of vertical jogs is a same-corridor bundle: nest it like the lane pass.
+    // A downward bundle must flip so the higher cable takes the right-hand jog, or the
+    // top-to-bottom rank order self-crosses (identity pairs cross twice). Horizontal
+    // overlaps keep absolute rank order (a higher cable stays higher).
+    if (segs[idxs[0]].axis === "v") {
+      const downSum = idxs.reduce((s, k) => s + (segs[k].down ? 1 : -1), 0);
+      if (downSum > 0) ordered.reverse();
+    }
     const count = ordered.length;
     ordered.forEach((k, idx) => {
       offsetOf.set(`${segs[k].id}:${segs[k].si}`, (idx - (count - 1) / 2) * NUDGE_GAP);
