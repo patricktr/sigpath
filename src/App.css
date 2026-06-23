@@ -1,5 +1,11 @@
 /* SigPath "Schematic" shell — all values via tokens (see theme.css). */
 .app {
+  /* Fixed-chrome dimensions, single source of truth so the floating context bar
+     can be positioned exactly over the canvas (see .contextbar / .bulkbar). */
+  --toolbar-h: 48px;
+  --rail-w: 208px;
+  --inspector-w: 240px;
+  position: relative;
   display: flex;
   flex-direction: column;
   height: 100vh;
@@ -13,7 +19,7 @@
   align-items: center;
   gap: 12px;
   flex: 0 0 auto;
-  height: 48px;
+  height: var(--toolbar-h);
   padding: 0 14px;
   background: var(--panel-bg);
   border-bottom: 1px solid var(--panel-border);
@@ -125,26 +131,44 @@
   border-radius: 50%;
 }
 
-/* ---- Context bar (selection actions) ---- */
+/* ---- Context bar (selection actions) ----
+   Floated over the top of the canvas (not a flex strip) so toggling a selection
+   never resizes the React Flow container — the diagram stays put, only the top
+   strip of canvas is covered. Anchored below the toolbar and inset to span just
+   the canvas (clear of the rail/inspector). Sits under the side panels (z-10). */
 .contextbar {
+  position: absolute;
+  top: var(--toolbar-h);
+  left: var(--rail-w);
+  right: var(--inspector-w);
+  z-index: 6;
   display: flex;
   align-items: center;
   gap: 10px;
-  flex: 0 0 auto;
   height: 36px;
   padding: 0 14px;
   background: var(--panel-bg);
   border-bottom: 1px solid var(--panel-border);
   font-size: 12px;
 }
+/* An edge selection clears the inspector (a device selection would take over the
+   context bar instead), so the cable bar — the widest — may span over the now-empty
+   inspector for full room. Device/zone bars stay canvas-inset to keep it visible. */
+.contextbar--edge {
+  right: 0;
+}
 
-/* Bulk-patch instruction strip — same footprint as the contextbar, accent-edged
-   so the active mode reads at a glance. */
+/* Bulk-patch instruction strip — same footprint/overlay as the contextbar,
+   accent-edged so the active mode reads at a glance. */
 .bulkbar {
+  position: absolute;
+  top: var(--toolbar-h);
+  left: var(--rail-w);
+  right: var(--inspector-w);
+  z-index: 6;
   display: flex;
   align-items: center;
   gap: 12px;
-  flex: 0 0 auto;
   height: 36px;
   padding: 0 14px;
   background: color-mix(in srgb, var(--sig-video) 8%, var(--panel-bg));
@@ -218,7 +242,7 @@
 }
 
 .rail {
-  width: 208px;
+  width: var(--rail-w);
   flex: 0 0 auto;
   display: flex;
   flex-direction: column;
@@ -323,7 +347,7 @@
 
 /* ---- Inspector ---- */
 .inspector {
-  width: 240px;
+  width: var(--inspector-w);
   flex: 0 0 auto;
   display: flex;
   flex-direction: column;

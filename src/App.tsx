@@ -1396,7 +1396,7 @@ function AppInner() {
         </div>
       )}
       {!bulkActive && contextKind && (
-        <div className="contextbar">
+        <div className={contextKind === "edge" ? "contextbar contextbar--edge" : "contextbar"}>
           {contextKind === "zone" && activeZone && (
             <>
               <span className="contextbar__title">
