@@ -7,26 +7,22 @@ import {
 import type { CableEdgeType } from "./types";
 import type { Pt } from "./obstacleRoute";
 import { orthogonalPathD } from "./obstacleRoute";
-import { LANE_GAP } from "./parallelLanes";
 import "./CableEdge.css";
 
-/** Corner rounding for the obstacle-detour path (matches the smooth-step feel). */
+/** Corner rounding for the orthogonal cable path (matches the smooth-step feel). */
 const BEND_RADIUS = 8;
 
 /**
- * The cable edge. Draws the smooth-step path; when a run changes connector but not
- * signal (a transition / adapter cable), its two ends differ in color, so we stroke
- * it with a source→target gradient — "the cable that is the converter." Straight
- * runs (same color both ends) carry no gradient and render as a flat color. The
- * gradient uses userSpaceOnUse coords so it follows the cable's real direction and
- * updates as nodes move. Validation overrides (red error / amber warning) win — they
- * set a solid stroke and clear the gradient before this renders. A cable ID, when
- * set, rides at the path midpoint as a small badge.
+ * The cable edge. App computes each device run's full orthogonal path (lane-offset Z or
+ * obstacle detour, de-overlapped) and hands the interior bend points via `data.waypoints`;
+ * we draw that rounded path, stitching the exact port endpoints onto its ends. A clean
+ * straight run carries no waypoints and falls back to React Flow's smooth-step path.
  *
- * When the run is rerouted around device boxes, `data.waypoints` carries the detour's
- * interior bend points; we draw that rounded orthogonal path instead, stitching the
- * exact port endpoints onto its ends. Obstacle detours take precedence over the
- * parallel-lane jog offset (a rerouted run never participates in a lane bundle).
+ * When a run changes connector but not signal (a transition / adapter cable), its two
+ * ends differ in color, so we stroke it with a source→target gradient — "the cable that
+ * is the converter." The gradient uses userSpaceOnUse coords so it follows the cable's
+ * real direction. Validation overrides (red error / amber warning) win. The cable ID,
+ * when set, rides near both ports as small badges.
  */
 export function CableEdge({
   id,
@@ -56,22 +52,7 @@ export function CableEdge({
     pts[pts.length - 2].y = targetY;
     path = orthogonalPathD(pts, BEND_RADIUS);
   } else {
-    // One of a bundle of parallel runs? Fan its smooth-step jog into its own lane.
-    // For a horizontal run the jog is set by centerX (centerY only moves the label),
-    // so we offset centerX for "h" and centerY for "v". The returned labelX/labelY
-    // already follow the offset path. (Verified against @xyflow/system; see
-    // parallelLanes.ts.)
-    const lane = data?.parallel;
-    let center: { centerX?: number; centerY?: number } = {};
-    if (lane) {
-      const off = (lane.index - (lane.count - 1) / 2) * LANE_GAP;
-      if (off !== 0) {
-        center =
-          lane.axis === "h"
-            ? { centerX: (sourceX + targetX) / 2 + off }
-            : { centerY: (sourceY + targetY) / 2 + off };
-      }
-    }
+    // A clean straight run (no waypoints) — React Flow's default smooth-step path.
     const [p] = getSmoothStepPath({
       sourceX,
       sourceY,
@@ -79,7 +60,6 @@ export function CableEdge({
       targetX,
       targetY,
       targetPosition,
-      ...center,
     });
     path = p;
   }

@@ -42,7 +42,7 @@ import {
   outputPorts,
   VIDEO_FORMATS,
 } from "./schema";
-import { assignLanes, approxPortY, LANE_GAP } from "./flow/parallelLanes";
+import { assignLanes, approxPortY } from "./flow/parallelLanes";
 import type { LaneInput } from "./flow/parallelLanes";
 import {
   routeAroundObstacles,
@@ -593,11 +593,14 @@ function AppInner() {
         jog: (ends.sx + ends.tx) / 2,
         lo: Math.min(ends.sy, ends.ty),
         hi: Math.max(ends.sy, ends.ty),
-        order: ends.sy,
-        dir: ends.ty > ends.sy ? 1 : -1,
+        sx: ends.sx,
+        sy: ends.sy,
+        tx: ends.tx,
+        ty: ends.ty,
       });
     }
-    const laneMap = assignLanes(laneInputs);
+    // Crossing-minimizing jog X per clustered run (unclustered runs keep their midpoint).
+    const laneJogX = assignLanes(laneInputs);
 
     // Final de-overlap for the non-detour runs: build each as a lane-offset Z, then nudge
     // any runs of different cables that still lie on the same line a few px apart
@@ -609,9 +612,7 @@ function AppInner() {
       if (waypointsById.has(e.id)) continue;
       const ends = endsById.get(e.id);
       if (!ends) continue;
-      const lane = laneMap.get(e.id);
-      const laneOff = lane ? (lane.index - (lane.count - 1) / 2) * LANE_GAP : 0;
-      const jogX = (ends.sx + ends.tx) / 2 + laneOff;
+      const jogX = laneJogX.get(e.id) ?? (ends.sx + ends.tx) / 2;
       polylines.push({
         id: e.id,
         pts: simplifyOrthogonal([
