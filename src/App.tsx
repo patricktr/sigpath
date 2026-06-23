@@ -42,13 +42,15 @@ import {
   outputPorts,
   VIDEO_FORMATS,
 } from "./schema";
-import { assignLanes, approxPortY } from "./flow/parallelLanes";
+import { assignLanes, approxPortY, LANE_GAP } from "./flow/parallelLanes";
 import type { LaneInput } from "./flow/parallelLanes";
 import {
   routeAroundObstacles,
   pathHitsObstacle,
   defaultRoutePoints,
   spreadDetourBundles,
+  nudgeCollinearOverlaps,
+  simplifyOrthogonal,
   rectContains,
 } from "./flow/obstacleRoute";
 import type { Rect, Pt } from "./flow/obstacleRoute";
@@ -597,6 +599,31 @@ function AppInner() {
     }
     const laneMap = assignLanes(laneInputs);
 
+    // Final de-overlap for the non-detour runs: build each as a lane-offset Z, then nudge
+    // any runs of different cables that still lie on the same line a few px apart
+    // (scrambled / cross-device overlaps the lane pass can't reach). Detours keep their
+    // spread path untouched — it's already de-overlapped and crossing-minimized, and the
+    // nudge (separation-only) would reintroduce crossings.
+    const polylines: { id: string; pts: Pt[] }[] = [];
+    for (const e of edges) {
+      if (waypointsById.has(e.id)) continue;
+      const ends = endsById.get(e.id);
+      if (!ends) continue;
+      const lane = laneMap.get(e.id);
+      const laneOff = lane ? (lane.index - (lane.count - 1) / 2) * LANE_GAP : 0;
+      const jogX = (ends.sx + ends.tx) / 2 + laneOff;
+      polylines.push({
+        id: e.id,
+        pts: simplifyOrthogonal([
+          { x: ends.sx, y: ends.sy },
+          { x: jogX, y: ends.sy },
+          { x: jogX, y: ends.ty },
+          { x: ends.tx, y: ends.ty },
+        ]),
+      });
+    }
+    const nudged = nudgeCollinearOverlaps(polylines);
+
     return edges.map((e) => {
       let style: CSSProperties;
       let animated = e.animated;
@@ -625,15 +652,11 @@ function AppInner() {
           filter: `drop-shadow(0 0 2px ${glow}) drop-shadow(0 0 6px ${glow})`,
         };
       }
-      // Geometry (independent of validation styling above): an obstacle detour wins
-      // over the lane offset; otherwise apply the parallel lane.
-      const wp = waypointsById.get(e.id);
-      if (wp) {
-        data = { ...(data ?? { cableTypeId: "" }), waypoints: wp };
-      } else {
-        const lane = laneMap.get(e.id);
-        if (lane) data = { ...(data ?? { cableTypeId: "" }), parallel: lane };
-      }
+      // Geometry (independent of validation styling above): an obstacle detour's spread
+      // path, else the nudged Z. Empty waypoints = a clean straight run — let CableEdge
+      // fall back to its smooth-step default.
+      const wp = waypointsById.get(e.id) ?? nudged.get(e.id);
+      if (wp && wp.length) data = { ...(data ?? { cableTypeId: "" }), waypoints: wp };
       return { ...e, style, animated, data };
     });
   }, [edges, validation, nodes]);

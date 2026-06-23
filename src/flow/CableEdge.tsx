@@ -6,7 +6,7 @@ import {
 } from "@xyflow/react";
 import type { CableEdgeType } from "./types";
 import type { Pt } from "./obstacleRoute";
-import { orthogonalPathD, polylineMidpoint } from "./obstacleRoute";
+import { orthogonalPathD } from "./obstacleRoute";
 import { LANE_GAP } from "./parallelLanes";
 import "./CableEdge.css";
 
@@ -41,8 +41,6 @@ export function CableEdge({
   markerEnd,
 }: EdgeProps<CableEdgeType>) {
   let path: string;
-  let labelX: number;
-  let labelY: number;
 
   const waypoints = data?.waypoints;
   if (waypoints && waypoints.length) {
@@ -57,9 +55,6 @@ export function CableEdge({
     pts[1].y = sourceY;
     pts[pts.length - 2].y = targetY;
     path = orthogonalPathD(pts, BEND_RADIUS);
-    const mid = polylineMidpoint(pts);
-    labelX = mid.x;
-    labelY = mid.y;
   } else {
     // One of a bundle of parallel runs? Fan its smooth-step jog into its own lane.
     // For a horizontal run the jog is set by centerX (centerY only moves the label),
@@ -77,7 +72,7 @@ export function CableEdge({
             : { centerY: (sourceY + targetY) / 2 + off };
       }
     }
-    const [p, lx, ly] = getSmoothStepPath({
+    const [p] = getSmoothStepPath({
       sourceX,
       sourceY,
       sourcePosition,
@@ -87,14 +82,21 @@ export function CableEdge({
       ...center,
     });
     path = p;
-    labelX = lx;
-    labelY = ly;
   }
 
   const gradient = data?.gradient;
   const gradientId = `cablegrad-${id}`;
   const edgeStyle = gradient ? { ...style, stroke: `url(#${gradientId})` } : style;
   const number = data?.number;
+
+  // The cable ID rides near BOTH ports (just outside each), not at the midpoint, so a
+  // run reads at whichever end you trace from even when the middle is a dense tangle.
+  // Ports exit/enter horizontally, so the badges sit at the port Y, a short way along
+  // the cable; the offset shrinks on a short run so the two badges don't collide.
+  const dir = targetX >= sourceX ? 1 : -1;
+  const inset = Math.min(34, Math.max(12, Math.abs(targetX - sourceX) * 0.38));
+  const srcLabelX = sourceX + dir * inset;
+  const tgtLabelX = targetX - dir * inset;
 
   return (
     <>
@@ -118,7 +120,13 @@ export function CableEdge({
         <EdgeLabelRenderer>
           <div
             className="cable-id-label"
-            style={{ transform: `translate(-50%, -50%) translate(${labelX}px, ${labelY}px)` }}
+            style={{ transform: `translate(-50%, -50%) translate(${srcLabelX}px, ${sourceY}px)` }}
+          >
+            {number}
+          </div>
+          <div
+            className="cable-id-label"
+            style={{ transform: `translate(-50%, -50%) translate(${tgtLabelX}px, ${targetY}px)` }}
           >
             {number}
           </div>

@@ -514,3 +514,145 @@ export function spreadDetourBundles(
   for (const w of work) out.set(w.id, w.pts.slice(1, -1)); // interior waypoints only
   return out;
 }
+
+// --- Collinear-overlap nudging -------------------------------------------------
+
+/** Px that two cable runs lying on the same line are nudged apart — small, just enough
+ *  to read them as separate lines (mirrors the user ask: "offset even a few pixels"). */
+const NUDGE_GAP = 6;
+/** Short run kept at a port before a nudged cable hops to its offset lane, so the cable
+ *  stays anchored to the port and the hop reads as a deliberate little step. */
+const NUDGE_STUB = 10;
+
+const segAxis = (a: Pt, b: Pt): "h" | "v" | null => {
+  const h = Math.abs(a.y - b.y) <= 0.5;
+  const v = Math.abs(a.x - b.x) <= 0.5;
+  if (h && !v) return "h";
+  if (v && !h) return "v";
+  return null; // zero-length or (shouldn't happen) diagonal
+};
+
+/**
+ * Rebuild one orthogonal polyline shifting each segment perpendicular by `off(i)` px.
+ * An interior corner just moves (its two perpendicular runs absorb the shift). A run that
+ * touches a PORT (first/last segment) can't move its port end, so we insert a short stub
+ * at the port Y/X and a hop up/down to the offset lane — the cable stays anchored and the
+ * separation reads as a small step near the connector. Assumes axes alternate (simplify
+ * the polyline first).
+ */
+function rebuildWithHops(pts: Pt[], off: (i: number) => number): Pt[] {
+  const n = pts.length - 1; // segment count
+  if (n < 1) return pts.map((p) => ({ ...p }));
+  const axisAt = (i: number) => segAxis(pts[i], pts[i + 1]);
+  const result: Pt[] = [{ ...pts[0] }];
+
+  const o0 = off(0);
+  const a0 = axisAt(0);
+  if (Math.abs(o0) > 0.5 && a0) {
+    if (a0 === "h") {
+      const dir = Math.sign(pts[1].x - pts[0].x) || 1;
+      const sx = pts[0].x + dir * NUDGE_STUB;
+      result.push({ x: sx, y: pts[0].y }, { x: sx, y: pts[0].y + o0 });
+    } else {
+      const dir = Math.sign(pts[1].y - pts[0].y) || 1;
+      const sy = pts[0].y + dir * NUDGE_STUB;
+      result.push({ x: pts[0].x, y: sy }, { x: pts[0].x + o0, y: sy });
+    }
+  }
+
+  for (let k = 1; k <= n - 1; k++) {
+    const aPrev = axisAt(k - 1);
+    const aCur = axisAt(k);
+    let dx = 0;
+    let dy = 0;
+    // The 'v' run touching this corner shifts its x; the 'h' run shifts its y.
+    if (aPrev === "v") dx = off(k - 1);
+    else if (aPrev === "h") dy = off(k - 1);
+    if (aCur === "v") dx = off(k);
+    else if (aCur === "h") dy = off(k);
+    result.push({ x: pts[k].x + dx, y: pts[k].y + dy });
+  }
+
+  const oN = off(n - 1);
+  const aN = axisAt(n - 1);
+  if (Math.abs(oN) > 0.5 && aN) {
+    if (aN === "h") {
+      const dir = Math.sign(pts[n - 1].x - pts[n].x) || 1;
+      const sx = pts[n].x + dir * NUDGE_STUB;
+      result.push({ x: sx, y: pts[n].y + oN }, { x: sx, y: pts[n].y });
+    } else {
+      const dir = Math.sign(pts[n - 1].y - pts[n].y) || 1;
+      const sy = pts[n].y + dir * NUDGE_STUB;
+      result.push({ x: pts[n].x + oN, y: sy }, { x: pts[n].x, y: sy });
+    }
+  }
+
+  result.push({ ...pts[n] });
+  return result;
+}
+
+/**
+ * Final separation pass over ALL cable polylines: wherever runs of two *different* cables
+ * lie on the same line and overlap, fan them a few px apart (with port hops) so they read
+ * as distinct lines. Catches what the corridor-lane and detour passes can't — scrambled
+ * patches and cross-device runs whose horizontals land on a shared row. Returns adjusted
+ * INTERIOR waypoints per cable. Runs already separated by earlier passes stay singletons
+ * here and are returned untouched.
+ */
+export function nudgeCollinearOverlaps(routes: { id: string; pts: Pt[] }[]): Map<string, Pt[]> {
+  type Seg = { id: string; si: number; axis: "h" | "v"; pos: number; lo: number; hi: number; rank: number };
+  const segs: Seg[] = [];
+  for (const r of routes) {
+    const rank = (r.pts[0].y + r.pts[r.pts.length - 1].y) / 2;
+    for (let i = 0; i < r.pts.length - 1; i++) {
+      const a = r.pts[i];
+      const b = r.pts[i + 1];
+      const ax = segAxis(a, b);
+      if (!ax) continue;
+      if (ax === "h") segs.push({ id: r.id, si: i, axis: "h", pos: a.y, lo: Math.min(a.x, b.x), hi: Math.max(a.x, b.x), rank });
+      else segs.push({ id: r.id, si: i, axis: "v", pos: a.x, lo: Math.min(a.y, b.y), hi: Math.max(a.y, b.y), rank });
+    }
+  }
+
+  const n = segs.length;
+  const parent = segs.map((_, i) => i);
+  const find = (i: number): number => (parent[i] === i ? i : (parent[i] = find(parent[i])));
+  for (let i = 0; i < n; i++) {
+    for (let j = i + 1; j < n; j++) {
+      if (
+        segs[i].id !== segs[j].id &&
+        segs[i].axis === segs[j].axis &&
+        Math.abs(segs[i].pos - segs[j].pos) <= NUDGE_GAP * 1.5 &&
+        overlap1d(segs[i].lo, segs[i].hi, segs[j].lo, segs[j].hi)
+      ) {
+        parent[find(i)] = find(j);
+      }
+    }
+  }
+  const groups = new Map<number, number[]>();
+  for (let i = 0; i < n; i++) {
+    const r = find(i);
+    const g = groups.get(r);
+    if (g) g.push(i);
+    else groups.set(r, [i]);
+  }
+
+  const offsetOf = new Map<string, number>();
+  for (const idxs of groups.values()) {
+    if (new Set(idxs.map((k) => segs[k].id)).size < 2) continue; // only when ≥2 cables overlap
+    const ordered = [...idxs].sort(
+      (a, b) => segs[a].rank - segs[b].rank || (segs[a].id < segs[b].id ? -1 : 1),
+    );
+    const count = ordered.length;
+    ordered.forEach((k, idx) => {
+      offsetOf.set(`${segs[k].id}:${segs[k].si}`, (idx - (count - 1) / 2) * NUDGE_GAP);
+    });
+  }
+
+  const out = new Map<string, Pt[]>();
+  for (const r of routes) {
+    const rebuilt = rebuildWithHops(r.pts, (i) => offsetOf.get(`${r.id}:${i}`) ?? 0);
+    out.set(r.id, rebuilt.slice(1, -1));
+  }
+  return out;
+}
