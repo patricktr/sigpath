@@ -1569,6 +1569,8 @@ function AppInner() {
                 fitView
                 nodesConnectable={!bulkActive}
                 nodesDraggable={!bulkActive}
+                multiSelectionKeyCode={["Meta", "Control", "Shift"]}
+                deleteKeyCode={["Backspace", "Delete"]}
               >
                 <Background
                   id="minor"
