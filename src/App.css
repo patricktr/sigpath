@@ -442,6 +442,33 @@
 .statusbar__item {
   white-space: nowrap;
 }
+.statusbar__format {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+.statusbar__format-label {
+  color: var(--text-muted);
+}
+.statusbar__format-select {
+  font: inherit;
+  /* keep the format readable as "1080p59.94", not upper-cased to "1080P59.94" */
+  text-transform: none;
+  border: 1px solid var(--panel-border);
+  border-radius: 6px;
+  background: var(--canvas-bg);
+  color: var(--text);
+  padding: 1px 4px;
+  cursor: pointer;
+}
+/* Unset → the same blue as the "needs show format" status, so an ungraded project
+   reads as needing attention rather than all-clear. */
+.statusbar__format-select--unset {
+  color: var(--sig-video);
+  border-color: var(--sig-video);
+  font-weight: 700;
+}
 .statusbar__snap {
   font: inherit;
   text-transform: uppercase;

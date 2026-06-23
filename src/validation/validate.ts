@@ -49,6 +49,13 @@ export type ValidationResult = {
 type DemandResult = { scale: GradeScaleId; demand: GradeId } | "pending" | null;
 
 /**
+ * Image-domain scales — the ones a project's frame size/rate (show format) speaks to.
+ * Only these drive the "set a show format" prompt; network/USB grades are set via
+ * explicit targets, so a bare LAN run shouldn't nag for a video format.
+ */
+const IMAGE_SCALES = new Set<GradeScaleId>(["sdi", "hdmi", "displayport"]);
+
+/**
  * The grade a run actually carries. A per-run override wins; otherwise the project
  * ceiling for the source's scale (an explicit target, else the video format), clamped
  * to what the source can emit (a 3G source in a 4K show still only emits 3G). Returns
@@ -172,9 +179,12 @@ export function validate(
       if (compat.status !== "error") {
         const dem = runDemand(out, e.data, signalProfile);
         if (dem === "pending") {
-          // Graded run, no show format: can't check until the user picks one. Only
-          // nag when there's a capability a demand would actually test.
-          if (inp.grade || e.data?.cableGrade) needsShowFormat = true;
+          // A video run (SDI/HDMI/DisplayPort) with no show format set — prompt for
+          // one. Keyed on the connector's scale, not on a port grade value, so it
+          // fires for any video run even before grades are filled in (and on older
+          // projects whose embedded device snapshots predate grades).
+          const sc = gradeScaleForConnector(out.connector);
+          if (sc && IMAGE_SCALES.has(sc)) needsShowFormat = true;
         } else if (dem) {
           if (meetsDemand(inp.grade, dem.demand) === false) {
             errorEdges.add(e.id);

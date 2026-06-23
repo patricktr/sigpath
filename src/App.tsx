@@ -36,6 +36,7 @@ import {
   deviceTitle,
   gradeScaleForConnector,
   gradesForScale,
+  VIDEO_FORMATS,
 } from "./schema";
 import type { DeviceModel } from "./schema";
 import { useProject } from "./project/useProject";
@@ -1519,6 +1520,31 @@ function AppInner() {
                 .filter(Boolean)
                 .join(" · ")}
         </button>
+        <label
+          className="statusbar__format"
+          title="Project show format — the frame size/rate the show runs at. Sets the bandwidth each run must carry, for signal-grade validation."
+        >
+          <span className="statusbar__format-label">Format</span>
+          <select
+            className={
+              signalProfile?.videoFormat
+                ? "statusbar__format-select"
+                : "statusbar__format-select statusbar__format-select--unset"
+            }
+            value={signalProfile?.videoFormat ?? ""}
+            onChange={(e) => {
+              setSignalProfile((p) => ({ ...p, videoFormat: e.target.value || undefined }));
+              markDirty();
+            }}
+          >
+            <option value="">Set show format…</option>
+            {VIDEO_FORMATS.map((f) => (
+              <option key={f} value={f}>
+                {f}
+              </option>
+            ))}
+          </select>
+        </label>
         <span className="statusbar__item">{deviceTotal} Devices</span>
         <span className="statusbar__item">{edges.length} Links</span>
         <span className="statusbar__spacer" />
