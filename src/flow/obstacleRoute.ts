@@ -328,12 +328,43 @@ type SegRef = {
   /** The run's span along its own axis (y-range for vertical, x-range for horizontal). */
   lo: number;
   hi: number;
-  /** Midpoint along the axis — orders runs within a cluster so they nest. */
-  mid: number;
+  /** The whole cable's vertical centre (mean of its two port Ys) — a single value per
+   *  cable so it keeps a consistent lane across every cluster it threads (no self-cross). */
+  rank: number;
 };
 
 const overlap1d = (aLo: number, aHi: number, bLo: number, bHi: number) =>
   aLo < bHi - 0.5 && bLo < aHi - 0.5;
+
+/** A proper orthogonal crossing of two axis-aligned segments (strict interior of both)?
+ *  Parallel/collinear runs never count — those are the merges the spread itself removes. */
+function segmentsCross(a1: Pt, a2: Pt, b1: Pt, b2: Pt): boolean {
+  const aH = Math.abs(a1.y - a2.y) <= 0.5;
+  const bH = Math.abs(b1.y - b2.y) <= 0.5;
+  if (aH === bH) return false;
+  const [h0, h1] = aH ? [a1, a2] : [b1, b2];
+  const [v0, v1] = aH ? [b1, b2] : [a1, a2];
+  const hy = h0.y;
+  const vx = v0.x;
+  return (
+    vx > Math.min(h0.x, h1.x) + 0.5 &&
+    vx < Math.max(h0.x, h1.x) - 0.5 &&
+    hy > Math.min(v0.y, v1.y) + 0.5 &&
+    hy < Math.max(v0.y, v1.y) - 0.5
+  );
+}
+
+/** Count proper crossings between the runs of different cables in a bundle. */
+function countBundleCrossings(paths: Pt[][]): number {
+  const segs = paths.map((p) => p.slice(1).map((q, i) => [p[i], q] as [Pt, Pt]));
+  let n = 0;
+  for (let i = 0; i < paths.length; i++) {
+    for (let j = i + 1; j < paths.length; j++) {
+      for (const a of segs[i]) for (const b of segs[j]) if (segmentsCross(a[0], a[1], b[0], b[1])) n++;
+    }
+  }
+  return n;
+}
 
 /**
  * Fan overlapping parallel detour runs apart so a bundle routing around the same box
@@ -353,12 +384,14 @@ export function spreadDetourBundles(
   deviceRects: Rect[],
 ): Map<string, Pt[]> {
   const infl = deviceRects.map((r) => inflate(r, OBSTACLE_MARGIN));
-  const deltas = new Map<string, { x: number; y: number }[]>();
-  for (const r of routes) deltas.set(r.id, r.pts.map(() => ({ x: 0, y: 0 })));
+  // Work on a mutable copy of the points so each cluster can be applied + measured in place.
+  const work = routes.map((r) => ({ id: r.id, pts: r.pts.map((p) => ({ ...p })) }));
+  const ptsById = new Map(work.map((w) => [w.id, w.pts]));
 
   const collect = (axis: "v" | "h"): SegRef[] => {
     const segs: SegRef[] = [];
-    for (const r of routes) {
+    for (const r of work) {
+      const rank = (r.pts[0].y + r.pts[r.pts.length - 1].y) / 2;
       // Skip the first/last run (port stubs) so ports stay put.
       for (let i = 1; i < r.pts.length - 2; i++) {
         const a = r.pts[i];
@@ -366,9 +399,9 @@ export function spreadDetourBundles(
         const isV = Math.abs(a.x - b.x) <= 0.5 && Math.abs(a.y - b.y) > 0.5;
         const isH = Math.abs(a.y - b.y) <= 0.5 && Math.abs(a.x - b.x) > 0.5;
         if (axis === "v" && isV) {
-          segs.push({ id: r.id, pi: i, pos: a.x, lo: Math.min(a.y, b.y), hi: Math.max(a.y, b.y), mid: (a.y + b.y) / 2 });
+          segs.push({ id: r.id, pi: i, pos: a.x, lo: Math.min(a.y, b.y), hi: Math.max(a.y, b.y), rank });
         } else if (axis === "h" && isH) {
-          segs.push({ id: r.id, pi: i, pos: a.y, lo: Math.min(a.x, b.x), hi: Math.max(a.x, b.x), mid: (a.x + b.x) / 2 });
+          segs.push({ id: r.id, pi: i, pos: a.y, lo: Math.min(a.x, b.x), hi: Math.max(a.x, b.x), rank });
         }
       }
     }
@@ -427,23 +460,50 @@ export function spreadDetourBundles(
       let shift = 0;
       if (lowBound > highBound) shift = (lowBound + highBound) / 2;
       else shift = Math.max(lowBound, Math.min(highBound, 0));
-      // Order by midpoint so runs nest; smallest-mid run sits toward +pos (the obstacle
-      // side when one flanks the cluster — see the no-crossing argument in parallelLanes).
+
+      // Order the cluster by whole-cable rank; the two nesting directions (rank ascending
+      // vs descending) are the only sensible lane orders. Spread both ways and keep the
+      // one with fewer bundle crossings — robust without per-case over/under reasoning.
       const order = [...idxs].sort(
-        (a, b) => segs[a].mid - segs[b].mid || (segs[a].id < segs[b].id ? -1 : 1),
+        (a, b) => segs[a].rank - segs[b].rank || (segs[a].id < segs[b].id ? -1 : 1),
       );
-      order.forEach((segIdx, k) => {
-        const off = ((count - 1) / 2 - k) * gap + shift;
-        const s = segs[segIdx];
-        const d = deltas.get(s.id)!;
-        if (axis === "v") {
-          d[s.pi].x += off;
-          d[s.pi + 1].x += off;
-        } else {
-          d[s.pi].y += off;
-          d[s.pi + 1].y += off;
-        }
-      });
+      const applyOrient = (rev: boolean): (() => void) => {
+        const ordered = rev ? [...order].reverse() : order;
+        const undo: Array<() => void> = [];
+        ordered.forEach((segIdx, k) => {
+          const off = (k - (count - 1) / 2) * gap + shift;
+          const s = segs[segIdx];
+          const pts = ptsById.get(s.id)!;
+          const a = pts[s.pi];
+          const b = pts[s.pi + 1];
+          if (axis === "v") {
+            a.x += off;
+            b.x += off;
+            undo.push(() => {
+              a.x -= off;
+              b.x -= off;
+            });
+          } else {
+            a.y += off;
+            b.y += off;
+            undo.push(() => {
+              a.y -= off;
+              b.y -= off;
+            });
+          }
+        });
+        return () => undo.forEach((u) => u());
+      };
+      const allPaths = work.map((w) => w.pts);
+      const undoAsc = applyOrient(false);
+      const crossAsc = countBundleCrossings(allPaths);
+      undoAsc();
+      const undoDesc = applyOrient(true);
+      const crossDesc = countBundleCrossings(allPaths);
+      if (crossAsc <= crossDesc) {
+        undoDesc();
+        applyOrient(false);
+      }
     }
   };
 
@@ -451,10 +511,6 @@ export function spreadDetourBundles(
   process("h");
 
   const out = new Map<string, Pt[]>();
-  for (const r of routes) {
-    const d = deltas.get(r.id)!;
-    const moved = r.pts.map((p, i) => ({ x: p.x + d[i].x, y: p.y + d[i].y }));
-    out.set(r.id, moved.slice(1, -1)); // interior waypoints only
-  }
+  for (const w of work) out.set(w.id, w.pts.slice(1, -1)); // interior waypoints only
   return out;
 }
