@@ -44,6 +44,8 @@ import {
 } from "./schema";
 import { assignLanes, approxPortY } from "./flow/parallelLanes";
 import type { LaneInput } from "./flow/parallelLanes";
+import { EdgeMarqueeSelect } from "./flow/EdgeMarqueeSelect";
+import { rectHitsRun } from "./flow/marqueeHit";
 import type { DeviceModel } from "./schema";
 import { useProject } from "./project/useProject";
 import { parseDocument } from "./io/serialize";
@@ -1000,6 +1002,51 @@ function AppInner() {
     void rf.current?.deleteElements({ nodes: delNodes, edges: delEdges });
   }, []);
 
+  // Approx flow-space endpoints of a standard output→input run (same geometry the
+  // parallel-lane pass uses). Used to hit-test cables against the selection marquee.
+  const edgeEndsFlow = useCallback((e: CableEdgeType) => {
+    const src = nodesRef.current.find((n) => n.id === e.source);
+    const tgt = nodesRef.current.find((n) => n.id === e.target);
+    if (src?.type !== "device" || tgt?.type !== "device") return null;
+    const sp = src.data.model.ports.find((p) => p.id === e.sourceHandle);
+    const tp = tgt.data.model.ports.find((p) => p.id === e.targetHandle);
+    if (!sp || !tp) return null;
+    const si = outputPorts(src.data.model).findIndex((p) => p.id === sp.id);
+    const ti = inputPorts(tgt.data.model).findIndex((p) => p.id === tp.id);
+    const w = src.measured?.width ?? src.width ?? 168;
+    return {
+      sx: src.position.x + w,
+      sy: src.position.y + approxPortY(si < 0 ? 0 : si),
+      tx: tgt.position.x,
+      ty: tgt.position.y + approxPortY(ti < 0 ? 0 : ti),
+    };
+  }, []);
+
+  // Marquee end → also select any cable whose path the rectangle intersects. React Flow
+  // natively grabs only edges connected to boxed *nodes*, so a box over a cable's middle
+  // (devices outside) would otherwise miss it. The store rect is in renderer coords;
+  // convert to flow space with the viewport transform, then hit-test each run.
+  const selectEdgesInMarquee = useCallback(
+    (rect: { x: number; y: number; width: number; height: number }, transform: [number, number, number]) => {
+      const [tx, ty, zoom] = transform;
+      const r = {
+        x: (rect.x - tx) / zoom,
+        y: (rect.y - ty) / zoom,
+        w: rect.width / zoom,
+        h: rect.height / zoom,
+      };
+      if (r.w < 2 && r.h < 2) return; // a click, not a drag
+      const ids = new Set<string>();
+      for (const e of edgesRef.current) {
+        const g = edgeEndsFlow(e);
+        if (g && rectHitsRun(g.sx, g.sy, g.tx, g.ty, r)) ids.add(e.id);
+      }
+      if (!ids.size) return;
+      setEdges((eds) => eds.map((e) => (ids.has(e.id) && !e.selected ? { ...e, selected: true } : e)));
+    },
+    [edgeEndsFlow, setEdges],
+  );
+
   const duplicateSelection = useCallback(() => {
     const sel = nodesRef.current.filter((n) => n.selected && n.type === "device");
     if (sel.length === 0) return;
@@ -1586,6 +1633,7 @@ function AppInner() {
                 />
                 <MiniMap pannable zoomable />
                 <Controls />
+                <EdgeMarqueeSelect onMarqueeEnd={selectEdgesInMarquee} />
               </ReactFlow>
              </BulkPatchContext.Provider>
             </NoteActionsContext.Provider>
