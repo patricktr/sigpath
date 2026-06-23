@@ -137,6 +137,33 @@
   border-bottom: 1px solid var(--panel-border);
   font-size: 12px;
 }
+
+/* Bulk-patch instruction strip — same footprint as the contextbar, accent-edged
+   so the active mode reads at a glance. */
+.bulkbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 0 0 auto;
+  height: 36px;
+  padding: 0 14px;
+  background: color-mix(in srgb, var(--sig-video) 8%, var(--panel-bg));
+  border-bottom: 2px solid var(--sig-video);
+  font-size: 12px;
+}
+.bulkbar__title {
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-size: 11px;
+  color: var(--sig-video);
+}
+.bulkbar__status {
+  color: var(--text);
+}
+.bulkbar__spacer {
+  flex: 1 1 auto;
+}
 .contextbar__title {
   display: flex;
   align-items: center;

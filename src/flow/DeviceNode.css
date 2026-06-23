@@ -72,6 +72,50 @@
   justify-content: flex-end;
 }
 
+/* Bulk-patch mode: ports are click targets, with a source ordinal badge over the
+   connector. position:relative anchors the absolutely-placed badge. */
+.port--bulk {
+  position: relative;
+  cursor: pointer;
+}
+.port--bulk:hover {
+  background: color-mix(in srgb, var(--sig-video) 16%, transparent);
+}
+/* Let clicks land on the port row (which carries the pick handler), not the handle. */
+.device-node .port--bulk .port__handle.react-flow__handle {
+  pointer-events: none;
+}
+.port__ordinal {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  min-width: 14px;
+  height: 14px;
+  padding: 0 3px;
+  box-sizing: border-box;
+  display: grid;
+  place-items: center;
+  font-size: 9px;
+  font-weight: 700;
+  line-height: 1;
+  border-radius: 7px;
+  background: var(--sig-video);
+  color: #fff;
+  z-index: 3;
+  pointer-events: none;
+}
+.port__ordinal--in {
+  left: -5px;
+}
+.port__ordinal--out {
+  right: -5px;
+}
+.port__ordinal--io {
+  left: 50%;
+  top: -4px;
+  transform: translateX(-50%);
+}
+
 .port__label {
   font-size: 10.5px;
   white-space: nowrap;

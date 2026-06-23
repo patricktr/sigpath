@@ -22,6 +22,8 @@ import "@xyflow/react/dist/style.css";
 import { DeviceNode } from "./flow/DeviceNode";
 import { CableEdge } from "./flow/CableEdge";
 import { arrangeLeftToRight } from "./flow/autoLayout";
+import { bulkClick, EMPTY_BULK, sourceOrdinal, bulkStatus, BulkPatchContext } from "./flow/bulkPatch";
+import type { BulkState, BulkPortRef, BulkPatchActions } from "./flow/bulkPatch";
 import type {
   DeviceNodeType,
   CableEdgeType,
@@ -203,37 +205,103 @@ function AppInner() {
   const flowWrapRef = useRef<HTMLDivElement>(null);
 
   // Drawing a connection auto-types the cable from the source port's connector.
+  // Build a fresh cable edge for a source→target port pair: typed/colored from the
+  // source connector and auto-numbered against `eds` (next free in its signal group's
+  // sequence, VID-001…). Shared by single-drag connect and bulk patch.
+  const buildCableEdge = useCallback(
+    (
+      source: string,
+      sourceHandle: string | null | undefined,
+      target: string,
+      targetHandle: string | null | undefined,
+      eds: CableEdgeType[],
+    ): CableEdgeType => {
+      const sourceNode = nodes.find((n) => n.id === source);
+      const port =
+        sourceNode?.type === "device"
+          ? sourceNode.data.model.ports.find((p) => p.id === sourceHandle)
+          : undefined;
+      const cableTypeId = port?.connector;
+      const prefix = cablePrefixFromConnector(cableTypeId);
+      return {
+        id: `cable-${crypto.randomUUID()}`,
+        source,
+        target,
+        sourceHandle,
+        targetHandle,
+        type: "cable",
+        style: { stroke: cableColor(cableTypeId), strokeWidth: 2 },
+        data: {
+          cableTypeId: cableTypeId ?? "",
+          number: formatCableId(prefix, nextCableNumber(prefix, eds)),
+        },
+      };
+    },
+    [nodes],
+  );
+
   const onConnect = useCallback(
     (connection: Connection) => {
       takeSnapshot();
-      const sourceNode = nodes.find((n) => n.id === connection.source);
-      const port =
-        sourceNode?.type === "device"
-          ? sourceNode.data.model.ports.find((p) => p.id === connection.sourceHandle)
-          : undefined;
-      const cableTypeId = port?.connector;
-      const color = cableColor(cableTypeId);
-      // Auto-number the run: next free in its signal group's sequence (VID-001…),
-      // computed against the live edges so rapid draws don't collide.
-      setEdges((eds) => {
-        const prefix = cablePrefixFromConnector(cableTypeId);
-        const edge: CableEdgeType = {
-          id: `cable-${crypto.randomUUID()}`,
-          source: connection.source,
-          target: connection.target,
-          sourceHandle: connection.sourceHandle,
-          targetHandle: connection.targetHandle,
-          type: "cable",
-          style: { stroke: color, strokeWidth: 2 },
-          data: {
-            cableTypeId: cableTypeId ?? "",
-            number: formatCableId(prefix, nextCableNumber(prefix, eds)),
-          },
-        };
-        return addEdge(edge, eds);
-      });
+      setEdges((eds) =>
+        addEdge(
+          buildCableEdge(
+            connection.source,
+            connection.sourceHandle,
+            connection.target,
+            connection.targetHandle,
+            eds,
+          ),
+          eds,
+        ),
+      );
     },
-    [nodes, setEdges, takeSnapshot],
+    [setEdges, takeSnapshot, buildCableEdge],
+  );
+
+  // ---- Bulk patch: pick output ports in order, then click inputs to run cables
+  // order-paired (1→1, 2→2…). The pure reducer lives in flow/bulkPatch.ts.
+  const [bulkActive, setBulkActive] = useState(false);
+  const [bulk, setBulk] = useState<BulkState>(EMPTY_BULK);
+
+  const enterBulk = useCallback(() => {
+    setBulk(EMPTY_BULK);
+    setBulkActive(true);
+  }, []);
+  const exitBulk = useCallback(() => {
+    setBulkActive(false);
+    setBulk(EMPTY_BULK);
+  }, []);
+
+  const onBulkPortClick = useCallback(
+    (ref: BulkPortRef) => {
+      const node = nodes.find((n) => n.id === ref.nodeId);
+      const dir =
+        node?.type === "device"
+          ? node.data.model.ports.find((p) => p.id === ref.portId)?.direction
+          : undefined;
+      if (!dir) return;
+      const res = bulkClick(bulk, ref, dir);
+      if (res.draw) {
+        // One undo step for the whole batch: snapshot before the first pair only.
+        if (bulk.dests.length === 0) takeSnapshot();
+        const { from, to } = res.draw;
+        setEdges((eds) =>
+          addEdge(buildCableEdge(from.nodeId, from.portId, to.nodeId, to.portId, eds), eds),
+        );
+      }
+      setBulk(res.state);
+    },
+    [bulk, nodes, setEdges, takeSnapshot, buildCableEdge],
+  );
+
+  const bulkPatchValue = useMemo<BulkPatchActions>(
+    () => ({
+      active: bulkActive,
+      onPortClick: onBulkPortClick,
+      ordinalFor: (ref) => sourceOrdinal(bulk, ref),
+    }),
+    [bulkActive, onBulkPortClick, bulk],
   );
 
   // Grab either end of an existing cable and drop it on another port to re-patch
@@ -310,6 +378,16 @@ function AppInner() {
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, []);
+
+  // Esc leaves bulk-patch mode (keeping any cables already run).
+  useEffect(() => {
+    if (!bulkActive) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") exitBulk();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [bulkActive, exitBulk]);
 
   useEffect(() => {
     if (!addToast) return;
@@ -1176,6 +1254,14 @@ function AppInner() {
         </div>
         <button
           type="button"
+          className={bulkActive ? "tbtn is-on" : "tbtn"}
+          onClick={() => (bulkActive ? exitBulk() : enterBulk())}
+          title="Bulk patch — wire many cables at once, order-paired"
+        >
+          Bulk patch
+        </button>
+        <button
+          type="button"
           className={validationOpen ? "tbtn is-on" : "tbtn"}
           onClick={() => {
             setValidationOpen((v) => !v);
@@ -1213,7 +1299,17 @@ function AppInner() {
         </button>
       </header>
 
-      {contextKind && (
+      {bulkActive && (
+        <div className="bulkbar">
+          <span className="bulkbar__title">Bulk patch</span>
+          <span className="bulkbar__status">{bulkStatus(bulk)}</span>
+          <span className="bulkbar__spacer" />
+          <button type="button" className="contextbar__btn" onClick={exitBulk}>
+            Done (Esc)
+          </button>
+        </div>
+      )}
+      {!bulkActive && contextKind && (
         <div className="contextbar">
           {contextKind === "zone" && activeZone && (
             <>
@@ -1408,6 +1504,7 @@ function AppInner() {
         <div className="canvas-wrap" ref={flowWrapRef}>
           <ZoneActionsContext.Provider value={zoneActions}>
             <NoteActionsContext.Provider value={noteActions}>
+             <BulkPatchContext.Provider value={bulkPatchValue}>
               <ReactFlow
                 nodes={nodes}
                 edges={displayEdges}
@@ -1431,6 +1528,8 @@ function AppInner() {
                 maxZoom={4}
                 colorMode={theme}
                 fitView
+                nodesConnectable={!bulkActive}
+                nodesDraggable={!bulkActive}
               >
                 <Background
                   id="minor"
@@ -1447,6 +1546,7 @@ function AppInner() {
                 <MiniMap pannable zoomable />
                 <Controls />
               </ReactFlow>
+             </BulkPatchContext.Provider>
             </NoteActionsContext.Provider>
           </ZoneActionsContext.Provider>
           {listsOpen && (
