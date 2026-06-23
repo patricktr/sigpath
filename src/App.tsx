@@ -44,6 +44,12 @@ import {
 } from "./schema";
 import { assignLanes, approxPortY } from "./flow/parallelLanes";
 import type { LaneInput } from "./flow/parallelLanes";
+import {
+  routeAroundObstacles,
+  pathHitsObstacle,
+  defaultRoutePoints,
+} from "./flow/obstacleRoute";
+import type { Rect, Pt } from "./flow/obstacleRoute";
 import { EdgeMarqueeSelect } from "./flow/EdgeMarqueeSelect";
 import { rectHitsRun } from "./flow/marqueeHit";
 import type { DeviceModel } from "./schema";
@@ -485,12 +491,29 @@ function AppInner() {
       return port ? cableColor(port.connector) : undefined;
     };
 
-    // Parallel-cable de-overlap: approximate each output→input run's geometry, then
-    // group runs sharing a corridor so CableEdge can fan their jogs into lanes. Only
-    // the standard horizontal run (output on the right → input on the left); bidi
-    // (bottom) ports are deferred. Approximation is fine — the real offset is computed
-    // from exact endpoints in CableEdge; this only decides grouping + order.
-    const laneInputs: LaneInput[] = [];
+    // Device boxes are the cable obstacles — zones are pass-through containers and
+    // notes are annotations, so cables route through them. Height falls back to a
+    // port-count estimate when React Flow hasn't measured the node yet.
+    const deviceRects = nodes
+      .filter((n): n is DeviceNodeType => n.type === "device")
+      .map((n) => {
+        const w = n.measured?.width ?? n.width ?? 168;
+        const ports = Math.max(
+          inputPorts(n.data.model).length,
+          outputPorts(n.data.model).length,
+          1,
+        );
+        const h = n.measured?.height ?? n.height ?? approxPortY(ports - 1) + 24;
+        const rect: Rect = { x: n.position.x, y: n.position.y, w, h };
+        return { id: n.id, rect };
+      });
+
+    // Approx output→input endpoints per standard horizontal run, shared by obstacle
+    // routing and the parallel-lane pass. Only output(right)→input(left) device runs;
+    // bidi (bottom) ports are deferred. The real offset is computed from exact
+    // endpoints in CableEdge — this approximation only drives grouping + reroute.
+    type Ends = { sx: number; sy: number; tx: number; ty: number };
+    const endsById = new Map<string, Ends>();
     for (const e of edges) {
       const src = byId.get(e.source);
       const tgt = byId.get(e.target);
@@ -501,18 +524,50 @@ function AppInner() {
       const si = outputPorts(src.data.model).findIndex((p) => p.id === sp.id);
       const ti = inputPorts(tgt.data.model).findIndex((p) => p.id === tp.id);
       const srcW = src.measured?.width ?? src.width ?? 168;
-      const sx = src.position.x + srcW;
-      const sy = src.position.y + approxPortY(si < 0 ? 0 : si);
-      const tx = tgt.position.x;
-      const ty = tgt.position.y + approxPortY(ti < 0 ? 0 : ti);
+      endsById.set(e.id, {
+        sx: src.position.x + srcW,
+        sy: src.position.y + approxPortY(si < 0 ? 0 : si),
+        tx: tgt.position.x,
+        ty: tgt.position.y + approxPortY(ti < 0 ? 0 : ti),
+      });
+    }
+
+    // Obstacle avoidance: a run whose straight Z passes through a device box (other
+    // than its own two ends) is rerouted around the boxes. Only blocked runs reroute;
+    // every clear run stays on the default path and joins the lane pass below.
+    const waypointsById = new Map<string, Pt[]>();
+    for (const e of edges) {
+      const ends = endsById.get(e.id);
+      if (!ends) continue;
+      const obstacles = deviceRects
+        .filter((d) => d.id !== e.source && d.id !== e.target)
+        .map((d) => d.rect);
+      if (obstacles.length === 0) continue;
+      const from = { x: ends.sx, y: ends.sy };
+      const to = { x: ends.tx, y: ends.ty };
+      if (!pathHitsObstacle(defaultRoutePoints(from, to, (ends.sx + ends.tx) / 2), obstacles)) {
+        continue;
+      }
+      const wp = routeAroundObstacles(from, to, obstacles);
+      if (wp) waypointsById.set(e.id, wp);
+    }
+
+    // Parallel-cable de-overlap: group clear runs sharing a corridor so CableEdge can
+    // fan their jogs into lanes. Rerouted runs are excluded — their detour already
+    // sets them apart.
+    const laneInputs: LaneInput[] = [];
+    for (const e of edges) {
+      if (waypointsById.has(e.id)) continue;
+      const ends = endsById.get(e.id);
+      if (!ends) continue;
       laneInputs.push({
         id: e.id,
         axis: "h",
-        jog: (sx + tx) / 2,
-        lo: Math.min(sy, ty),
-        hi: Math.max(sy, ty),
-        order: sy,
-        dir: ty > sy ? 1 : -1,
+        jog: (ends.sx + ends.tx) / 2,
+        lo: Math.min(ends.sy, ends.ty),
+        hi: Math.max(ends.sy, ends.ty),
+        order: ends.sy,
+        dir: ends.ty > ends.sy ? 1 : -1,
       });
     }
     const laneMap = assignLanes(laneInputs);
@@ -545,9 +600,15 @@ function AppInner() {
           filter: `drop-shadow(0 0 2px ${glow}) drop-shadow(0 0 6px ${glow})`,
         };
       }
-      // Parallel lane (geometry only) — independent of validation styling above.
-      const lane = laneMap.get(e.id);
-      if (lane) data = { ...(data ?? { cableTypeId: "" }), parallel: lane };
+      // Geometry (independent of validation styling above): an obstacle detour wins
+      // over the lane offset; otherwise apply the parallel lane.
+      const wp = waypointsById.get(e.id);
+      if (wp) {
+        data = { ...(data ?? { cableTypeId: "" }), waypoints: wp };
+      } else {
+        const lane = laneMap.get(e.id);
+        if (lane) data = { ...(data ?? { cableTypeId: "" }), parallel: lane };
+      }
       return { ...e, style, animated, data };
     });
   }, [edges, validation, nodes]);

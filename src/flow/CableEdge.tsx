@@ -5,8 +5,13 @@ import {
   type EdgeProps,
 } from "@xyflow/react";
 import type { CableEdgeType } from "./types";
+import type { Pt } from "./obstacleRoute";
+import { orthogonalPathD, polylineMidpoint } from "./obstacleRoute";
 import { LANE_GAP } from "./parallelLanes";
 import "./CableEdge.css";
+
+/** Corner rounding for the obstacle-detour path (matches the smooth-step feel). */
+const BEND_RADIUS = 8;
 
 /**
  * The cable edge. Draws the smooth-step path; when a run changes connector but not
@@ -17,6 +22,11 @@ import "./CableEdge.css";
  * updates as nodes move. Validation overrides (red error / amber warning) win — they
  * set a solid stroke and clear the gradient before this renders. A cable ID, when
  * set, rides at the path midpoint as a small badge.
+ *
+ * When the run is rerouted around device boxes, `data.waypoints` carries the detour's
+ * interior bend points; we draw that rounded orthogonal path instead, stitching the
+ * exact port endpoints onto its ends. Obstacle detours take precedence over the
+ * parallel-lane jog offset (a rerouted run never participates in a lane bundle).
  */
 export function CableEdge({
   id,
@@ -30,31 +40,56 @@ export function CableEdge({
   data,
   markerEnd,
 }: EdgeProps<CableEdgeType>) {
-  // One of a bundle of parallel runs? Fan its smooth-step jog into its own lane.
-  // For a horizontal run the jog is set by centerX (centerY only moves the label),
-  // so we offset centerX for "h" and centerY for "v". The returned labelX/labelY
-  // already follow the offset path — no separate label math. (Verified against
-  // @xyflow/system getSmoothStepPath; see parallelLanes.ts.)
-  const lane = data?.parallel;
-  let center: { centerX?: number; centerY?: number } = {};
-  if (lane) {
-    const off = (lane.index - (lane.count - 1) / 2) * LANE_GAP;
-    if (off !== 0) {
-      center =
-        lane.axis === "h"
-          ? { centerX: (sourceX + targetX) / 2 + off }
-          : { centerY: (sourceY + targetY) / 2 + off };
+  let path: string;
+  let labelX: number;
+  let labelY: number;
+
+  const waypoints = data?.waypoints;
+  if (waypoints && waypoints.length) {
+    // Stitch exact ports onto the routed interior. The first/last bend share the
+    // port's Y (the run leaves/enters horizontally), so snap them to the exact port
+    // Y — the approximate routing Y can be a pixel or two off — keeping it orthogonal.
+    const pts: Pt[] = [
+      { x: sourceX, y: sourceY },
+      ...waypoints.map((p) => ({ ...p })),
+      { x: targetX, y: targetY },
+    ];
+    pts[1].y = sourceY;
+    pts[pts.length - 2].y = targetY;
+    path = orthogonalPathD(pts, BEND_RADIUS);
+    const mid = polylineMidpoint(pts);
+    labelX = mid.x;
+    labelY = mid.y;
+  } else {
+    // One of a bundle of parallel runs? Fan its smooth-step jog into its own lane.
+    // For a horizontal run the jog is set by centerX (centerY only moves the label),
+    // so we offset centerX for "h" and centerY for "v". The returned labelX/labelY
+    // already follow the offset path. (Verified against @xyflow/system; see
+    // parallelLanes.ts.)
+    const lane = data?.parallel;
+    let center: { centerX?: number; centerY?: number } = {};
+    if (lane) {
+      const off = (lane.index - (lane.count - 1) / 2) * LANE_GAP;
+      if (off !== 0) {
+        center =
+          lane.axis === "h"
+            ? { centerX: (sourceX + targetX) / 2 + off }
+            : { centerY: (sourceY + targetY) / 2 + off };
+      }
     }
+    const [p, lx, ly] = getSmoothStepPath({
+      sourceX,
+      sourceY,
+      sourcePosition,
+      targetX,
+      targetY,
+      targetPosition,
+      ...center,
+    });
+    path = p;
+    labelX = lx;
+    labelY = ly;
   }
-  const [path, labelX, labelY] = getSmoothStepPath({
-    sourceX,
-    sourceY,
-    sourcePosition,
-    targetX,
-    targetY,
-    targetPosition,
-    ...center,
-  });
 
   const gradient = data?.gradient;
   const gradientId = `cablegrad-${id}`;

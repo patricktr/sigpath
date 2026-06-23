@@ -1,6 +1,7 @@
 import type { Node, Edge } from "@xyflow/react";
 import type { DeviceModel, CableTypeId, GradeId } from "../schema";
 import type { Lane } from "./parallelLanes";
+import type { Pt } from "./obstacleRoute";
 
 /**
  * React Flow binding types. The domain model lives in `src/schema`; these types
@@ -47,6 +48,10 @@ export type CableEdgeData = {
   /** Derived at render time (not persisted): this run's lane within a bundle of
    *  parallel cables sharing a corridor — CableEdge turns it into a jog offset. */
   parallel?: Lane;
+  /** Derived at render time (not persisted): interior bend points of an
+   *  obstacle-avoiding detour around device boxes. When set, CableEdge draws this
+   *  orthogonal path instead of the default smooth-step jog (and ignores `parallel`). */
+  waypoints?: Pt[];
 };
 
 export type CableEdgeType = Edge<CableEdgeData>;
