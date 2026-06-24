@@ -42,7 +42,7 @@ import {
   outputPorts,
   VIDEO_FORMATS,
 } from "./schema";
-import { assignLanes, approxPortY } from "./flow/parallelLanes";
+import { assignLanes, approxPortY, LANE_GAP } from "./flow/parallelLanes";
 import type { LaneInput } from "./flow/parallelLanes";
 import {
   routeAroundObstacles,
@@ -219,6 +219,9 @@ function AppInner() {
   const noteCount = useRef(0);
   const rf = useRef<ReactFlowInstance<SigNode, CableEdgeType> | null>(null);
   const flowWrapRef = useRef<HTMLDivElement>(null);
+  // Each joggable (non-detour) run's current jog X + its run midpoint, refreshed every
+  // render — lets a manual nudge start from where the cable actually sits (no jump).
+  const jogInfoRef = useRef<Map<string, { midX: number; jogX: number }>>(new Map());
 
   // Drawing a connection auto-types the cable from the source port's connector.
   // Build a fresh cable edge for a source→target port pair: typed/colored from the
@@ -585,6 +588,7 @@ function AppInner() {
     const laneInputs: LaneInput[] = [];
     for (const e of edges) {
       if (waypointsById.has(e.id)) continue;
+      if (e.data?.jogOffset != null) continue; // pinned by the user — out of the optimizer
       const ends = endsById.get(e.id);
       if (!ends) continue;
       laneInputs.push({
@@ -608,11 +612,14 @@ function AppInner() {
     // spread path untouched — it's already de-overlapped and crossing-minimized, and the
     // nudge (separation-only) would reintroduce crossings.
     const polylines: { id: string; pts: Pt[] }[] = [];
+    const jogInfo = new Map<string, { midX: number; jogX: number }>();
     for (const e of edges) {
       if (waypointsById.has(e.id)) continue;
       const ends = endsById.get(e.id);
       if (!ends) continue;
-      const jogX = laneJogX.get(e.id) ?? (ends.sx + ends.tx) / 2;
+      const midX = (ends.sx + ends.tx) / 2;
+      const jogX = e.data?.jogOffset != null ? midX + e.data.jogOffset : laneJogX.get(e.id) ?? midX;
+      jogInfo.set(e.id, { midX, jogX });
       polylines.push({
         id: e.id,
         pts: simplifyOrthogonal([
@@ -624,6 +631,7 @@ function AppInner() {
       });
     }
     const nudged = nudgeCollinearOverlaps(polylines);
+    jogInfoRef.current = jogInfo;
 
     return edges.map((e) => {
       let style: CSSProperties;
@@ -930,6 +938,41 @@ function AppInner() {
       );
     },
     [setEdges],
+  );
+
+  // Manual routing override: nudge the run's vertical jog left/right by one lane width.
+  // Starts from where the cable currently sits (jogInfoRef) so the first nudge doesn't
+  // jump, then pins it as an offset from the run midpoint — the auto pass routes around.
+  const nudgeJog = useCallback(
+    (edgeId: string, dir: -1 | 1) => {
+      const info = jogInfoRef.current.get(edgeId);
+      if (!info) return; // only joggable (non-detour) runs
+      const offset = info.jogX - info.midX + dir * LANE_GAP;
+      takeSnapshot();
+      setEdges((eds) =>
+        eds.map((e) =>
+          e.id === edgeId
+            ? { ...e, data: { ...(e.data ?? { cableTypeId: "" }), jogOffset: offset } }
+            : e,
+        ),
+      );
+    },
+    [setEdges, takeSnapshot],
+  );
+
+  // Drop the manual override — the run rejoins the crossing-minimizer.
+  const clearJog = useCallback(
+    (edgeId: string) => {
+      takeSnapshot();
+      setEdges((eds) =>
+        eds.map((e) =>
+          e.id === edgeId
+            ? { ...e, data: { ...(e.data ?? { cableTypeId: "" }), jogOffset: undefined } }
+            : e,
+        ),
+      );
+    },
+    [setEdges, takeSnapshot],
   );
 
   // Set the cable's supported bandwidth rating on this run (undefined clears it).
@@ -1711,6 +1754,42 @@ function AppInner() {
                 >
                   ＋ Add converter
                 </button>
+              )}
+              {selection.cables.length === 1 && jogInfoRef.current.has(selection.cables[0].id) && (
+                <span
+                  className="contextbar__title"
+                  style={{ display: "inline-flex", alignItems: "center", gap: 4, fontWeight: 400 }}
+                >
+                  Route
+                  <button
+                    type="button"
+                    className="contextbar__btn"
+                    onClick={() => nudgeJog(selection.cables[0].id, -1)}
+                    title="Nudge this run's jog left"
+                    aria-label="Nudge jog left"
+                  >
+                    ◀
+                  </button>
+                  <button
+                    type="button"
+                    className="contextbar__btn"
+                    onClick={() => nudgeJog(selection.cables[0].id, 1)}
+                    title="Nudge this run's jog right"
+                    aria-label="Nudge jog right"
+                  >
+                    ▶
+                  </button>
+                  {selection.cables[0].data?.jogOffset != null && (
+                    <button
+                      type="button"
+                      className="contextbar__btn"
+                      onClick={() => clearJog(selection.cables[0].id)}
+                      title="Restore automatic routing"
+                    >
+                      Auto
+                    </button>
+                  )}
+                </span>
               )}
               <button type="button" className="contextbar__btn" onClick={deleteSelection}>
                 Delete

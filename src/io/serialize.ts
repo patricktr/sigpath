@@ -50,6 +50,7 @@ function editorToDiagram(d: EditorDiagram): Diagram {
     lengthMeters: e.data?.lengthMeters,
     cableGrade: e.data?.cableGrade,
     signalGrade: e.data?.signalGrade,
+    jogOffset: e.data?.jogOffset,
   }));
 
   const zones: Zone[] = zoneNodes.map((z) => ({
@@ -117,6 +118,7 @@ function diagramToEditor(d: Diagram): EditorDiagram {
       lengthMeters: c.lengthMeters,
       cableGrade: c.cableGrade,
       signalGrade: c.signalGrade,
+      jogOffset: c.jogOffset,
     },
   }));
 

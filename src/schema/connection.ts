@@ -32,6 +32,13 @@ export type Connection = {
    */
   signalGrade?: GradeId;
   label?: string;
+  /**
+   * Manual routing override (px): the cable's vertical jog X relative to the run's
+   * midpoint, set when the user nudges it off the auto-router's track. Omitted ⇒ the
+   * crossing-minimizer places it; present ⇒ it's pinned and the auto pass routes
+   * around it.
+   */
+  jogOffset?: number;
 };
 
 export type CompatStatus = "ok" | "warn" | "error";

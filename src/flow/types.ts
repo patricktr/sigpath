@@ -45,6 +45,9 @@ export type CableEdgeData = {
   cableGrade?: GradeId;
   /** Per-run demand override (persisted; mirrors Connection.signalGrade). */
   signalGrade?: GradeId;
+  /** Manual routing override (persisted): vertical-jog X relative to the run midpoint.
+   *  Set ⇒ the run is pinned there and drops out of the auto crossing-minimizer. */
+  jogOffset?: number;
   /** Derived at render time (not persisted): when a cable's two ends differ in
    *  connector color, the source→target colors to stroke it with a gradient. */
   gradient?: { from: string; to: string };
