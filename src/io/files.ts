@@ -46,6 +46,16 @@ export async function confirmDeleteDiagram(name: string, blockRefs = 0): Promise
   });
 }
 
+/** Confirm before promoting a zone to its own tab — destructive (contents MOVE), so the
+ *  user previews what's affected. Returns true to proceed. */
+export async function confirmPromoteZone(name: string, deviceCount: number): Promise<boolean> {
+  const n = deviceCount === 1 ? "1 device" : `${deviceCount} devices`;
+  return await confirm(
+    `Promote "${name}" to its own tab? This moves ${n} (and their cables) into a new tab and replaces the zone with a block here. Undoable.`,
+    { title: "Promote zone to tab", kind: "info", okLabel: "Promote", cancelLabel: "Cancel" },
+  );
+}
+
 /** Prompt for a path and write a text file (e.g. CSV). Returns the path, or null if cancelled. */
 export async function saveText(text: string, defaultName: string, ext: string): Promise<string | null> {
   const path = await save({ filters: [{ name: ext.toUpperCase(), extensions: [ext] }], defaultPath: defaultName });

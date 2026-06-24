@@ -71,6 +71,7 @@ import {
   writeTextToPath,
   fileStem,
   confirmDeleteDiagram,
+  confirmPromoteZone,
   saveText,
   saveBinary,
 } from "./io/files";
@@ -148,6 +149,7 @@ function AppInner() {
     deleteDiagram,
     blockRefCount,
     embedTabAsBlock,
+    promoteZoneToTab,
     getDocument,
     loadProject,
     signalProfile,
@@ -1316,6 +1318,24 @@ function AppInner() {
     [diagrams, embedTabAsBlock],
   );
 
+  // Promote a zone to its own tab: preview the member count, confirm (it's destructive),
+  // then move the contents out and collapse the zone into a block.
+  const handlePromoteZone = useCallback(
+    async (zoneId: string) => {
+      const zone = nodesRef.current.find((n) => n.id === zoneId && n.type === "zone");
+      if (!zone || zone.type !== "zone") return;
+      const deviceCount = nodesInZone(zone, nodesRef.current).filter((n) => n.type === "device").length;
+      if (deviceCount === 0) {
+        setStatus("The zone has no devices to promote.");
+        return;
+      }
+      if (!(await confirmPromoteZone(zone.data.label, deviceCount))) return;
+      const res = promoteZoneToTab(zoneId);
+      setStatus(res.error ?? `Promoted "${zone.data.label}" to a tab (${res.movedDevices} devices moved)`);
+    },
+    [promoteZoneToTab],
+  );
+
   const handleSave = useCallback(async (): Promise<boolean> => {
     try {
       let path = currentPath;
@@ -1672,6 +1692,14 @@ function AppInner() {
                 title="Route cables around this zone instead of through it"
               >
                 {activeZone.data.obstacle ? "⤬ Cables avoid ✓" : "⤬ Cables avoid"}
+              </button>
+              <button
+                type="button"
+                className="contextbar__btn"
+                onClick={() => handlePromoteZone(activeZone.id)}
+                title="Move this zone's contents into their own tab and reference it here as a block"
+              >
+                ⤴ Promote to tab
               </button>
               <button type="button" className="contextbar__btn" onClick={deleteSelection}>
                 Delete

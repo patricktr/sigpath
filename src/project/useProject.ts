@@ -1,7 +1,7 @@
 import { useCallback, useRef, useState } from "react";
 import type { MutableRefObject } from "react";
-import type { CableEdgeType, SigNode, EditorDiagram } from "../flow/types";
-import { deriveBoundary, embedWouldCycle, makeBlockNode } from "../flow/nesting";
+import type { CableEdgeType, SigNode, EditorDiagram, ZoneNodeType } from "../flow/types";
+import { deriveBoundary, embedWouldCycle, makeBlockNode, planPromoteZone } from "../flow/nesting";
 import { emptyEditorDiagram, fromDocument, toDocument } from "../io/serialize";
 import type { SigpathDocument, SignalProfile } from "../schema";
 
@@ -206,6 +206,41 @@ export function useProject(initial: EditorDiagram[], opts: Options) {
     [synced, activeId, takeSnapshot, setDiagrams, setNodes, nodesRef],
   );
 
+  /**
+   * Promote a zone in the ACTIVE diagram into its own tab (p2-zonetab). Destructive but
+   * atomic + undoable (decision 2 — move, not copy): the zone's contained nodes and their
+   * internal cables move into a new sub-diagram; cables crossing the zone edge auto-publish
+   * a boundary port and re-point onto a block that replaces the zone. Stays on the host so
+   * the collapsed block is visible. Returns how many devices moved, or an error.
+   */
+  const promoteZoneToTab = useCallback(
+    (zoneId: string): { ok: boolean; movedDevices: number; error?: string } => {
+      const zone = nodesRef.current.find((n) => n.id === zoneId && n.type === "zone") as
+        | ZoneNodeType
+        | undefined;
+      if (!zone) return { ok: false, movedDevices: 0, error: "Zone not found." };
+      const diagramId = crypto.randomUUID();
+      const blockId = crypto.randomUUID();
+      const plan = planPromoteZone(zone, nodesRef.current, edgesRef.current, { diagramId, blockId });
+      if (plan.subNodes.length === 0) {
+        return { ok: false, movedDevices: 0, error: "The zone is empty — nothing to promote." };
+      }
+      takeSnapshot();
+      const subDiagram: EditorDiagram = {
+        id: diagramId,
+        name: zone.data.label || "Room",
+        nodes: plan.subNodes,
+        edges: plan.subEdges,
+        boundary: plan.boundary,
+      };
+      setDiagrams([...synced(), subDiagram]);
+      setNodes(plan.hostNodes);
+      setEdges(plan.hostEdges);
+      return { ok: true, movedDevices: plan.movedDeviceCount };
+    },
+    [nodesRef, edgesRef, synced, takeSnapshot, setDiagrams, setNodes, setEdges],
+  );
+
   /** Snapshot the whole project (active diagram synced) for saving. */
   const getDocument = useCallback(
     (): SigpathDocument =>
@@ -251,6 +286,7 @@ export function useProject(initial: EditorDiagram[], opts: Options) {
     deleteDiagram,
     blockRefCount,
     embedTabAsBlock,
+    promoteZoneToTab,
     getDocument,
     loadProject,
     newProject,

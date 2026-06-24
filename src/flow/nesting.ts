@@ -1,7 +1,8 @@
 import { deviceTitle } from "../schema";
 import type { BoundaryPort } from "../schema";
 import { synthesizeBlockModel } from "../io/serialize";
-import type { BlockNodeType, CableEdgeType, EditorDiagram, SigNode } from "./types";
+import { nodesInZone } from "./zoneMembership";
+import type { BlockNodeType, CableEdgeType, EditorDiagram, SigNode, ZoneNodeType } from "./types";
 
 /**
  * Editor-side helpers for the nesting verbs (p2-zonetab — design/ZONE-TAB.html).
@@ -64,15 +65,15 @@ export function embedWouldCycle(diagrams: EditorDiagram[], hostId: string, refId
   return false;
 }
 
-/** A fresh block node referencing a diagram, its port model synthesized from `boundary`. */
-export function makeBlockNode(
+function blockNode(
+  id: string,
   refDiagramId: string,
   refName: string,
   boundary: Boundary,
   position: { x: number; y: number },
 ): BlockNodeType {
   return {
-    id: crypto.randomUUID(),
+    id,
     type: "block",
     position,
     data: {
@@ -81,6 +82,121 @@ export function makeBlockNode(
       boundaryRev: boundary.rev,
       drift: false,
     },
+  };
+}
+
+/** A fresh block node referencing a diagram, its port model synthesized from `boundary`. */
+export function makeBlockNode(
+  refDiagramId: string,
+  refName: string,
+  boundary: Boundary,
+  position: { x: number; y: number },
+): BlockNodeType {
+  return blockNode(crypto.randomUUID(), refDiagramId, refName, boundary, position);
+}
+
+export type PromotePlan = {
+  /** The new sub-diagram's content (members, rebased) + internal cables + published boundary. */
+  subNodes: SigNode[];
+  subEdges: CableEdgeType[];
+  boundary: Boundary;
+  /** The block that replaces the zone in the host diagram. */
+  block: BlockNodeType;
+  /** The host diagram after promotion: zone + members removed, block added. */
+  hostNodes: SigNode[];
+  /** The host edges after promotion: internal runs removed, crossing runs re-pointed to the block. */
+  hostEdges: CableEdgeType[];
+  movedDeviceCount: number;
+};
+
+/**
+ * Plan promoting a zone into its own tab (p2-zonetab, decision 1/2 — MOVE, with confirm).
+ * Pure: computes the whole transformation without mutating anything, so the caller can
+ * apply it in one atomic snapshot. Members are the nodes geometrically inside the zone;
+ * they move into a new sub-diagram (positions rebased to the zone origin). A cable with
+ * both ends inside is internal and moves too; a cable crossing the zone edge auto-publishes
+ * a boundary port for its inside endpoint and is re-pointed onto the new block — so the run
+ * stays a single cable, now entering/leaving the room through the boundary.
+ */
+export function planPromoteZone(
+  zone: ZoneNodeType,
+  hostNodes: SigNode[],
+  hostEdges: CableEdgeType[],
+  ids: { diagramId: string; blockId: string },
+): PromotePlan {
+  const members = nodesInZone(zone, hostNodes);
+  const memberIds = new Set(members.map((m) => m.id));
+  const memberById = new Map(members.map((m) => [m.id, m]));
+
+  // Rebase member positions to the zone's top-left so the new tab reads tidily.
+  const subNodes: SigNode[] = members.map((m) => ({
+    ...m,
+    position: { x: m.position.x - zone.position.x + 40, y: m.position.y - zone.position.y + 40 },
+    selected: false,
+  }));
+
+  const portOf = (nodeId: string, portId: string | null | undefined) => {
+    const n = memberById.get(nodeId);
+    if (!n || (n.type !== "device" && n.type !== "block")) return undefined;
+    return n.data.model.ports.find((p) => p.id === portId);
+  };
+
+  const boundaryPorts: BoundaryPort[] = [];
+  const bpByKey = new Map<string, BoundaryPort>();
+  const boundaryFor = (memberId: string, portId: string): BoundaryPort => {
+    const key = `${memberId}:${portId}`;
+    const existing = bpByKey.get(key);
+    if (existing) return existing;
+    const member = memberById.get(memberId);
+    const port = portOf(memberId, portId);
+    const devName =
+      member && (member.type === "device" || member.type === "block")
+        ? deviceTitle(member.data.model, member.data.label)
+        : "Port";
+    const bp: BoundaryPort = {
+      id: `bp-${memberId}-${portId}`,
+      name: `${devName} · ${port?.name ?? portId}`,
+      direction: port?.direction ?? "output",
+      connector: port?.connector ?? "",
+      accepts: port?.accepts,
+      grade: port?.grade,
+      internal: { instanceId: memberId, portId },
+    };
+    bpByKey.set(key, bp);
+    boundaryPorts.push(bp);
+    return bp;
+  };
+
+  const subEdges: CableEdgeType[] = [];
+  const hostEdgesOut: CableEdgeType[] = [];
+  for (const e of hostEdges) {
+    const sIn = memberIds.has(e.source);
+    const tIn = memberIds.has(e.target);
+    if (sIn && tIn) {
+      subEdges.push({ ...e, selected: false }); // internal run → moves into the sub-diagram
+    } else if (sIn) {
+      const bp = boundaryFor(e.source, e.sourceHandle ?? ""); // leaves the room → boundary on the source
+      hostEdgesOut.push({ ...e, source: ids.blockId, sourceHandle: bp.id });
+    } else if (tIn) {
+      const bp = boundaryFor(e.target, e.targetHandle ?? ""); // enters the room → boundary on the target
+      hostEdgesOut.push({ ...e, target: ids.blockId, targetHandle: bp.id });
+    } else {
+      hostEdgesOut.push(e); // wholly outside → untouched
+    }
+  }
+
+  const boundary: Boundary = { ports: boundaryPorts, rev: 1 };
+  const block = blockNode(ids.blockId, ids.diagramId, zone.data.label || "Room", boundary, zone.position);
+  const hostNodesOut = hostNodes.filter((n) => n.id !== zone.id && !memberIds.has(n.id)).concat(block);
+
+  return {
+    subNodes,
+    subEdges,
+    boundary,
+    block,
+    hostNodes: hostNodesOut,
+    hostEdges: hostEdgesOut,
+    movedDeviceCount: members.filter((m) => m.type === "device").length,
   };
 }
 
