@@ -46,6 +46,7 @@ import { assignLanes, approxPortY, LANE_GAP } from "./flow/parallelLanes";
 import type { LaneInput } from "./flow/parallelLanes";
 import {
   routeAroundObstacles,
+  centerDetourVerticals,
   pathHitsObstacle,
   defaultRoutePoints,
   spreadDetourBundles,
@@ -565,7 +566,12 @@ function AppInner() {
         continue;
       }
       const wp = routeAroundObstacles(from, to, obstacles);
-      if (wp) waypointsById.set(e.id, wp);
+      if (wp) {
+        // Slide each descent to the middle of its open corridor — not hugging the box it
+        // cleared or the device it enters.
+        const centered = centerDetourVerticals([from, ...wp, to], obstacles);
+        waypointsById.set(e.id, centered.slice(1, -1));
+      }
     }
 
     // Fan apart detours that share a trunk (a whole bundle routing around one box)

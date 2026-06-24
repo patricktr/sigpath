@@ -24,11 +24,6 @@ const PORT_STUB = 22;
 /** Cost added per 90° bend — far larger than any pixel length so A* minimizes
  *  bends first, then total length. Keeps detours to clean rectilinear shapes. */
 const TURN_COST = 100_000;
-/** Small surcharge on a horizontal run that isn't at the target's row, so among equal-
- *  bend, equal-length detours A* prefers the one that drops to the target row early and
- *  runs straight in — rather than sliding along to the device's doorstep and cutting down
- *  through its column of cable-ID labels. Far below TURN_COST, so it never adds a bend. */
-const OFF_ROW_BIAS = 0.1;
 /** Bail out (fall back to the straight route) above this many in-play obstacles,
  *  so a pathological diagram can't stall the render. Grids stay small in practice. */
 const MAX_OBSTACLES = 40;
@@ -215,16 +210,7 @@ export function routeAroundObstacles(from: Pt, to: Pt, obstacles: Rect[]): Pt[] 
       if (segmentHitsRect(xs[node.i], ys[node.j], xs[ni], ys[nj], inflated)) continue;
       const len = Math.abs(xs[ni] - xs[node.i]) + Math.abs(ys[nj] - ys[node.j]);
       const turn = s.axis !== node.axis ? TURN_COST : 0;
-      // The cable enters the target port horizontally (via the appended stub), so a
-      // VERTICAL arrival at the goal is a real turn at the doorstep — count it. Without
-      // this, dropping down right beside the device looks like one fewer bend than
-      // descending early, so A* always picks the doorstep descent.
-      const arriveTurn = ni === goalI && nj === goalJ && s.axis === 1 ? TURN_COST : 0;
-      // Tie-breaker among equal-bend detours: a horizontal run off the target row costs a
-      // hair more, so the run drops to the target row as soon as it clears the obstacle
-      // and runs straight in, instead of sliding along to the device's doorstep.
-      const offRow = s.axis === 0 && Math.abs(ys[nj] - ys[goalJ]) > 0.5 ? len * OFF_ROW_BIAS : 0;
-      const ng = g + len + turn + offRow + arriveTurn;
+      const ng = g + len + turn;
       const nk = key(ni, nj, s.axis);
       if (ng < (gScore.get(nk) ?? Infinity)) {
         gScore.set(nk, ng);
@@ -326,6 +312,50 @@ export function simplifyOrthogonal(points: Pt[]): Pt[] {
       }
     }
     out.push(p);
+  }
+  return out;
+}
+
+/**
+ * Center each free vertical run of a detour in the open corridor it sits in, so the run
+ * drops down in the GAP between two devices rather than hugging either — neither the box
+ * it just cleared (whose own ports + outgoing cables line that edge) nor the target (whose
+ * input labels line its edge). A* fixes the path's shape; this only slides verticals
+ * sideways to the middle of their clear span, and only when the moved run plus its two
+ * flanking horizontals stay off every box. Pass the same obstacle set used to route.
+ */
+export function centerDetourVerticals(pts: Pt[], obstacles: Rect[]): Pt[] {
+  const infl = obstacles.map((r) => inflate(r, OBSTACLE_MARGIN));
+  const out = pts.map((p) => ({ ...p }));
+  for (let i = 1; i < out.length - 2; i++) {
+    const a = out[i];
+    const b = out[i + 1];
+    if (!(Math.abs(a.x - b.x) <= 0.5 && Math.abs(a.y - b.y) > 0.5)) continue; // not a vertical run
+    const ylo = Math.min(a.y, b.y);
+    const yhi = Math.max(a.y, b.y);
+    // Corridor: nearest box edge on each side that spans this run's rows.
+    let leftB = -Infinity;
+    let rightB = Infinity;
+    for (const o of infl) {
+      if (!overlap1d(ylo, yhi, o.y, o.y + o.h)) continue;
+      if (o.x + o.w <= a.x + 0.5) leftB = Math.max(leftB, o.x + o.w);
+      if (o.x >= a.x - 0.5) rightB = Math.min(rightB, o.x);
+    }
+    // Don't slide past the flanking horizontals' far ends (they'd reverse or vanish).
+    const lo = Math.max(leftB, Math.min(out[i - 1].x, out[i + 2].x));
+    const hi = Math.min(rightB, Math.max(out[i - 1].x, out[i + 2].x));
+    if (hi - lo < 4) continue;
+    const cx = (lo + hi) / 2;
+    if (Math.abs(cx - a.x) < 1) continue;
+    if (
+      segmentHitsRect(cx, a.y, cx, b.y, infl) || // moved vertical
+      segmentHitsRect(out[i - 1].x, out[i - 1].y, cx, a.y, infl) || // left horizontal
+      segmentHitsRect(cx, b.y, out[i + 2].x, out[i + 2].y, infl) // right horizontal
+    ) {
+      continue;
+    }
+    a.x = cx;
+    b.x = cx;
   }
   return out;
 }
