@@ -486,6 +486,19 @@ function AppInner() {
     const flat = flatten(current, activeId);
     return deriveLists(flat.nodes, flat.edges);
   }, [nodes, edges, diagrams, activeId]);
+
+  // How many blocks reference each diagram — drives the tab "⧉N" chip. One pass over every
+  // diagram's nodes (active diagram read live).
+  const blockRefCounts = useMemo(() => {
+    const counts = new Map<string, number>();
+    const current = diagrams.map((d) => (d.id === activeId ? { ...d, nodes } : d));
+    for (const d of current) {
+      for (const n of d.nodes) {
+        if (n.type === "block") counts.set(n.data.refDiagramId, (counts.get(n.data.refDiagramId) ?? 0) + 1);
+      }
+    }
+    return counts;
+  }, [diagrams, activeId, nodes]);
   const validation = useMemo(
     () => validate(nodes, edges, signalProfile),
     [nodes, edges, signalProfile],
@@ -1286,6 +1299,13 @@ function AppInner() {
   }, []);
   // Selection drag moves all selected nodes natively; just snapshot for undo.
   const onSelectionDragStart = useCallback(() => takeSnapshot(), [takeSnapshot]);
+  // Double-click a block to open the diagram it references (p2-zonetab navigation).
+  const onNodeDoubleClick = useCallback(
+    (_event: unknown, node: SigNode) => {
+      if (node.type === "block") switchDiagram(node.data.refDiagramId);
+    },
+    [switchDiagram],
+  );
   const onBeforeDelete = useCallback(async () => {
     takeSnapshot();
     return true;
@@ -1935,6 +1955,7 @@ function AppInner() {
                 onNodeDragStart={onNodeDragStart}
                 onNodeDrag={onNodeDrag}
                 onNodeDragStop={onNodeDragStop}
+                onNodeDoubleClick={onNodeDoubleClick}
                 onSelectionDragStart={onSelectionDragStart}
                 onBeforeDelete={onBeforeDelete}
                 onInit={(inst) => {
@@ -2002,7 +2023,11 @@ function AppInner() {
       </div>
 
       <DiagramTabs
-        diagrams={diagrams.map((d) => ({ id: d.id, name: d.name }))}
+        diagrams={diagrams.map((d) => ({
+          id: d.id,
+          name: d.name,
+          referencedBy: blockRefCounts.get(d.id) ?? 0,
+        }))}
         activeId={activeId}
         onSwitch={switchDiagram}
         onAdd={addDiagram}

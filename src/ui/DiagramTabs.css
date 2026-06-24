@@ -54,6 +54,17 @@
   color: var(--sig-power);
 }
 
+.tab__refs {
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1;
+  padding: 2px 5px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--accent) 16%, transparent);
+  color: var(--accent);
+  white-space: nowrap;
+}
+
 .tab__embed {
   border: none;
   background: none;

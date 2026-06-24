@@ -1,7 +1,7 @@
 import { useState } from "react";
 import "./DiagramTabs.css";
 
-type TabInfo = { id: string; name: string };
+type TabInfo = { id: string; name: string; referencedBy?: number };
 
 type Props = {
   diagrams: TabInfo[];
@@ -58,6 +58,14 @@ export function DiagramTabs({ diagrams, activeId, onSwitch, onAdd, onRename, onD
             />
           ) : (
             <span className="tab__name">{d.name}</span>
+          )}
+          {!!d.referencedBy && editingId !== d.id && (
+            <span
+              className="tab__refs"
+              title={`Embedded as a block in ${d.referencedBy} ${d.referencedBy === 1 ? "place" : "places"}`}
+            >
+              ⧉{d.referencedBy}
+            </span>
           )}
           {d.id !== activeId && editingId !== d.id && (
             <button
