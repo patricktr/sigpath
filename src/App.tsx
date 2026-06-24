@@ -22,6 +22,7 @@ import "@xyflow/react/dist/style.css";
 import { DeviceNode } from "./flow/DeviceNode";
 import { BlockNode } from "./flow/BlockNode";
 import { flatten } from "./flow/nesting";
+import { nodesInZone } from "./flow/zoneMembership";
 import { CableEdge } from "./flow/CableEdge";
 import { arrangeLeftToRight } from "./flow/autoLayout";
 import { bulkClick, EMPTY_BULK, sourceOrdinal, bulkStatus, BulkPatchContext } from "./flow/bulkPatch";
@@ -1241,8 +1242,48 @@ function AppInner() {
     setStatus(`Duplicated ${clones.length} device${clones.length === 1 ? "" : "s"}`);
   }, [setNodes, takeSnapshot]);
 
+  // Move-with-zone: dragging a zone carries the nodes inside it (p2-movewithzone). On drag
+  // start we capture the members + their start positions; each drag tick re-applies the
+  // zone's delta to them. Membership is geometric (nodesInZone), recomputed per drag — no
+  // stored parent/child relationship.
+  const zoneDragRef = useRef<{
+    zoneId: string;
+    zoneStart: { x: number; y: number };
+    members: { id: string; start: { x: number; y: number } }[];
+  } | null>(null);
+
   // Snapshot before drags and deletions so they can be undone as single steps.
-  const onNodeDragStart = useCallback(() => takeSnapshot(), [takeSnapshot]);
+  const onNodeDragStart = useCallback(
+    (_event: unknown, node: SigNode) => {
+      takeSnapshot();
+      if (node.type === "zone") {
+        const members = nodesInZone(node, nodesRef.current).map((m) => ({
+          id: m.id,
+          start: { ...m.position },
+        }));
+        zoneDragRef.current = { zoneId: node.id, zoneStart: { ...node.position }, members };
+      } else {
+        zoneDragRef.current = null;
+      }
+    },
+    [takeSnapshot],
+  );
+  const onNodeDrag = useCallback(
+    (_event: unknown, node: SigNode) => {
+      const drag = zoneDragRef.current;
+      if (!drag || node.id !== drag.zoneId || drag.members.length === 0) return;
+      const dx = node.position.x - drag.zoneStart.x;
+      const dy = node.position.y - drag.zoneStart.y;
+      const moves = new Map(drag.members.map((m) => [m.id, { x: m.start.x + dx, y: m.start.y + dy }]));
+      setNodes((nds) => nds.map((n) => (moves.has(n.id) ? { ...n, position: moves.get(n.id)! } : n)));
+    },
+    [setNodes],
+  );
+  const onNodeDragStop = useCallback(() => {
+    zoneDragRef.current = null;
+  }, []);
+  // Selection drag moves all selected nodes natively; just snapshot for undo.
+  const onSelectionDragStart = useCallback(() => takeSnapshot(), [takeSnapshot]);
   const onBeforeDelete = useCallback(async () => {
     takeSnapshot();
     return true;
@@ -1864,7 +1905,9 @@ function AppInner() {
                 onReconnect={onReconnect}
                 reconnectRadius={20}
                 onNodeDragStart={onNodeDragStart}
-                onSelectionDragStart={onNodeDragStart}
+                onNodeDrag={onNodeDrag}
+                onNodeDragStop={onNodeDragStop}
+                onSelectionDragStart={onSelectionDragStart}
                 onBeforeDelete={onBeforeDelete}
                 onInit={(inst) => {
                   rf.current = inst;
