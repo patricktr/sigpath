@@ -1,6 +1,7 @@
 import { groupForConnector } from "../schema";
 import type { SignalKind } from "../schema";
-import type { CableEdgeType, DeviceNodeType, SigNode } from "../flow/types";
+import { isPortBearing } from "../flow/types";
+import type { CableEdgeType, PortBearingNode, SigNode } from "../flow/types";
 
 /**
  * Cable-ID numbering. IDs are `PREFIX-NNN` (e.g. VID-001), the prefix keyed off
@@ -20,9 +21,9 @@ const GROUP_PREFIX: Record<SignalKind, string> = {
 
 const FALLBACK_PREFIX = "CBL";
 
-function deviceIndex(nodes: SigNode[]): Map<string, DeviceNodeType> {
-  const m = new Map<string, DeviceNodeType>();
-  for (const n of nodes) if (n.type === "device") m.set(n.id, n);
+function portBearingIndex(nodes: SigNode[]): Map<string, PortBearingNode> {
+  const m = new Map<string, PortBearingNode>();
+  for (const n of nodes) if (isPortBearing(n)) m.set(n.id, n);
   return m;
 }
 
@@ -33,7 +34,7 @@ export function cablePrefixFromConnector(connector: string | undefined): string 
 }
 
 /** Prefix for a cable, read from its source port's connector. */
-function cablePrefix(edge: CableEdgeType, byId: Map<string, DeviceNodeType>): string {
+function cablePrefix(edge: CableEdgeType, byId: Map<string, PortBearingNode>): string {
   const port = byId.get(edge.source)?.data.model.ports.find((p) => p.id === edge.sourceHandle);
   return cablePrefixFromConnector(port?.connector);
 }
@@ -57,7 +58,7 @@ export function nextCableNumber(prefix: string, edges: CableEdgeType[]): number 
 
 /** Re-sequence every cable's ID by prefix, in the diagram's current order. */
 export function renumberCables(edges: CableEdgeType[], nodes: SigNode[]): CableEdgeType[] {
-  const byId = deviceIndex(nodes);
+  const byId = portBearingIndex(nodes);
   const counters = new Map<string, number>();
   return edges.map((e) => {
     const prefix = cablePrefix(e, byId);

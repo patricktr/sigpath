@@ -20,10 +20,12 @@ import {
 import "@xyflow/react/dist/style.css";
 
 import { DeviceNode } from "./flow/DeviceNode";
+import { BlockNode } from "./flow/BlockNode";
 import { CableEdge } from "./flow/CableEdge";
 import { arrangeLeftToRight } from "./flow/autoLayout";
 import { bulkClick, EMPTY_BULK, sourceOrdinal, bulkStatus, BulkPatchContext } from "./flow/bulkPatch";
 import type { BulkState, BulkPortRef, BulkPatchActions } from "./flow/bulkPatch";
+import { isPortBearing, nodePorts } from "./flow/types";
 import type {
   DeviceNodeType,
   CableEdgeType,
@@ -103,7 +105,7 @@ import { Inspector } from "./ui/Inspector";
 import "./App.css";
 
 /** Registered once at module scope so the reference stays stable across renders. */
-const nodeTypes = { device: DeviceNode, zone: ZoneNode, note: NoteNode };
+const nodeTypes = { device: DeviceNode, zone: ZoneNode, note: NoteNode, block: BlockNode };
 const edgeTypes = { cable: CableEdge };
 
 /** Grid size (px) for snap-to-grid and the background dots. */
@@ -142,6 +144,7 @@ function AppInner() {
     addDiagram,
     renameDiagram,
     deleteDiagram,
+    blockRefCount,
     getDocument,
     loadProject,
     signalProfile,
@@ -237,10 +240,7 @@ function AppInner() {
       eds: CableEdgeType[],
     ): CableEdgeType => {
       const sourceNode = nodes.find((n) => n.id === source);
-      const port =
-        sourceNode?.type === "device"
-          ? sourceNode.data.model.ports.find((p) => p.id === sourceHandle)
-          : undefined;
+      const port = nodePorts(sourceNode).find((p) => p.id === sourceHandle);
       const cableTypeId = port?.connector;
       const prefix = cablePrefixFromConnector(cableTypeId);
       return {
@@ -296,10 +296,7 @@ function AppInner() {
   const onBulkPortClick = useCallback(
     (ref: BulkPortRef) => {
       const node = nodes.find((n) => n.id === ref.nodeId);
-      const dir =
-        node?.type === "device"
-          ? node.data.model.ports.find((p) => p.id === ref.portId)?.direction
-          : undefined;
+      const dir = nodePorts(node).find((p) => p.id === ref.portId)?.direction;
       if (!dir) return;
       const res = bulkClick(bulk, ref, dir);
       if (res.draw) {
@@ -332,10 +329,7 @@ function AppInner() {
     (oldEdge: CableEdgeType, newConnection: Connection) => {
       takeSnapshot();
       const sourceNode = nodes.find((n) => n.id === newConnection.source);
-      const port =
-        sourceNode?.type === "device"
-          ? sourceNode.data.model.ports.find((p) => p.id === newConnection.sourceHandle)
-          : undefined;
+      const port = nodePorts(sourceNode).find((p) => p.id === newConnection.sourceHandle);
       const cableTypeId = port?.connector;
       const color = cableColor(cableTypeId);
       const refreshed: CableEdgeType = {
@@ -493,9 +487,7 @@ function AppInner() {
     const { errorEdges, warnEdges } = validation;
     const byId = new Map(nodes.map((n) => [n.id, n]));
     const portColor = (nodeId: string, handleId: string | null | undefined): string | undefined => {
-      const n = byId.get(nodeId);
-      const port =
-        n?.type === "device" ? n.data.model.ports.find((p) => p.id === handleId) : undefined;
+      const port = nodePorts(byId.get(nodeId)).find((p) => p.id === handleId);
       return port ? cableColor(port.connector) : undefined;
     };
 
@@ -505,7 +497,9 @@ function AppInner() {
     // port-count estimate; a region's size needs React Flow's measure (skip until then).
     const obstacleRects: { id: string; rect: Rect }[] = [];
     for (const n of nodes) {
-      if (n.type === "device") {
+      // Devices and blocks are box obstacles; cables route around them. (A block is just
+      // another port-bearing box here — its size comes from its synthesized port model.)
+      if (isPortBearing(n)) {
         const w = n.measured?.width ?? n.width ?? 168;
         const ports = Math.max(inputPorts(n.data.model).length, outputPorts(n.data.model).length, 1);
         const h = n.measured?.height ?? n.height ?? approxPortY(ports - 1) + 24;
@@ -526,7 +520,7 @@ function AppInner() {
     for (const e of edges) {
       const src = byId.get(e.source);
       const tgt = byId.get(e.target);
-      if (src?.type !== "device" || tgt?.type !== "device") continue;
+      if (!isPortBearing(src) || !isPortBearing(tgt)) continue;
       const sp = src.data.model.ports.find((p) => p.id === e.sourceHandle);
       const tp = tgt.data.model.ports.find((p) => p.id === e.targetHandle);
       if (sp?.direction !== "output" || tp?.direction !== "input") continue;
@@ -807,10 +801,7 @@ function AppInner() {
     if (selection.cables.length !== 1) return null;
     const e = selection.cables[0];
     const srcNode = nodes.find((n) => n.id === e.source);
-    const srcPort =
-      srcNode?.type === "device"
-        ? srcNode.data.model.ports.find((p) => p.id === e.sourceHandle)
-        : undefined;
+    const srcPort = nodePorts(srcNode).find((p) => p.id === e.sourceHandle);
     const comboOptions =
       srcPort?.accepts && srcPort.accepts.length ? [srcPort.connector, ...srcPort.accepts] : null;
     const label = lists.patches.find((p) => p.id === e.id)?.cableType ?? "";
@@ -1020,7 +1011,7 @@ function AppInner() {
     if (!edge) return null;
     const src = nodesRef.current.find((n) => n.id === edge.source);
     const tgt = nodesRef.current.find((n) => n.id === edge.target);
-    if (!src || !tgt || src.type !== "device" || tgt.type !== "device") return null;
+    if (!isPortBearing(src) || !isPortBearing(tgt)) return null;
     const srcPort = src.data.model.ports.find((p) => p.id === edge.sourceHandle);
     const tgtPort = tgt.data.model.ports.find((p) => p.id === edge.targetHandle);
     if (!srcPort || !tgtPort) return null;
@@ -1187,7 +1178,7 @@ function AppInner() {
   const edgeEndsFlow = useCallback((e: CableEdgeType) => {
     const src = nodesRef.current.find((n) => n.id === e.source);
     const tgt = nodesRef.current.find((n) => n.id === e.target);
-    if (src?.type !== "device" || tgt?.type !== "device") return null;
+    if (!isPortBearing(src) || !isPortBearing(tgt)) return null;
     const sp = src.data.model.ports.find((p) => p.id === e.sourceHandle);
     const tp = tgt.data.model.ports.find((p) => p.id === e.targetHandle);
     if (!sp || !tp) return null;
@@ -1251,9 +1242,9 @@ function AppInner() {
   const handleDeleteDiagram = useCallback(
     async (id: string) => {
       const name = diagrams.find((d) => d.id === id)?.name ?? "this diagram";
-      if (await confirmDeleteDiagram(name)) deleteDiagram(id);
+      if (await confirmDeleteDiagram(name, blockRefCount(id))) deleteDiagram(id);
     },
-    [diagrams, deleteDiagram],
+    [diagrams, deleteDiagram, blockRefCount],
   );
 
   const handleSave = useCallback(async (): Promise<boolean> => {

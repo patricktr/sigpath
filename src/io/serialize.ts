@@ -1,8 +1,11 @@
 import { cableColor, SIGPATH_SCHEMA_VERSION, emptyDiagram } from "../schema";
 import type {
   Annotation,
+  BlockInstance,
+  BoundaryPort,
   Connection,
   DeviceInstance,
+  DeviceModel,
   Diagram,
   Project,
   SignalProfile,
@@ -10,6 +13,7 @@ import type {
   Zone,
 } from "../schema";
 import type {
+  BlockNodeType,
   CableEdgeType,
   DeviceNodeType,
   EditorDiagram,
@@ -17,6 +21,24 @@ import type {
   SigNode,
   ZoneNodeType,
 } from "../flow/types";
+
+/** A diagram's published interface, keyed by diagram id — used on load to synthesize
+ *  each block's port model from the diagram it references. */
+type BoundaryLookup = Map<string, { name: string; ports: BoundaryPort[]; rev: number }>;
+
+/** Build the synthesized DeviceModel a block renders from: its ports ARE the referenced
+ *  diagram's boundary ports (BoundaryPort is Port-shaped), so a block resolves through the
+ *  same `data.model.ports` seam as a device. A missing reference yields an empty,
+ *  clearly-named model rather than a crash (normalizeDocument flags it — Phase A slice 5). */
+function synthesizeBlockModel(refDiagramId: string, ref?: { name: string; ports: BoundaryPort[] }): DeviceModel {
+  return {
+    id: `block:${refDiagramId}`,
+    model: ref?.name ?? "Missing tab",
+    category: "other",
+    ports: ref?.ports ?? [],
+    source: "builtin",
+  };
+}
 
 /**
  * Maps between the editor's diagrams (React Flow nodes + edges) and the
@@ -33,6 +55,7 @@ function editorToDiagram(d: EditorDiagram): Diagram {
   const deviceNodes = d.nodes.filter((n): n is DeviceNodeType => n.type === "device");
   const zoneNodes = d.nodes.filter((n): n is ZoneNodeType => n.type === "zone");
   const noteNodes = d.nodes.filter((n): n is NoteNodeType => n.type === "note");
+  const blockNodes = d.nodes.filter((n): n is BlockNodeType => n.type === "block");
 
   const devices: DeviceInstance[] = deviceNodes.map((n) => ({
     id: n.id,
@@ -75,16 +98,53 @@ function editorToDiagram(d: EditorDiagram): Diagram {
     obstacle: n.data.obstacle,
   }));
 
-  return { ...emptyDiagram(d.id, d.name), devices, connections, zones, annotations };
+  // Blocks persist only their reference + placement; the synthesized port model is
+  // rebuilt from the referenced diagram's boundary on load (never stored).
+  const blocks: BlockInstance[] = blockNodes.map((n) => ({
+    id: n.id,
+    refDiagramId: n.data.refDiagramId,
+    label: n.data.label,
+    position: n.position,
+    obstacle: n.data.obstacle,
+    boundaryRev: n.data.boundaryRev,
+  }));
+
+  return {
+    ...emptyDiagram(d.id, d.name),
+    devices,
+    connections,
+    zones,
+    annotations,
+    ...(blocks.length ? { blocks } : {}),
+    ...(d.boundary ? { boundary: d.boundary } : {}),
+  };
 }
 
-function diagramToEditor(d: Diagram): EditorDiagram {
+function diagramToEditor(d: Diagram, boundaryById: BoundaryLookup): EditorDiagram {
   const deviceNodes: SigNode[] = d.devices.map((dev) => ({
     id: dev.id,
     type: "device",
     position: dev.position,
     data: { model: dev.model, label: dev.label },
   }));
+
+  const blockNodes: SigNode[] = (d.blocks ?? []).map((b) => {
+    const ref = boundaryById.get(b.refDiagramId);
+    return {
+      id: b.id,
+      type: "block",
+      position: b.position,
+      data: {
+        refDiagramId: b.refDiagramId,
+        label: b.label,
+        model: synthesizeBlockModel(b.refDiagramId, ref),
+        boundaryRev: b.boundaryRev,
+        // Drift = the referenced interface moved on since this block was bound.
+        drift: ref ? b.boundaryRev < ref.rev : false,
+        obstacle: b.obstacle,
+      },
+    };
+  });
 
   const zoneNodes: SigNode[] = (d.zones ?? []).map((z) => ({
     id: z.id,
@@ -123,7 +183,13 @@ function diagramToEditor(d: Diagram): EditorDiagram {
   }));
 
   // Zones first so they sit behind devices in the array (zIndex enforces it too).
-  return { id: d.id, name: d.name, nodes: [...zoneNodes, ...deviceNodes, ...noteNodes], edges };
+  return {
+    id: d.id,
+    name: d.name,
+    nodes: [...zoneNodes, ...deviceNodes, ...blockNodes, ...noteNodes],
+    edges,
+    ...(d.boundary ? { boundary: d.boundary } : {}),
+  };
 }
 
 /** A fresh, empty editor diagram. */
@@ -152,8 +218,14 @@ export function fromDocument(doc: SigpathDocument): {
   diagrams: EditorDiagram[];
   signalProfile?: SignalProfile;
 } {
-  const project = doc.project;
-  const diagrams = (project?.diagrams ?? []).map(diagramToEditor);
+  const project = normalizeDocument(doc).project;
+  // Index every diagram's published interface first, so a block can synthesize its port
+  // model from the diagram it references (which may be defined after it in the array).
+  const boundaryById: BoundaryLookup = new Map();
+  for (const dg of project?.diagrams ?? []) {
+    if (dg.boundary) boundaryById.set(dg.id, { name: dg.name, ports: dg.boundary.ports, rev: dg.boundary.rev });
+  }
+  const diagrams = (project?.diagrams ?? []).map((dg) => diagramToEditor(dg, boundaryById));
   return {
     projectId: project?.id ?? crypto.randomUUID(),
     projectName: project?.name ?? "Untitled",
@@ -169,4 +241,46 @@ export function parseDocument(json: string): SigpathDocument {
     throw new Error("Not a valid sigpath document");
   }
   return data;
+}
+
+/**
+ * Drop any block whose reference would close an embed cycle — self-embed (A → A) or a
+ * back-edge (A → B → A) — so a hand-edited or future file can't drive flatten()/render
+ * into infinite recursion. Standard DFS: a ref to a diagram currently on the recursion
+ * stack is the offending block. Cables to a dropped block then resolve to nothing and
+ * surface as a normal "Broken connection" in validation rather than hanging the app.
+ */
+function breakEmbedCycles(diagrams: Diagram[]): Diagram[] {
+  const byId = new Map(diagrams.map((d) => [d.id, d]));
+  const dropped = new Set<string>(); // `${hostId}::${blockId}`
+  const done = new Set<string>();
+  const onStack = new Set<string>();
+  const visit = (id: string) => {
+    if (done.has(id)) return;
+    onStack.add(id);
+    for (const b of byId.get(id)?.blocks ?? []) {
+      if (b.refDiagramId === id || onStack.has(b.refDiagramId)) dropped.add(`${id}::${b.id}`);
+      else if (byId.has(b.refDiagramId)) visit(b.refDiagramId);
+    }
+    onStack.delete(id);
+    done.add(id);
+  };
+  for (const d of diagrams) visit(d.id);
+  if (dropped.size === 0) return diagrams;
+  return diagrams.map((d) =>
+    d.blocks ? { ...d, blocks: d.blocks.filter((b) => !dropped.has(`${d.id}::${b.id}`)) } : d,
+  );
+}
+
+/**
+ * Loader hygiene run on every document before it becomes editor state: guarantees a
+ * non-empty diagram list and breaks block-embed cycles. Pure — returns a cleaned
+ * document; the original is untouched. (Endpoint integrity is left to validation, which
+ * already surfaces a dangling cable as "Broken connection" rather than dropping it.)
+ */
+export function normalizeDocument(doc: SigpathDocument): SigpathDocument {
+  const project = doc.project ?? { id: crypto.randomUUID(), name: "Untitled", diagrams: [] };
+  const acyclic = breakEmbedCycles(project.diagrams ?? []);
+  const diagrams = acyclic.length ? acyclic : [emptyDiagram(crypto.randomUUID(), "Diagram 1")];
+  return { ...doc, project: { ...project, diagrams } };
 }

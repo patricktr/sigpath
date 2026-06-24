@@ -14,6 +14,17 @@
   outline-offset: 2px;
 }
 
+/* A nested-diagram block (p2-zonetab): same card + port layout as a device — so cables
+   attach and align on the grid identically — but dashed and accent-tinted so it reads as
+   a reference to a tab, not a real device. */
+.device-node--block {
+  border-style: dashed;
+  border-color: color-mix(in srgb, var(--accent) 55%, var(--node-border));
+}
+.device-node--block .device-node__header {
+  background: color-mix(in srgb, var(--accent) 18%, var(--node-header-bg));
+}
+
 /* Fixed height = 1.5 grid cells minus the 1px top border, so the first port's
    center lands exactly 2 grid cells below the (grid-snapped) node top — on a
    background line. Anything taller/shorter would push every port off the grid. */

@@ -1,4 +1,5 @@
 import { cableColor, cableLabel, checkPortCompatibility, deviceTitle } from "../schema";
+import { isPortBearing } from "../flow/types";
 import type { CableEdgeType, DeviceNodeType, SigNode } from "../flow/types";
 
 /** One device model with how many instances are in the diagram. */
@@ -53,11 +54,14 @@ export function deriveLists(nodes: SigNode[], edges: CableEdgeType[]): DerivedLi
     .map(([key, v]) => ({ key, name: v.name, count: v.count }))
     .sort((a, b) => a.name.localeCompare(b.name));
 
-  // Resolve each connection's endpoint ports + compatibility once.
-  const deviceById = new Map(deviceNodes.map((n) => [n.id, n]));
+  // Resolve each connection's endpoint ports + compatibility once. Endpoints index over
+  // ALL port-bearing nodes (devices AND blocks) so a cable into a nested-diagram block
+  // resolves its boundary port — and counts as one cable. (The equipment list above stays
+  // device-only; a block's inner devices are folded in via flatten() in Phase B.)
+  const endpointById = new Map(nodes.filter(isPortBearing).map((n) => [n.id, n]));
   const links = edges.map((e) => {
-    const src = deviceById.get(e.source);
-    const tgt = deviceById.get(e.target);
+    const src = endpointById.get(e.source);
+    const tgt = endpointById.get(e.target);
     const out = src?.data.model.ports.find((p) => p.id === e.sourceHandle);
     const inp = tgt?.data.model.ports.find((p) => p.id === e.targetHandle);
     const compat = out && inp ? checkPortCompatibility(out, inp) : undefined;

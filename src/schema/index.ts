@@ -9,4 +9,5 @@ export * from "./grades";
 export * from "./cables";
 export * from "./device";
 export * from "./connection";
+export * from "./boundary";
 export * from "./document";

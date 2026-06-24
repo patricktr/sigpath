@@ -30,9 +30,15 @@ export function fileStem(path: string): string {
   return base.replace(/\.[^.]+$/, "");
 }
 
-/** Native confirm dialog before deleting an entire diagram. Returns true to proceed. */
-export async function confirmDeleteDiagram(name: string): Promise<boolean> {
-  return await confirm(`Delete "${name}"? This removes the diagram and everything in it.`, {
+/** Native confirm dialog before deleting an entire diagram. When the diagram is embedded
+ *  as a block elsewhere, the message warns that those references will degrade (decision 5).
+ *  Returns true to proceed. */
+export async function confirmDeleteDiagram(name: string, blockRefs = 0): Promise<boolean> {
+  const cascade =
+    blockRefs > 0
+      ? ` It's embedded as a block in ${blockRefs} place${blockRefs === 1 ? "" : "s"}, which will become "Missing tab" placeholders.`
+      : "";
+  return await confirm(`Delete "${name}"? This removes the diagram and everything in it.${cascade}`, {
     title: "Delete diagram",
     kind: "warning",
     okLabel: "Delete",

@@ -1,15 +1,19 @@
 import type { DeviceInstance } from "./device";
 import type { Connection } from "./connection";
 import type { GradeScaleId, GradeId } from "./grades";
+import type { BoundaryPort } from "./boundary";
 
 /**
  * Bumped whenever the persisted shape changes, so a future loader can migrate older
  * `.sigpath` files. v2 (2026-06-22) added the optional `Project.signalProfile` plus
  * optional grade fields on ports and connections. v3 (2026-06-23) added the optional
- * `obstacle` flag on zones and annotations — all additive, so an older file loads
- * unchanged (a missing flag reads as off).
+ * `obstacle` flag on zones and annotations. v4 (2026-06-24) added nested sub-diagrams
+ * (p2-zonetab): the optional `Diagram.boundary` (the ports a diagram publishes when
+ * embedded) and `Diagram.blocks` (placed references to other diagrams). All additive,
+ * so an older file loads unchanged — a missing field reads as absent, i.e. the diagram
+ * simply isn't embeddable yet and holds no blocks. See design/ZONE-TAB.html.
  */
-export const SIGPATH_SCHEMA_VERSION = 3;
+export const SIGPATH_SCHEMA_VERSION = 4;
 
 /** A labeled, colored region grouping devices (stage, rack, control room). */
 export type Zone = {
@@ -39,6 +43,34 @@ export type Diagram = {
   zones: Zone[];
   annotations: Annotation[];
   orientation?: "left-right" | "free";
+  /**
+   * The ports this diagram exposes when embedded elsewhere as a block (p2-zonetab).
+   * Absent ⇒ the diagram isn't embeddable yet. `rev` is a content hash of the port set,
+   * bumped only when the boundary actually changes, so embeds can detect drift.
+   */
+  boundary?: { ports: BoundaryPort[]; rev: number };
+  /** Placed references to other diagrams, rendered as blocks. Absent ⇒ none. */
+  blocks?: BlockInstance[];
+};
+
+/**
+ * A placed reference to another Diagram, rendered as a block in the host diagram
+ * (p2-zonetab). NOT a Zone — a Zone is decorative; a block is a live reference whose
+ * handles are the referenced diagram's boundary ports. The same diagram may be embedded
+ * many times as distinct BlockInstances sharing one `refDiagramId`.
+ */
+export type BlockInstance = {
+  /** Unique within the HOST diagram — lives in the host's id-space like a device. */
+  id: string;
+  refDiagramId: string;
+  /** Per-placement label override; defaults to the referenced diagram's name. */
+  label?: string;
+  position: { x: number; y: number };
+  size?: { width: number; height: number };
+  /** Cables route around a block by default; opt out per placement. */
+  obstacle?: boolean;
+  /** The referenced diagram's `boundary.rev` this block was last bound to (drift check). */
+  boundaryRev: number;
 };
 
 /**

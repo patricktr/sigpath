@@ -138,6 +138,21 @@ export function useProject(initial: EditorDiagram[], opts: Options) {
     [takeSnapshot],
   );
 
+  /** How many blocks in OTHER diagrams reference this diagram — so a delete can warn the
+   *  user those blocks will degrade to "Missing tab" placeholders (decision 5). Counts
+   *  the live canvas via synced(), so it's accurate for the active diagram too. */
+  const blockRefCount = useCallback(
+    (id: string): number => {
+      let count = 0;
+      for (const d of synced()) {
+        if (d.id === id) continue;
+        for (const n of d.nodes) if (n.type === "block" && n.data.refDiagramId === id) count += 1;
+      }
+      return count;
+    },
+    [synced],
+  );
+
   const deleteDiagram = useCallback(
     (id: string) => {
       takeSnapshot();
@@ -201,6 +216,7 @@ export function useProject(initial: EditorDiagram[], opts: Options) {
     addDiagram,
     renameDiagram,
     deleteDiagram,
+    blockRefCount,
     getDocument,
     loadProject,
     newProject,

@@ -1,5 +1,5 @@
 import type { Node, Edge } from "@xyflow/react";
-import type { DeviceModel, CableTypeId, GradeId } from "../schema";
+import type { DeviceModel, CableTypeId, GradeId, BoundaryPort, Port } from "../schema";
 import type { Pt } from "./obstacleRoute";
 
 /**
@@ -34,8 +34,48 @@ export type NoteData = {
 
 export type NoteNodeType = Node<NoteData, "note">;
 
-/** Any node on the canvas — a device, a zone, or a note. */
-export type SigNode = DeviceNodeType | ZoneNodeType | NoteNodeType;
+/**
+ * A placed reference to another diagram, rendered as a block (p2-zonetab). Its handles
+ * are the referenced diagram's boundary ports. `model` is SYNTHESIZED from that boundary
+ * set at load/render time — `model.ports` are the boundary ports — so every consumer that
+ * reads `data.model.ports` (validate, derive, cableId) resolves a block exactly as a
+ * device, behind one shared seam. See design/ZONE-TAB.html.
+ */
+export type BlockNodeData = {
+  refDiagramId: string;
+  /** Per-placement label override; defaults to the referenced diagram's name. */
+  label?: string;
+  /** Synthesized from the referenced diagram's `boundary.ports`; not persisted as-is. */
+  model: DeviceModel;
+  /** The referenced diagram's `boundary.rev` this block was bound to. */
+  boundaryRev: number;
+  /** Derived (not persisted): boundaryRev is behind the referenced diagram's live rev. */
+  drift?: boolean;
+  /** Cables route around a block by default; opt out per placement. */
+  obstacle?: boolean;
+};
+
+export type BlockNodeType = Node<BlockNodeData, "block">;
+
+/** Any node on the canvas — a device, a zone, a note, or a nested-diagram block. */
+export type SigNode = DeviceNodeType | ZoneNodeType | NoteNodeType | BlockNodeType;
+
+/** Nodes that carry connectable ports — a real device or a nested-diagram block. Both
+ *  hold their ports at `data.model.ports` (a block's are synthesized from the referenced
+ *  diagram's boundary), so every consumer resolves a cable endpoint through them
+ *  uniformly. This is the single seam that keeps validate / derive / cableId / routing
+ *  from forking a separate block path. See design/ZONE-TAB.html. */
+export type PortBearingNode = DeviceNodeType | BlockNodeType;
+
+/** True for a device or block node (handles undefined/null so call sites stay terse). */
+export function isPortBearing(n: SigNode | undefined | null): n is PortBearingNode {
+  return !!n && (n.type === "device" || n.type === "block");
+}
+
+/** The ports a node exposes — empty for zones, notes, and missing nodes. */
+export function nodePorts(n: SigNode | undefined | null): Port[] {
+  return isPortBearing(n) ? n.data.model.ports : [];
+}
 
 export type CableEdgeData = {
   cableTypeId: CableTypeId;
@@ -65,4 +105,8 @@ export type EditorDiagram = {
   name: string;
   nodes: SigNode[];
   edges: CableEdgeType[];
+  /** Ports this diagram publishes when embedded as a block (p2-zonetab). Diagram-level
+   *  metadata — not a node — so it rides here and round-trips through serialize. The
+   *  spread in useProject's synced() preserves it across canvas edits. */
+  boundary?: { ports: BoundaryPort[]; rev: number };
 };

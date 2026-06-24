@@ -10,7 +10,8 @@ import {
   videoFormatToGrade,
 } from "../schema";
 import type { GradeId, GradeScaleId, Port, SignalKind, SignalProfile } from "../schema";
-import type { CableEdgeData, CableEdgeType, DeviceNodeType, SigNode } from "../flow/types";
+import { isPortBearing } from "../flow/types";
+import type { CableEdgeData, CableEdgeType, PortBearingNode, SigNode } from "../flow/types";
 
 export type Severity = "error" | "warning";
 
@@ -86,9 +87,11 @@ export function validate(
   edges: CableEdgeType[],
   signalProfile?: SignalProfile,
 ): ValidationResult {
-  const devices = new Map<string, DeviceNodeType>();
+  // Endpoint index: devices AND nested-diagram blocks (both port-bearing), so a cable
+  // into a block resolves its boundary port instead of false-flagging "Broken".
+  const devices = new Map<string, PortBearingNode>();
   for (const n of nodes) {
-    if (n.type === "device") devices.set(n.id, n);
+    if (isPortBearing(n)) devices.set(n.id, n);
   }
 
   const issues: ValidationIssue[] = [];
@@ -104,7 +107,7 @@ export function validate(
     portUsage.set(key, list);
   };
 
-  const name = (n?: DeviceNodeType) => (n ? deviceTitle(n.data.model, n.data.label) : "?");
+  const name = (n?: PortBearingNode) => (n ? deviceTitle(n.data.model, n.data.label) : "?");
 
   for (const e of edges) {
     const src = devices.get(e.source);
