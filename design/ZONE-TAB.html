@@ -440,6 +440,17 @@ export type SigNode = DeviceNodeType | ZoneNodeType | NoteNodeType | BlockNodeTy
         can legitimately exist in two diagrams — which is safe precisely because resolution never crosses a
         diagram boundary except through a boundary port.
       </p>
+      <p class="callout">
+        <strong>One physical cable stays one cable — a boundary port is a projection, not a patch point.</strong>
+        A boundary port is the outward <em>face</em> of exactly one inner device port (its <code>internal</code>
+        ref); you never run a separate “device → boundary” wire inside the sub-tab. So a run like
+        <code>Switcher PGM → [Control Room] → Projector</code> is a <em>single</em> <code>Connection</code> in the
+        host diagram (<code>(block, PGM Out) → (Projector, in)</code>); <code>flatten()</code> rewrites the block
+        endpoint to <code>internal</code>, yielding one edge <code>(Switcher, PGM) → (Projector, in)</code> — so the
+        BOM and cable numbering see <strong>one</strong> cable, not two. A real <em>physical</em> patch panel /
+        wall plate / tie-line (where a cable genuinely terminates and another begins) is modeled as an actual
+        device, not a boundary — see decision 7.
+      </p>
 
       <!-- 7. PROMOTE / EMBED -->
       <h2 class="section"><span class="num">7</span>Promote ⇄ embed</h2>
@@ -554,37 +565,42 @@ export type SigNode = DeviceNodeType | ZoneNodeType | NoteNodeType | BlockNodeTy
 
       <!-- 12. DECISIONS -->
       <h2 class="section"><span class="num">12</span>Decisions for Patrick</h2>
-      <p class="lead">Six genuine forks. Each lists the options and the recommended call — your ruling locks the spec.</p>
+      <p class="lead">Seven forks — <strong>ruled on June 24, 2026; the spec below is locked.</strong> Each lists the options and the call.</p>
       <div class="grid">
         <div class="card">
-          <h4><span class="dot" style="background: var(--accent)"></span>Promote membership</h4>
+          <h4><span class="dot" style="background: var(--done)"></span>Promote membership</h4>
           <p><strong>How is “inside the zone” decided?</strong> (a) pure geometric, one-shot; (b) geometric + interactive preview; (c) build real stored zone membership first (the <code>p2-movewithzone</code> groundwork).</p>
-          <p class="rec">→ (b) preview-and-confirm. Promote is destructive (devices leave the host); a half-overlap misassignment silently loses trust. Don't block nesting on (c).</p>
+          <p class="rec">✓ Decided — (b) preview-and-confirm. Promote is destructive (devices leave the host); a half-overlap misassignment silently loses trust. Don't block nesting on (c).</p>
         </div>
         <div class="card">
-          <h4><span class="dot" style="background: var(--accent)"></span>Contained devices: move or copy?</h4>
+          <h4><span class="dot" style="background: var(--done)"></span>Contained devices: move or copy?</h4>
           <p><strong>On promote</strong> — (a) MOVE: devices live only in the sub-diagram, block is a pure reference; (b) COPY: devices stay in the host too.</p>
-          <p class="rec">→ (a) MOVE. Copy desyncs two truths and double-counts the BOM. The tab <em>is</em> the content; the block is the view. Communicate via toast + undo.</p>
+          <p class="rec">✓ Decided — (a) MOVE. Copy desyncs two truths and double-counts the BOM. The tab <em>is</em> the content; the block is the view. Communicate via toast + undo.</p>
         </div>
         <div class="card">
-          <h4><span class="dot" style="background: var(--accent)"></span>Boundary-port exposure</h4>
+          <h4><span class="dot" style="background: var(--done)"></span>Boundary-port exposure</h4>
           <p>(a) auto every dangling port; (b) explicit pin per port; (c) auto-on-promote + explicit curation after.</p>
-          <p class="rec">→ (c). Auto at the promote/embed moment (the crossing cables are the obvious hookups), then a rename/hide/reorder panel keeps the room's public face intentional.</p>
+          <p class="rec">✓ Decided — (c) auto-on-promote + curation. Auto at the promote/embed moment (the crossing cables are the obvious hookups), then a rename/hide/reorder panel keeps the room's public face intentional.</p>
         </div>
         <div class="card">
-          <h4><span class="dot" style="background: var(--accent)"></span>Per-instance customization</h4>
+          <h4><span class="dot" style="background: var(--done)"></span>Per-instance customization</h4>
           <p><strong>N embeds of one tab</strong> — (a) tab-level boundary only (all instances share one id set); (b) per-instance overrides (room A runs 12G, room B 3G on the same port).</p>
-          <p class="rec">→ (a) for v1. Shared ids make N-embed identity + flatten namespacing tractable; per-instance overrides are real but separable. State (b) as unsupported.</p>
+          <p class="rec">✓ Decided — (a) tab-level for v1. Shared ids make N-embed identity + flatten namespacing tractable; per-instance overrides are real but separable, and unsupported in v1.</p>
         </div>
         <div class="card">
-          <h4><span class="dot" style="background: var(--accent)"></span>Deleting a referenced tab</h4>
+          <h4><span class="dot" style="background: var(--done)"></span>Deleting a referenced tab</h4>
           <p>(a) hard-refuse; (b) refuse with a “cascade-delete N blocks too?” confirm; (c) allow + degrade blocks to placeholders.</p>
-          <p class="rec">→ (b) as the gate, with (c)-style placeholder degradation only via <code>normalizeDocument</code> for hand-edited files. Today <code>deleteDiagram</code> filters with zero ref check — close that in Phase A.</p>
+          <p class="rec">✓ Decided — (b) cascade-confirm gate + (c) placeholder degradation via <code>normalizeDocument</code> for hand-edited files. Today <code>deleteDiagram</code> filters with zero ref check — close that in Phase A.</p>
         </div>
         <div class="card">
-          <h4><span class="dot" style="background: var(--accent)"></span>Cross-boundary validation depth</h4>
+          <h4><span class="dot" style="background: var(--done)"></span>Cross-boundary validation depth</h4>
           <p>(a) single-hop: validate the host cable against the boundary port's mirrored connector/grade; (b) deep: propagate demand through the boundary into the inner run.</p>
-          <p class="rec">→ (a) single-hop for v1 (stated explicitly). Mirrored connector/grade make compat + the grade gate meaningful at the boundary without recursion; deep propagation is Phase C+.</p>
+          <p class="rec">✓ Decided — (a) single-hop for v1. Mirrored connector/grade make compat + the grade gate meaningful at the boundary without recursion; deep propagation (b) is now its own roadmap item, <code>p2-deepgrade</code>.</p>
+        </div>
+        <div class="card">
+          <h4><span class="dot" style="background: var(--done)"></span>Boundary: pass-through or patch panel?</h4>
+          <p><strong>Does a room edge merge a run into one cable, or split it?</strong> (a) pass-through: a boundary port projects one inner device port — one physical cable crosses it; (b) patch point: the boundary is real hardware where one cable ends and another begins (two cables).</p>
+          <p class="rec">✓ Decided — (a) pass-through for v1: one run = one cable in the BOM (see §6). A genuine patch panel / wall plate is modeled as an actual device (it has a SKU and belongs in the BOM), keeping the boundary abstraction logical.</p>
         </div>
       </div>
 
