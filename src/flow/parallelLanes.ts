@@ -34,7 +34,7 @@ export type LaneInput = {
   ty: number;
 };
 
-/** Px the per-lane jogs are spread apart. Small — ports sit ~22px apart. Tunable. */
+/** Px the per-lane jogs are spread apart. Small — ports sit one grid cell (24px) apart. Tunable. */
 export const LANE_GAP = 18;
 
 /** Two jogs within this many px (with overlapping spans) are the same corridor. */
@@ -44,11 +44,12 @@ const BRUTE_MAX = 7;
 /** Greedy track order up to this size; above it, the directional heuristic. */
 const GREEDY_MAX = 20;
 
-// --- Approximate handle-Y within a device node. Kept in sync with DeviceNode.css:
-// header (6+6 pad + ~13 text ≈ 25) + body top pad (8) + half a port (8) = first port
-// center ≈ 41 from the node top; ports stack at 16px height + 6px gap = 22px pitch.
-export const NODE_FIRST_PORT_Y = 41;
-export const NODE_PORT_PITCH = 22;
+// --- Handle-Y within a device node. Kept in sync with DeviceNode.css, where the
+// layout is grid-pitched (App's GRID = 24): 1px border + a 1.5-cell header (35px) +
+// half a one-cell port (12) puts the first port center at 2 grid cells (48) from the
+// node top; ports then stack one grid cell (24px) apart, landing on background lines.
+export const NODE_FIRST_PORT_Y = 48;
+export const NODE_PORT_PITCH = 24;
 /** Approx vertical center of the i-th port in its column, relative to the node top. */
 export const approxPortY = (indexInColumn: number) =>
   NODE_FIRST_PORT_Y + indexInColumn * NODE_PORT_PITCH;

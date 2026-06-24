@@ -1852,6 +1852,9 @@ function AppInner() {
                 }}
                 snapToGrid={snap}
                 snapGrid={[GRID, GRID]}
+                // Hand the grid unit to the node CSS so port-row pitch can't drift
+                // from the snap grid — ports stay one grid cell apart, landing on lines.
+                style={{ ["--grid-pitch"]: `${GRID}px` } as CSSProperties}
                 defaultEdgeOptions={{ type: "cable" }}
                 minZoom={0.1}
                 maxZoom={4}

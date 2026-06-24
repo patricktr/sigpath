@@ -14,12 +14,16 @@
   outline-offset: 2px;
 }
 
+/* Fixed height = 1.5 grid cells minus the 1px top border, so the first port's
+   center lands exactly 2 grid cells below the (grid-snapped) node top — on a
+   background line. Anything taller/shorter would push every port off the grid. */
 .device-node__header {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   justify-content: space-between;
   gap: 8px;
-  padding: 6px 10px;
+  height: calc(var(--grid-pitch, 24px) * 1.5 - 1px);
+  padding: 0 10px;
   background: var(--node-header-bg);
   color: var(--node-header-text);
 }
@@ -40,11 +44,13 @@
   white-space: nowrap;
 }
 
+/* No top padding: ports begin right under the header so row 0 sits on the grid.
+   Bottom padding only pads the card and never shifts a port. */
 .device-node__body {
   display: flex;
   justify-content: space-between;
   gap: 18px;
-  padding: 8px 0;
+  padding: 0 0 8px;
 }
 
 .device-node__col {
@@ -53,14 +59,16 @@
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 0;
 }
 
+/* One grid cell tall, handle centered → consecutive ports are exactly one grid
+   step apart, so grid-snapped dragging aligns any port to any other port. */
 .port {
   display: flex;
   align-items: center;
   gap: 6px;
-  height: 16px;
+  height: var(--grid-pitch, 24px);
 }
 
 .port--in {
