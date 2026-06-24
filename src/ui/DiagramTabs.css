@@ -54,6 +54,20 @@
   color: var(--sig-power);
 }
 
+.tab__embed {
+  border: none;
+  background: none;
+  cursor: pointer;
+  color: var(--text-faint);
+  font-size: 12px;
+  line-height: 1;
+  padding: 0;
+}
+
+.tab__embed:hover {
+  color: var(--accent);
+}
+
 .tab__edit {
   font: inherit;
   font-size: 12px;

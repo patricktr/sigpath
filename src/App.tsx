@@ -145,6 +145,7 @@ function AppInner() {
     renameDiagram,
     deleteDiagram,
     blockRefCount,
+    embedTabAsBlock,
     getDocument,
     loadProject,
     signalProfile,
@@ -1247,6 +1248,25 @@ function AppInner() {
     [diagrams, deleteDiagram, blockRefCount],
   );
 
+  // Embed another tab into the active diagram as a block, dropped at the viewport center.
+  const handleEmbedTab = useCallback(
+    (refId: string) => {
+      const snap = (v: number) => Math.round(v / GRID) * GRID;
+      let position = { x: 96, y: 96 };
+      const wrap = flowWrapRef.current;
+      const inst = rf.current;
+      if (wrap && inst) {
+        const r = wrap.getBoundingClientRect();
+        const c = inst.screenToFlowPosition({ x: r.left + r.width / 2, y: r.top + r.height / 2 });
+        position = { x: snap(c.x - 90), y: snap(c.y - 48) };
+      }
+      const name = diagrams.find((d) => d.id === refId)?.name ?? "diagram";
+      const err = embedTabAsBlock(refId, position);
+      setStatus(err ?? `Embedded "${name}" as a block`);
+    },
+    [diagrams, embedTabAsBlock],
+  );
+
   const handleSave = useCallback(async (): Promise<boolean> => {
     try {
       let path = currentPath;
@@ -1909,6 +1929,7 @@ function AppInner() {
         onAdd={addDiagram}
         onRename={renameDiagram}
         onDelete={handleDeleteDiagram}
+        onEmbed={handleEmbedTab}
       />
 
       <footer className="statusbar">

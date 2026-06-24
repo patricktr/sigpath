@@ -10,6 +10,8 @@ type Props = {
   onAdd: () => void;
   onRename: (id: string, name: string) => void;
   onDelete: (id: string) => void;
+  /** Embed this tab into the active diagram as a block (p2-zonetab). */
+  onEmbed: (id: string) => void;
 };
 
 /**
@@ -17,7 +19,7 @@ type Props = {
  * (the OS handles organizing projects into folders). Double-click a tab to
  * rename it inline.
  */
-export function DiagramTabs({ diagrams, activeId, onSwitch, onAdd, onRename, onDelete }: Props) {
+export function DiagramTabs({ diagrams, activeId, onSwitch, onAdd, onRename, onDelete, onEmbed }: Props) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [draft, setDraft] = useState("");
 
@@ -56,6 +58,20 @@ export function DiagramTabs({ diagrams, activeId, onSwitch, onAdd, onRename, onD
             />
           ) : (
             <span className="tab__name">{d.name}</span>
+          )}
+          {d.id !== activeId && editingId !== d.id && (
+            <button
+              type="button"
+              className="tab__embed"
+              onClick={(e) => {
+                e.stopPropagation();
+                onEmbed(d.id);
+              }}
+              aria-label={`Embed ${d.name} in the current diagram`}
+              title="Embed in the current diagram as a block"
+            >
+              ⧉
+            </button>
           )}
           {diagrams.length > 1 && editingId !== d.id && (
             <button

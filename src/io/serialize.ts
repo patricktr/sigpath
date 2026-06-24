@@ -30,7 +30,7 @@ type BoundaryLookup = Map<string, { name: string; ports: BoundaryPort[]; rev: nu
  *  diagram's boundary ports (BoundaryPort is Port-shaped), so a block resolves through the
  *  same `data.model.ports` seam as a device. A missing reference yields an empty,
  *  clearly-named model rather than a crash (normalizeDocument flags it — Phase A slice 5). */
-function synthesizeBlockModel(refDiagramId: string, ref?: { name: string; ports: BoundaryPort[] }): DeviceModel {
+export function synthesizeBlockModel(refDiagramId: string, ref?: { name: string; ports: BoundaryPort[] }): DeviceModel {
   return {
     id: `block:${refDiagramId}`,
     model: ref?.name ?? "Missing tab",

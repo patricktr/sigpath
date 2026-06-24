@@ -1,6 +1,7 @@
 import { useCallback, useRef, useState } from "react";
 import type { MutableRefObject } from "react";
 import type { CableEdgeType, SigNode, EditorDiagram } from "../flow/types";
+import { deriveBoundary, embedWouldCycle, makeBlockNode } from "../flow/nesting";
 import { emptyEditorDiagram, fromDocument, toDocument } from "../io/serialize";
 import type { SigpathDocument, SignalProfile } from "../schema";
 
@@ -173,6 +174,38 @@ export function useProject(initial: EditorDiagram[], opts: Options) {
     [takeSnapshot, synced, activeId, loadActive],
   );
 
+  /**
+   * Embed another diagram into the active one as a block (p2-zonetab). Non-destructive:
+   * nothing moves — a reference block is inserted. Auto-exposes the target's interface if
+   * it has none yet (persisted so every embed shares one boundary), and rejects anything
+   * that would create an embed cycle. Returns an error message, or null on success.
+   */
+  const embedTabAsBlock = useCallback(
+    (refDiagramId: string, position: { x: number; y: number } = { x: 96, y: 96 }): string | null => {
+      const cur = synced();
+      const target = cur.find((d) => d.id === refDiagramId);
+      if (!target) return "That diagram no longer exists.";
+      if (embedWouldCycle(cur, activeId, refDiagramId)) {
+        return refDiagramId === activeId
+          ? "A diagram can't embed itself."
+          : "That would create a circular reference.";
+      }
+      takeSnapshot();
+      // Reuse the target's published interface, or auto-expose + persist one on first embed.
+      let boundary = target.boundary;
+      let diagrams = cur;
+      if (!boundary || boundary.ports.length === 0) {
+        boundary = deriveBoundary(target);
+        diagrams = cur.map((d) => (d.id === refDiagramId ? { ...d, boundary } : d));
+      }
+      const block = makeBlockNode(refDiagramId, target.name, boundary, position);
+      setDiagrams(diagrams);
+      setNodes([...nodesRef.current, block]);
+      return null;
+    },
+    [synced, activeId, takeSnapshot, setDiagrams, setNodes, nodesRef],
+  );
+
   /** Snapshot the whole project (active diagram synced) for saving. */
   const getDocument = useCallback(
     (): SigpathDocument =>
@@ -217,6 +250,7 @@ export function useProject(initial: EditorDiagram[], opts: Options) {
     renameDiagram,
     deleteDiagram,
     blockRefCount,
+    embedTabAsBlock,
     getDocument,
     loadProject,
     newProject,
