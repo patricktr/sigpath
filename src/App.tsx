@@ -21,6 +21,7 @@ import "@xyflow/react/dist/style.css";
 
 import { DeviceNode } from "./flow/DeviceNode";
 import { BlockNode } from "./flow/BlockNode";
+import { flatten } from "./flow/nesting";
 import { CableEdge } from "./flow/CableEdge";
 import { arrangeLeftToRight } from "./flow/autoLayout";
 import { bulkClick, EMPTY_BULK, sourceOrdinal, bulkStatus, BulkPatchContext } from "./flow/bulkPatch";
@@ -474,7 +475,14 @@ function AppInner() {
     }
   }, []);
 
-  const lists = useMemo(() => deriveLists(nodes, edges), [nodes, edges]);
+  // Pack/patch lists derive from the FLATTENED active diagram — blocks expand into the
+  // devices and cables they reference, so the BOM counts nested gear and boundary-crossing
+  // runs resolve to real inner ports. A diagram with no blocks flattens to itself.
+  const lists = useMemo(() => {
+    const current = diagrams.map((d) => (d.id === activeId ? { ...d, nodes, edges } : d));
+    const flat = flatten(current, activeId);
+    return deriveLists(flat.nodes, flat.edges);
+  }, [nodes, edges, diagrams, activeId]);
   const validation = useMemo(
     () => validate(nodes, edges, signalProfile),
     [nodes, edges, signalProfile],
