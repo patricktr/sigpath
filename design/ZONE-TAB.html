@@ -1,0 +1,630 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>sigpath — Zone ↔ Tab: Nested Sub-Diagrams</title>
+    <style>
+      :root {
+        --bg: #f6f8fb;
+        --panel: #ffffff;
+        --ink: #0f172a;
+        --muted: #64748b;
+        --line: #e2e8f0;
+        --accent: #2563eb;
+        --accent-soft: #dbeafe;
+        --done: #16a34a;
+        --next: #d97706;
+        --planned: #94a3b8;
+        --code-bg: #0f172a;
+        --code-ink: #e2e8f0;
+        --shadow: 0 1px 2px rgba(15, 23, 42, 0.06), 0 8px 24px rgba(15, 23, 42, 0.06);
+        /* signal palette — mirrors the app */
+        --video: #3b82f6;
+        --audio: #22c55e;
+        --av: #8b5cf6;
+        --network: #06b6d4;
+        --control: #f59e0b;
+        --power: #ef4444;
+        --radius: 12px;
+        --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica,
+          Arial, sans-serif;
+        --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas,
+          "Liberation Mono", monospace;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #0b1120;
+          --panel: #131c2e;
+          --ink: #e2e8f0;
+          --muted: #94a3b8;
+          --line: #25304a;
+          --accent: #60a5fa;
+          --accent-soft: #1e293b;
+          --code-bg: #0a1020;
+          --code-ink: #d8e2f1;
+          --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 10px 30px rgba(0, 0, 0, 0.35);
+        }
+      }
+      * { box-sizing: border-box; }
+      html { scroll-behavior: smooth; }
+      body {
+        margin: 0;
+        font-family: var(--font);
+        color: var(--ink);
+        background: var(--bg);
+        line-height: 1.55;
+        -webkit-font-smoothing: antialiased;
+      }
+      .wrap { max-width: 980px; margin: 0 auto; padding: 0 20px 80px; }
+
+      header.hero {
+        background:
+          radial-gradient(1200px 240px at 15% -40%, var(--accent-soft), transparent),
+          var(--panel);
+        border-bottom: 1px solid var(--line);
+        padding: 40px 0 28px;
+        margin-bottom: 28px;
+      }
+      .hero-inner { max-width: 980px; margin: 0 auto; padding: 0 20px; }
+      .wordmark { display: flex; align-items: center; gap: 12px; }
+      .wordmark .logo {
+        display: inline-flex; gap: 4px; align-items: center;
+        padding: 6px 8px; border-radius: 8px; background: var(--ink);
+      }
+      .wordmark .logo span { width: 8px; height: 18px; border-radius: 2px; display: block; }
+      .wordmark h1 { font-size: 26px; margin: 0; letter-spacing: -0.02em; }
+      .hero p.tagline { color: var(--muted); margin: 6px 0 0; font-size: 15px; max-width: 70ch; }
+      .meta { margin-top: 14px; font-size: 13px; color: var(--muted); }
+      .meta a { color: var(--accent); text-decoration: none; }
+      .meta a:hover { text-decoration: underline; }
+
+      h2.section { font-size: 19px; margin: 40px 0 14px; letter-spacing: -0.01em; scroll-margin-top: 16px; }
+      h2.section .num {
+        display: inline-grid; place-items: center; width: 24px; height: 24px;
+        font-size: 13px; border-radius: 7px; background: var(--accent-soft);
+        color: var(--accent); margin-right: 9px; vertical-align: 2px;
+      }
+      h3.sub { font-size: 14.5px; margin: 20px 0 8px; letter-spacing: -0.01em; }
+      p.lead { color: var(--muted); margin: 0 0 18px; max-width: 78ch; }
+      p { max-width: 78ch; }
+
+      .principles { background: var(--accent-soft); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px 20px; }
+      .principles ul { margin: 8px 0 0; padding-left: 18px; }
+      .principles li { margin: 5px 0; }
+      .principles strong { color: var(--ink); }
+
+      .tag { font-size: 11px; padding: 1px 7px; border-radius: 6px; background: var(--accent-soft); color: var(--accent); margin-left: 6px; white-space: nowrap; }
+      .pill {
+        display: inline-block; font-size: 11px; font-weight: 600; letter-spacing: 0.03em;
+        padding: 2px 9px; border-radius: 999px; border: 1px solid var(--line); color: var(--muted);
+      }
+      .pill.host  { color: var(--accent); border-color: color-mix(in srgb, var(--accent) 40%, var(--line)); }
+      .pill.sub   { color: var(--av); border-color: color-mix(in srgb, var(--av) 40%, var(--line)); }
+
+      /* TWO-LANE DIAGRAM */
+      .diagram { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 6px 0 10px; }
+      @media (max-width: 720px) { .diagram { grid-template-columns: 1fr; } }
+      .lane { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); padding: 14px 14px 16px; border-top-width: 3px; }
+      .lane--sub { border-top-color: var(--av); }
+      .lane--host { border-top-color: var(--accent); }
+      .lane-head { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+      .node { background: var(--bg); border: 1px solid var(--line); border-radius: 9px; padding: 9px 11px; font-size: 13.5px; font-weight: 600; margin-bottom: 8px; }
+      .node small { display: block; font-weight: 400; color: var(--muted); font-size: 11.5px; margin-top: 2px; }
+      .node--new { border-style: dashed; border-color: color-mix(in srgb, var(--accent) 45%, var(--line)); }
+      .node--block { border-style: dashed; border-color: color-mix(in srgb, var(--av) 55%, var(--line)); background: color-mix(in srgb, var(--av) 8%, var(--bg)); }
+      .arrow { text-align: center; color: var(--muted); font-size: 12px; padding: 5px 0; }
+      .diagram-note { font-size: 13px; color: var(--muted); background: var(--accent-soft); border: 1px solid var(--line); border-radius: 9px; padding: 10px 13px; margin: 4px 0 0; }
+      .diagram-note strong { color: var(--ink); }
+
+      ol.flow { list-style: none; counter-reset: step; padding: 0; margin: 12px 0; }
+      ol.flow > li { position: relative; padding: 4px 0 14px 40px; border-left: 2px solid var(--line); margin-left: 13px; }
+      ol.flow > li:last-child { border-left-color: transparent; padding-bottom: 0; }
+      ol.flow > li::before {
+        counter-increment: step; content: counter(step);
+        position: absolute; left: -14px; top: 0; width: 26px; height: 26px;
+        display: grid; place-items: center; border-radius: 50%;
+        background: var(--accent); color: #fff; font-size: 13px; font-weight: 700;
+      }
+      ol.flow.sub > li::before { background: var(--av); }
+      ol.flow .st { font-weight: 600; }
+      ol.flow .sd { color: var(--muted); font-size: 13.5px; }
+
+      pre {
+        background: var(--code-bg); color: var(--code-ink); border-radius: 10px;
+        padding: 13px 15px; overflow-x: auto; font-family: var(--mono);
+        font-size: 12.5px; line-height: 1.5; border: 1px solid var(--line); margin: 12px 0;
+      }
+      pre .c { color: #7e8aa3; }
+      pre .k { color: #7dd3fc; }
+      pre .s { color: #86efac; }
+      pre .n { color: #fcd34d; }
+      code { font-family: var(--mono); font-size: 0.9em; background: color-mix(in srgb, var(--accent-soft) 60%, var(--panel)); padding: 1px 5px; border-radius: 5px; }
+      pre code { background: none; padding: 0; font-size: inherit; }
+
+      .table-scroll { overflow-x: auto; border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); margin: 8px 0; }
+      table { border-collapse: collapse; width: 100%; font-size: 13.5px; background: var(--panel); }
+      th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+      th { background: color-mix(in srgb, var(--accent-soft) 50%, var(--panel)); font-size: 12px; text-transform: uppercase; letter-spacing: 0.03em; color: var(--muted); }
+      tr:last-child td { border-bottom: none; }
+      td strong { color: var(--ink); }
+      td code { white-space: nowrap; }
+      .ok { color: var(--done); font-weight: 600; }
+      .bad { color: var(--power); font-weight: 600; }
+      .mono-cell { font-family: var(--mono); font-size: 12px; white-space: nowrap; }
+      .eff { font-family: var(--mono); font-size: 11px; font-weight: 700; padding: 1px 7px; border-radius: 5px; }
+      .eff-s { color: var(--done); background: color-mix(in srgb, var(--done) 14%, transparent); }
+      .eff-m { color: var(--next); background: color-mix(in srgb, var(--next) 14%, transparent); }
+      .eff-l { color: var(--power); background: color-mix(in srgb, var(--power) 14%, transparent); }
+      .sev { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em; padding: 1px 7px; border-radius: 5px; white-space: nowrap; }
+      .sev-blocker { color: var(--power); background: color-mix(in srgb, var(--power) 14%, transparent); }
+      .sev-major { color: var(--next); background: color-mix(in srgb, var(--next) 14%, transparent); }
+      .sev-minor { color: var(--planned); background: color-mix(in srgb, var(--planned) 18%, transparent); }
+
+      .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 12px; margin: 8px 0; }
+      .card { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px 16px; box-shadow: var(--shadow); }
+      .card h4 { margin: 0 0 5px; font-size: 14.5px; display: flex; align-items: center; gap: 8px; }
+      .card p { margin: 0; font-size: 13px; color: var(--muted); }
+      .card p + p { margin-top: 7px; }
+      .card .rec { display: inline-block; margin-top: 9px; font-size: 11.5px; font-weight: 600; color: var(--done); }
+      .card .rec.graft { color: var(--av); }
+      .card .rec.reject { color: var(--planned); }
+      .card .rec.risk { color: var(--power); }
+      .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+
+      .callout { border-left: 3px solid var(--accent); background: color-mix(in srgb, var(--accent-soft) 55%, var(--panel)); padding: 12px 16px; border-radius: 0 10px 10px 0; margin: 14px 0; font-size: 13.5px; }
+      .callout strong { color: var(--ink); }
+      .callout.warn { border-left-color: var(--next); background: color-mix(in srgb, #fde68a 30%, var(--panel)); }
+
+      footer { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--line); font-size: 12.5px; color: var(--muted); }
+      footer a { color: var(--accent); }
+    </style>
+  </head>
+  <body>
+    <header class="hero">
+      <div class="hero-inner">
+        <div class="wordmark">
+          <span class="logo" aria-hidden="true">
+            <span style="background: var(--video)"></span>
+            <span style="background: var(--av)"></span>
+            <span style="background: var(--power)"></span>
+          </span>
+          <h1>sigpath</h1>
+        </div>
+        <p class="tagline">
+          <strong>Zone ↔ tab — nested sub-diagrams.</strong> A zone and a tab are two views of
+          the same thing: edit a control room in detail as its own tab, then drop it into the
+          event diagram as one wired block that exposes its boundary ports. The design behind
+          roadmap item <code>p2-zonetab</code>.
+        </p>
+        <div class="meta">
+          Last updated June 24, 2026 ·
+          <a href="../ROADMAP.html">← Product roadmap</a> ·
+          <a href="SIGNAL-GRADE.html">Signal-grade architecture →</a> ·
+          <a href="COMMUNITY.html">Community architecture →</a> ·
+          <a href="https://github.com/patricktr/sigpath">github.com/patricktr/sigpath</a>
+        </div>
+      </div>
+    </header>
+
+    <div class="wrap">
+      <!-- TL;DR -->
+      <h2 class="section">The one idea</h2>
+      <div class="principles">
+        <ul>
+          <li><strong>A tab is the content; a block is a view of it.</strong> A referenced
+            <code>Diagram</code> is the single source of truth. Each placement is a
+            <code>BlockInstance</code> — a first-class node that renders that diagram's published
+            <em>boundary ports</em> as connectable handles. Build a room once, wire it in many places.</li>
+          <li><strong>A block is not a zone.</strong> A <code>Zone</code> stays a decorative
+            rectangle. The block is a disjoint fourth node kind that reads unmistakably as
+            “a reference to a tab,” never an overloaded rectangle that sometimes means something else.</li>
+          <li><strong>The schema barely moves; the consumers do.</strong> v3→v4 is strictly
+            additive (old files load untouched). The real work is that
+            <code>validate</code>, the pack list, cable numbering, and export all assume one flat
+            diagram today — so nesting threads through a single shared <code>nodePorts()</code> seam
+            instead of a scattered rewrite. <em>That</em> is the cost, and it only grows the longer we wait.</li>
+          <li><strong>Boundary ports are Port-shaped and stable by construction.</strong> They carry
+            a connector and grade like any port, so connector-compat and the grade gate run across a
+            boundary with no special path — and their ids are minted once, so internal refactors never
+            silently rewire a block.</li>
+        </ul>
+      </div>
+
+      <!-- 1. TODAY -->
+      <h2 class="section"><span class="num">1</span>Today: a flat list of diagrams</h2>
+      <p class="lead">
+        A project is <code>SigpathDocument → Project { diagrams: Diagram[] } → Diagram { devices,
+        connections, zones, annotations }</code>. The tree is exactly three levels deep and there is
+        no way to nest one diagram inside another. Three facts make nesting a real piece of work
+        rather than a flag:
+      </p>
+      <div class="grid">
+        <div class="card">
+          <h4><span class="dot" style="background: var(--planned)"></span>A Zone is decorative</h4>
+          <p><code>Zone</code> (<code>document.ts:15</code>) is a <code>zIndex:-1</code> rectangle
+            with a label, color, and an obstacle flag. It links to nothing.</p>
+        </div>
+        <div class="card">
+          <h4><span class="dot" style="background: var(--planned)"></span>Ports live only on devices</h4>
+          <p>A <code>PortRef</code> (<code>connection.ts:7</code>) is <code>{instanceId, portId}</code>
+            where <code>instanceId</code> is a <code>DeviceInstance.id</code> in the <em>same</em>
+            diagram. There is no notion of a diagram-level port.</p>
+        </div>
+        <div class="card">
+          <h4><span class="dot" style="background: var(--planned)"></span>Every consumer gates on device</h4>
+          <p><code>validate.ts:91</code>, <code>derive.ts:41</code>, <code>cableId.ts:25</code> all
+            branch on <code>n.type === "device"</code> and resolve endpoints via
+            <code>node.data.model.ports.find(...)</code>.</p>
+        </div>
+      </div>
+      <p>
+        On the editor side, <code>useProject</code> owns <code>diagrams[]</code> + <code>activeId</code>,
+        and <em>only the active diagram is live</em> — its nodes/edges sit in React Flow state and fold
+        back via <code>synced()</code> (<code>useProject.ts:46</code>); every other diagram is a frozen
+        snapshot. The undo unit is the whole project. <code>serialize.ts</code> maps
+        device↔<code>DeviceInstance</code> and edge↔<code>Connection</code> and silently drops any other
+        node type. And <code>parseDocument</code> reads <code>schemaVersion</code> but never branches on
+        it — every change v1→v3 was additive-optional, so there is no real loader yet. Nesting is the
+        first feature that needs one.
+      </p>
+
+      <!-- 2. APPROACHES -->
+      <h2 class="section"><span class="num">2</span>Four ways to model nesting</h2>
+      <p class="lead">
+        Four independent designs were weighed by three judge panels (architecture, migration, product).
+        The winner is <strong>B</strong>, with the best ideas from the other three grafted in — not a
+        single-approach purity play, but the synthesis the panels converged on.
+      </p>
+      <div class="grid">
+        <div class="card">
+          <h4><span class="dot" style="background: var(--done)"></span>B · Dedicated block node <span class="pill sub">adopt</span></h4>
+          <p>A first-class <code>BlockInstance</code> references a <code>Diagram</code> and renders its
+            boundary ports. Zone stays cosmetic; the block reads unmistakably as a reference. Stable
+            mint-once port ids; one shared seam fixes all consumers; routing kernels need zero change
+            because a block adopts the device left-in / right-out handle convention.</p>
+          <span class="rec">adopt — the spine</span>
+        </div>
+        <div class="card">
+          <h4><span class="dot" style="background: var(--av)"></span>C · Published interface <span class="pill sub">graft</span></h4>
+          <p>A diagram declares an explicit, version-stamped port contract. Highest conceptual integrity
+            and the only model where a refactor provably can't silently change a block's ports — but it
+            front-loads a publish step and the codebase's first non-trivial loader. <strong>Grafted:</strong>
+            its <code>rev</code>-stamp drift state and its “cables to a removed port show Broken, never
+            silently dropped” rule.</p>
+          <span class="rec graft">graft the rev-stamp</span>
+        </div>
+        <div class="card">
+          <h4><span class="dot" style="background: var(--av)"></span>D · Block-as-device proxy <span class="pill sub">graft</span></h4>
+          <p>Lowest blast radius: a block satisfies <code>data.model.ports</code> verbatim. But making a
+            block <em>pretend</em> to be a device leaks garbage into the BOM and forks counting.
+            <strong>Grafted:</strong> the synthesized <code>DeviceModel</code> as an <em>internal</em>
+            resolve/render shim behind <code>nodePorts()</code> — never a user-facing masquerade.</p>
+          <span class="rec graft">graft the shim</span>
+        </div>
+        <div class="card">
+          <h4><span class="dot" style="background: var(--planned)"></span>A · Zone-as-reference <span class="pill sub">rejected</span></h4>
+          <p>Smallest schema delta — <code>Zone</code> gains <code>refDiagramId</code> + a cached boundary
+            list. But it overloads one type to mean both rectangle and live reference (mode confusion),
+            and the cache is denormalized state that rots on every sub-diagram edit. The “minimal” framing
+            is hollow — it still needs the full flatten pass. <strong>Grafted:</strong> auto-expose on promote.</p>
+          <span class="rec reject">rejected as primary</span>
+        </div>
+      </div>
+
+      <!-- 3. THE MODEL -->
+      <h2 class="section"><span class="num">3</span>The model: a block is a reference to a tab</h2>
+      <p class="lead">
+        The referenced <code>Diagram</code> is the single source of truth for both its content and its
+        published boundary set. A <code>BoundaryPort</code> is deliberately Port-shaped
+        (<code>id / name / direction / connector / accepts? / grade?</code>) plus an
+        <code>internal: PortRef</code> back-pointer to the real inner device port it proxies. Each
+        placement is a distinct <code>BlockInstance</code> with its own id and position, sharing
+        <code>refDiagramId</code>.
+      </p>
+      <div class="diagram">
+        <div class="lane lane--sub">
+          <div class="lane-head"><span class="dot" style="background: var(--av)"></span>Control Room · its own tab</div>
+          <div class="node">Switcher → Multiviewer → … <small>real devices, real internal cables</small></div>
+          <div class="arrow">↓ &nbsp;publish the crossing ports</div>
+          <div class="node node--new">boundary.ports: <code>PGM Out</code>, <code>Tally In</code> <small>Port-shaped · mint-once id · internal → inner device port</small></div>
+        </div>
+        <div class="lane lane--host">
+          <div class="lane-head"><span class="dot" style="background: var(--accent)"></span>Event · the host tab</div>
+          <div class="node node--block">[ Control Room ] block <small>renders PGM Out (right) · Tally In (left) as Handles</small></div>
+          <div class="arrow">↓ &nbsp;an ordinary host-diagram cable</div>
+          <div class="node node--block">[ Backstage ] block <small>itself another tab, embedded the same way</small></div>
+        </div>
+      </div>
+      <p class="diagram-note">
+        <strong>The trick that keeps the blast radius small:</strong> the block node carries a
+        <em>synthesized</em> <code>DeviceModel</code> whose <code>model.ports</code> <em>are</em> the
+        referenced diagram's boundary ports. So <code>node.data.model.ports.find(...)</code> resolves for
+        a block exactly as for a device — the four consumers widen one type guard behind a shared
+        <code>nodePorts()</code> seam instead of forking their logic. <code>PortRef</code> and
+        <code>Connection</code> are byte-unchanged on disk: a top-level cable lives in the host diagram's
+        <code>connections[]</code>, its endpoint <code>instanceId</code> is a <code>BlockInstance.id</code>
+        and its <code>portId</code> a <code>BoundaryPort.id</code> (which is also the Handle id the block renders).
+      </p>
+
+      <!-- 4. SCHEMA -->
+      <h2 class="section"><span class="num">4</span>Schema (v4, additive)</h2>
+      <p class="lead">
+        Bump <code>SIGPATH_SCHEMA_VERSION</code> 3 → 4. Every new field is optional, so v1–v3 files load
+        unchanged with no transform. <code>Zone</code> and <code>PortRef</code> are <em>not</em> touched.
+      </p>
+      <pre><code>// src/schema/boundary.ts (new)
+import type { PortDirection } from "./device";
+import type { ConnectorId } from "./connectors";
+import type { GradeId } from "./grades";
+
+/** The outward face a Diagram exposes when embedded as a block. Port-shaped so
+ *  compat/grade/cable-prefix work across a boundary with no special path. */
+export type BoundaryPort = {
+  id: string;            // STABLE, minted once; survives internal rename/renumber/rebind
+  name: string;          // editable display label, e.g. "PGM Out"
+  direction: PortDirection;
+  connector: ConnectorId;     // mirrored from the inner port at expose-time
+  accepts?: ConnectorId[];
+  grade?: GradeId;            // mirrored from the inner port
+  /** The single internal device port this boundary proxies. */
+  internal: { instanceId: string; portId: string };
+};</code></pre>
+      <pre><code>// src/schema/document.ts — Diagram gains an optional published interface + placed refs
+export type Diagram = {
+  id; name; devices; connections; zones; annotations; orientation?;
+  boundary?: { ports: BoundaryPort[]; rev: number }; // absent ⇒ not embeddable
+  blocks?: BlockInstance[];                           // placed references to other diagrams
+};
+
+/** A placed reference to another diagram, rendered as a block. NOT a Zone. */
+export type BlockInstance = {
+  id: string;                 // unique within the HOST diagram
+  refDiagramId: string;
+  label?: string;             // per-placement override; default = ref diagram name
+  position: { x: number; y: number };
+  size?: { width: number; height: number };
+  obstacle?: boolean;         // routing opt-in; default ON for blocks
+  boundaryRev: number;        // the ref diagram's boundary.rev this block was bound to
+};
+
+export const SIGPATH_SCHEMA_VERSION = 4;</code></pre>
+      <pre><code>// src/flow/types.ts — new node type + widened union
+export type BlockNodeData = {
+  refDiagramId: string;
+  label?: string;
+  model: DeviceModel;   // SYNTHESIZED from the ref diagram's boundary.ports at load/render
+  boundaryRev: number;
+  drift?: boolean;      // derived: boundaryRev &lt; ref diagram's live boundary.rev
+  obstacle?: boolean;
+};
+export type BlockNodeType = Node&lt;BlockNodeData, "block"&gt;;
+export type SigNode = DeviceNodeType | ZoneNodeType | NoteNodeType | BlockNodeType;</code></pre>
+
+      <!-- 5. BOUNDARY PORTS -->
+      <h2 class="section"><span class="num">5</span>Boundary ports — stable by construction</h2>
+      <p class="lead">
+        The <code>BoundaryPort</code> is the single genuinely new concept, and it earns its keep three ways:
+      </p>
+      <ol class="flow">
+        <li><span class="st">Port-shaped, so no parallel compat path.</span> <span class="sd">Because it carries
+          <code>connector</code> and <code>grade</code>, <code>checkPortCompatibility</code>
+          (<code>connection.ts:148</code>), the grade gate (<code>validate.ts</code> <code>runDemand</code>),
+          and <code>cablePrefix</code> (<code>cableId.ts:36</code>) all run on a boundary port through the
+          shared <code>nodePorts()</code> seam with zero special-casing.</span></li>
+        <li><span class="st">Source of truth on the tab, not cached per block.</span> <span class="sd">Boundary ports
+          live on <code>Diagram.boundary.ports</code>. Each block synthesizes its model from the live
+          referenced diagram at load/render (read through <code>synced()</code> when that tab is active so an
+          in-flight edit isn't stale). No denormalized copy to rot.</span></li>
+        <li><span class="st">Mint-once ids + a semantic sticky key.</span> <span class="sd">The id is minted once and
+          survives internal rename/renumber/rebind. Re-derivation after an inner edit matches on the semantic
+          tuple <em>(internal.instanceId + direction + connector + ordinal)</em> — never the unstable inner port
+          id — so the inspector replacing a device's model wholesale (<code>App.tsx:875</code>) can't orphan
+          every top-level cable.</span></li>
+      </ol>
+
+      <!-- 6. CROSS-DIAGRAM CONNECTIONS -->
+      <h2 class="section"><span class="num">6</span>Cross-diagram connections — no new edge type</h2>
+      <p class="lead">
+        There is no diagram qualifier on <code>PortRef</code> and no new edge kind. The cross-diagram link is
+        <em>always</em> the explicit <code>block → boundary → internal</code> hop, and endpoint resolution is
+        always scoped to the connection's own diagram.
+      </p>
+      <p>
+        A cable that touches a block is <em>structurally an ordinary host-diagram edge</em> whose source or
+        target happens to be a block node — so undo/snapshot, <code>jogOffset</code>, lane assignment, and
+        manual routing overrides all keep working with no kernel change. The only place two diagrams' ids ever
+        coexist is inside <code>flatten(project, rootId)</code>, which namespaces every inner id per
+        block-instance path before any project-wide pass (oversubscription, duplicate-id, BOM counts, cable
+        renumber). Because device ids are <em>preserved</em> when promote moves them into a new tab, the same id
+        can legitimately exist in two diagrams — which is safe precisely because resolution never crosses a
+        diagram boundary except through a boundary port.
+      </p>
+
+      <!-- 7. PROMOTE / EMBED -->
+      <h2 class="section"><span class="num">7</span>Promote ⇄ embed</h2>
+      <p class="lead">The two verbs that make a zone and a tab interchangeable. Each is one atomic
+        <code>takeSnapshot</code> in <code>useProject.ts</code>.</p>
+      <h3 class="sub"><code>promoteZoneToTab(zoneId)</code> — zone becomes its own tab</h3>
+      <ol class="flow sub">
+        <li><span class="st">Sync the host first.</span> <span class="sd">Derive both diagrams from one
+          <code>synced()</code> value so the move is a single atomic commit (no split-snapshot orphans).</span></li>
+        <li><span class="st">Compute membership, preview &amp; confirm.</span> <span class="sd">Geometric containment of
+          the zone rect, shown for the user to add/remove before committing — promote is destructive.</span></li>
+        <li><span class="st">Move contained devices/notes/internal cables into a fresh tab.</span> <span class="sd">Ids
+          preserved, positions rebased. They now live <em>only</em> in the sub-diagram.</span></li>
+        <li><span class="st">Auto-publish a boundary port per crossing cable.</span> <span class="sd">Mint id, mirror
+          connector/grade/direction, <code>internal</code> = the inside endpoint, <code>rev = 1</code>.</span></li>
+        <li><span class="st">Replace the zone with one BlockInstance, re-point crossing cables.</span> <span class="sd">Each
+          crossing cable's inside endpoint becomes <code>{blockId, boundaryPortId}</code>. Toast + undo make the
+          destructive move recoverable.</span></li>
+      </ol>
+      <h3 class="sub"><code>embedTabAsBlock(refDiagramId, position)</code> — drop a tab in as a block</h3>
+      <ol class="flow sub">
+        <li><span class="st">Cycle guard.</span> <span class="sd">DFS over <code>blocks[].refDiagramId</code> rejects
+          self-embed and any back-edge (A→B→A).</span></li>
+        <li><span class="st">Auto-expose if no boundary set yet.</span> <span class="sd">Publish dangling device ports;
+          prompt if none dangle.</span></li>
+        <li><span class="st">Insert one BlockInstance — nothing moves.</span> <span class="sd">The same tab can be embedded
+          N times as distinct instances sharing one boundary id set. Paste/duplicate routes through this same
+          function so the guards always run.</span></li>
+      </ol>
+
+      <!-- 8. RENDERING -->
+      <h2 class="section"><span class="num">8</span>Rendering the block</h2>
+      <p class="lead">
+        A new <code>BlockNode</code> component, registered in <code>nodeTypes</code> (<code>App.tsx:106</code>):
+        a titled box with an “opens-tab” glyph and the house-style dashed/accent border that already signals a
+        new node — visually unmistakable from a device.
+      </p>
+      <p>
+        Boundary ports render as Handles (inputs Left, outputs Right, bidirectional as paired source+target on
+        the bottom), with <code>Handle id === BoundaryPort.id</code>. Double-click switches to the referenced
+        tab. Geometry gates on <code>measured</code> + <code>updateNodeInternals</code> so a freshly inserted
+        block doesn't mis-route at the 168px default before React Flow re-measures. Because the synthesized
+        <code>DeviceModel</code> satisfies the existing contract, <code>displayEdges</code> /
+        <code>buildCableEdge</code> / lanes / <code>jogOffset</code> / obstacle-routing treat a block-touching
+        cable as an ordinary edge — <strong>zero kernel change</strong>.
+      </p>
+
+      <!-- 9. BLAST RADIUS -->
+      <h2 class="section"><span class="num">9</span>Blast radius — every consumer that assumes one flat diagram</h2>
+      <p class="lead">
+        This table is the “do it before it ossifies” argument made concrete. Each row is a place that walks
+        devices/connections today and must learn the <code>nodePorts()</code> seam or the <code>flatten()</code>
+        pass. Effort: <span class="eff eff-s">S</span> <span class="eff eff-m">M</span> <span class="eff eff-l">L</span>.
+      </p>
+      <div class="table-scroll">
+        <table>
+          <thead><tr><th>Consumer</th><th>File</th><th>Change</th><th>Effort</th></tr></thead>
+          <tbody>
+            <tr><td><strong>types</strong></td><td><code>flow/types.ts</code></td><td>Add <code>BlockNodeData</code>/<code>BlockNodeType</code>; widen the <code>SigNode</code> union (line 38).</td><td><span class="eff eff-s">S</span></td></tr>
+            <tr><td><strong>schema</strong></td><td><code>schema/document.ts</code></td><td>Add <code>BoundaryPort</code> (new file), <code>Diagram.boundary?</code>, <code>Diagram.blocks?</code>, <code>BlockInstance</code>; bump version to 4.</td><td><span class="eff eff-s">S</span></td></tr>
+            <tr><td><strong>serialize</strong></td><td><code>io/serialize.ts</code></td><td>Block branch in <code>editorToDiagram</code> / <code>diagramToEditor</code> (synthesize <code>data.model</code> from <code>boundary.ports</code>); persist <code>Diagram.boundary</code>; add <code>normalizeDocument</code> hook. Edge mapping unchanged.</td><td><span class="eff eff-m">M</span></td></tr>
+            <tr><td><strong>BlockNode</strong></td><td><code>flow/BlockNode.tsx</code></td><td>New component: boundary ports as Left/Right/bottom Handles (id === port id); register <code>block</code> in <code>nodeTypes</code>; gate geometry on <code>measured</code>.</td><td><span class="eff eff-m">M</span></td></tr>
+            <tr><td><strong>App state + routing</strong></td><td><code>App.tsx</code></td><td>Shared <code>nodePorts(node)</code>/<code>resolveEndpoint()</code>; widen the ~13 <code>data.model.ports</code> lookups, the routing endpoint filter (~529–531), the obstacle-rect builder; route block paste/duplicate through <code>embedTabAsBlock</code>. Kernels unchanged.</td><td><span class="eff eff-l">L</span></td></tr>
+            <tr><td><strong>validate</strong></td><td><code>validation/validate.ts</code></td><td>Include <code>n.type==='block'</code> in the endpoint map (line 91) so block cables aren't false “Broken”; resolve via <code>nodePorts</code>; add unbound/drift/unresolved-ref checks; run project-wide passes over <code>flatten()</code>.</td><td><span class="eff eff-m">M</span></td></tr>
+            <tr><td><strong>derive (BOM)</strong></td><td><code>lists/derive.ts</code></td><td>Block-aware label fallback (47, 126, 128) so a block never renders as a malformed device row; run over <code>flatten(project, rootId)</code> to multiply N-embed counts and instance-qualify patch rows.</td><td><span class="eff eff-l">L</span></td></tr>
+            <tr><td><strong>cableId</strong></td><td><code>lists/cableId.ts</code></td><td>Prefix via <code>nodePorts</code>; renumber over the flattened, instance-namespaced edge set so N embeds don't mint colliding <code>VID-001</code>. Ships in the same change as derive's flatten.</td><td><span class="eff eff-m">M</span></td></tr>
+            <tr><td><strong>useProject</strong></td><td><code>project/useProject.ts</code></td><td>Add <code>promoteZoneToTab</code> + <code>embedTabAsBlock</code> (one snapshot each, sync host first); <code>deleteDiagram</code> referential guard; embed cycle guard.</td><td><span class="eff eff-m">M</span></td></tr>
+            <tr><td><strong>export</strong></td><td><code>io/export.ts</code></td><td>CSV inherits flatten via derive (correct BOM). Image/PDF render a block as a labeled box captioned with flatten counts in v1; multi-page render deferred to Phase D.</td><td><span class="eff eff-s">S</span></td></tr>
+            <tr><td><strong>tabs</strong></td><td><code>ui/DiagramTabs.tsx</code></td><td>“referenced by N” chip; promote/embed/open-tab entry points.</td><td><span class="eff eff-s">S</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- 10. MIGRATION -->
+      <h2 class="section"><span class="num">10</span>Migration — and the first real loader</h2>
+      <p class="lead">
+        Strictly additive v3→v4: bump the version, extend the doc comment, ship. All new fields optional;
+        v1–v3 files load unchanged; <code>PortRef</code> is byte-identical.
+      </p>
+      <p>
+        Nesting is, however, the first feature with cross-references that can dangle — so it earns sigpath's
+        first non-trivial loader: a <code>normalizeDocument(doc)</code> pass run for all versions between
+        <code>parseDocument</code> and <code>fromDocument</code>. It rebinds or flags a missing
+        <code>refDiagramId</code> to a cable-preserving placeholder, leaves unbound boundary ports rather than
+        deleting them, breaks embed cycles, asserts every <code>Connection</code> endpoint resolves locally
+        (fail loud, not silent), tolerates <code>version &gt; 4</code>, and — while we're here — fixes the
+        pre-existing empty-<code>diagrams[0]</code> crash at <code>useProject.ts:175</code>. Save always writes
+        v4; there is no down-migration.
+      </p>
+
+      <!-- 11. BUILD ORDER -->
+      <h2 class="section"><span class="num">11</span>Suggested build order</h2>
+      <p class="lead">Mirrors the signal-grade phasing: silent plumbing → behavior → data-entry/UX.
+        <strong>v1 = A–C.</strong> D is follow-on polish.</p>
+      <div class="table-scroll">
+        <table>
+          <thead><tr><th>#</th><th>Phase</th><th>Why this slot</th></tr></thead>
+          <tbody>
+            <tr><td><strong>A</strong></td><td>Silent plumbing — schema v4, <code>BlockNode</code> render, serialize round-trip with synthesized model, <code>normalizeDocument</code> integrity + cycle + empty-project-crash sweep, mint-once ids, and the shared <code>nodePorts</code>/<code>resolveEndpoint</code> seam landed across validate/derive/cableId.</td><td>No user-visible behavior; old files load unchanged. <strong>Critical:</strong> the seam + consumer widenings land <em>here</em>, so no window exists where a block accepts a cable but validate false-flags it Broken or cableId mints garbage.</td></tr>
+            <tr><td><strong>B</strong></td><td>Behavior + flatten — <code>promoteZoneToTab</code> (atomic move) and <code>embedTabAsBlock</code> (cycle-guarded); widen App routing sites; add <code>flatten(project, rootId)</code> with per-instance namespacing + visited-set + depth cap; wire derive + cableId renumber through flatten together.</td><td>Single-embed promote is correct with no flatten work. flatten + cableId namespacing land <em>together</em> so N-embeds never false-collide — the nastiest cross-file coupling every judge and critic flagged.</td></tr>
+            <tr><td><strong>C</strong></td><td>Data-entry / UX + drift — boundary-port rename/hide/reorder panel; rev-stamp drift detection + amber “room changed — refresh ports” affordance + sticky re-derive; cables to removed ports flagged Broken; “referenced by N” chip + open-tab.</td><td>Converts the deferred no-live-coupling sharp edge into a visible, trustworthy review action instead of a silent stale render.</td></tr>
+            <tr><td><strong>D</strong></td><td>Export fidelity (optional) — multi-page off-screen render: one page per referenced tab, blocks as labeled boxes hyperlinking to their sub-tab page.</td><td>Highest effort, lowest day-one value. Block-as-captioned-box images + correct CSV are acceptable until then.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="callout warn">
+        <strong>The one invariant that spans files:</strong> a block must not accept a top-level cable until
+        <code>flatten()</code> + per-instance namespaced renumber exist — otherwise two embeds of the same room
+        both mint <code>VID-001</code> and <code>validate</code> hard-errors “Duplicate cable ID,” shipping
+        nesting visibly broken. <code>cableId.ts</code> and <code>derive.ts</code> change in the <em>same</em> commit (Phase B).
+      </p>
+
+      <!-- 12. DECISIONS -->
+      <h2 class="section"><span class="num">12</span>Decisions for Patrick</h2>
+      <p class="lead">Six genuine forks. Each lists the options and the recommended call — your ruling locks the spec.</p>
+      <div class="grid">
+        <div class="card">
+          <h4><span class="dot" style="background: var(--accent)"></span>Promote membership</h4>
+          <p><strong>How is “inside the zone” decided?</strong> (a) pure geometric, one-shot; (b) geometric + interactive preview; (c) build real stored zone membership first (the <code>p2-movewithzone</code> groundwork).</p>
+          <p class="rec">→ (b) preview-and-confirm. Promote is destructive (devices leave the host); a half-overlap misassignment silently loses trust. Don't block nesting on (c).</p>
+        </div>
+        <div class="card">
+          <h4><span class="dot" style="background: var(--accent)"></span>Contained devices: move or copy?</h4>
+          <p><strong>On promote</strong> — (a) MOVE: devices live only in the sub-diagram, block is a pure reference; (b) COPY: devices stay in the host too.</p>
+          <p class="rec">→ (a) MOVE. Copy desyncs two truths and double-counts the BOM. The tab <em>is</em> the content; the block is the view. Communicate via toast + undo.</p>
+        </div>
+        <div class="card">
+          <h4><span class="dot" style="background: var(--accent)"></span>Boundary-port exposure</h4>
+          <p>(a) auto every dangling port; (b) explicit pin per port; (c) auto-on-promote + explicit curation after.</p>
+          <p class="rec">→ (c). Auto at the promote/embed moment (the crossing cables are the obvious hookups), then a rename/hide/reorder panel keeps the room's public face intentional.</p>
+        </div>
+        <div class="card">
+          <h4><span class="dot" style="background: var(--accent)"></span>Per-instance customization</h4>
+          <p><strong>N embeds of one tab</strong> — (a) tab-level boundary only (all instances share one id set); (b) per-instance overrides (room A runs 12G, room B 3G on the same port).</p>
+          <p class="rec">→ (a) for v1. Shared ids make N-embed identity + flatten namespacing tractable; per-instance overrides are real but separable. State (b) as unsupported.</p>
+        </div>
+        <div class="card">
+          <h4><span class="dot" style="background: var(--accent)"></span>Deleting a referenced tab</h4>
+          <p>(a) hard-refuse; (b) refuse with a “cascade-delete N blocks too?” confirm; (c) allow + degrade blocks to placeholders.</p>
+          <p class="rec">→ (b) as the gate, with (c)-style placeholder degradation only via <code>normalizeDocument</code> for hand-edited files. Today <code>deleteDiagram</code> filters with zero ref check — close that in Phase A.</p>
+        </div>
+        <div class="card">
+          <h4><span class="dot" style="background: var(--accent)"></span>Cross-boundary validation depth</h4>
+          <p>(a) single-hop: validate the host cable against the boundary port's mirrored connector/grade; (b) deep: propagate demand through the boundary into the inner run.</p>
+          <p class="rec">→ (a) single-hop for v1 (stated explicitly). Mirrored connector/grade make compat + the grade gate meaningful at the boundary without recursion; deep propagation is Phase C+.</p>
+        </div>
+      </div>
+
+      <!-- 13. OPEN QUESTIONS + RISKS -->
+      <h2 class="section"><span class="num">13</span>Open questions &amp; risks</h2>
+      <h3 class="sub">Open questions</h3>
+      <ul>
+        <li><strong>Phase-A lovability.</strong> With promote+embed in B, Phase A ships no user-visible verb. Should the first <em>shippable</em> slice be re-cut around <code>embedTabAsBlock</code> only (non-destructive, no flatten), with promote and N-embed flatten following — so slice one is demoable?</li>
+        <li><strong>Bidirectional boundary ports.</strong> A network crossing is commonly bidirectional; the paired source+target handle sharing one id needs a <code>validate</code> oversubscription rule (line 234 treats only <code>direction==='input'</code> as always-error). Confirm the intended semantics for a bidi boundary wired twice at the host.</li>
+        <li><strong>flatten() performance.</strong> validate + derive run on every change (<code>App.tsx:482–484</code>). For deeply nested / many-embed projects, is per-change full flatten acceptable, or do we memoize the flattened graph keyed on a content hash?</li>
+        <li><strong>Cable-number determinism.</strong> <code>renumberCables</code> numbers in array order (<code>cableId.ts:59</code>). Across save/load the same project must renumber identically for a printed patch sheet — do we need a stable sort key in flatten before renumbering?</li>
+        <li><strong>Export gap.</strong> In v1 the CSV BOM lists inner devices invisible on the image/PDF (which shows a block-as-box). Acceptable for v1, or does the image need a per-block “see room” caption with a device count?</li>
+        <li><strong>Empty interface.</strong> Should a finished sub-diagram with no dangling internal ports be embeddable at all (it yields an empty boundary), or must such a tab explicitly publish ports first?</li>
+      </ul>
+      <h3 class="sub">Risks (every one carries a mitigation already folded into the phasing)</h3>
+      <div class="table-scroll">
+        <table>
+          <thead><tr><th>Risk</th><th>Sev</th><th>Mitigation</th></tr></thead>
+          <tbody>
+            <tr><td><strong>Cross-tab duplicate cable IDs.</strong> cableId mints colliding <code>VID-001</code> per diagram; validate hard-errors “Duplicate cable ID.” If blocks accept cables before flatten + namespaced renumber, nesting ships broken.</td><td><span class="sev sev-blocker">blocker</span></td><td>Land the <code>nodePorts</code> seam in A; gate block-cable drawing until flatten + per-instance renumber land together in B. <code>cableId.ts</code> + <code>derive.ts</code> in one commit.</td></tr>
+            <tr><td><strong>BOM omits everything inside a block.</strong> <code>deriveLists</code> counts only device nodes in the active diagram, so a block contributes zero rows and the pack list undercounts a room.</td><td><span class="sev sev-blocker">blocker</span></td><td>Run <code>deriveLists</code> over <code>flatten(project, rootId)</code> before any block export; N-embed multiplies counts; keep packlist keyed on <code>model.id</code> so identical inner models aggregate.</td></tr>
+            <tr><td><strong>PortRef instanceId ambiguity.</strong> promote preserves device ids while moving them, so the same id can exist in two diagrams.</td><td><span class="sev sev-blocker">blocker</span></td><td>Resolution is always scoped to the connection's own diagram; cross-diagram is only ever the explicit block→boundary→internal hop; flatten namespaces inner ids per instance path; normalizeDocument asserts every endpoint resolves locally.</td></tr>
+            <tr><td><strong>Boundary-port id drift.</strong> Keying re-derivation on the unstable inner port id (inspector replaces the model wholesale, <code>App.tsx:875</code>) orphans every top-level cable on an inner edit.</td><td><span class="sev sev-blocker">blocker</span></td><td>Key the sticky re-match on the semantic tuple (internal.instanceId + direction + connector + ordinal); mint-once ids; test that ids survive an internal rename/re-spec round-trip.</td></tr>
+            <tr><td><strong>Non-atomic promote.</strong> <code>synced()</code> reflects only the active diagram, so a promote writing a non-active new tab + re-pointing host cables can split across snapshots; undo orphans half-moved cables.</td><td><span class="sev sev-major">major</span></td><td>Derive both diagrams from one <code>synced()</code> value, then <code>setDiagrams</code> + host <code>setNodes/setEdges</code> in a single commit inside one <code>takeSnapshot</code>.</td></tr>
+            <tr><td><strong>Fresh block <code>measured===undefined</code>.</strong> React Flow's per-id measure store leaves a new block at the 168px default, so block cables mis-route until re-measure.</td><td><span class="sev sev-major">major</span></td><td>Gate block obstacle-rect + port endpoints on <code>measured</code> present; call <code>updateNodeInternals</code> on insert and tab switch.</td></tr>
+            <tr><td><strong>Paste/undo/delete bypass invariants.</strong> onPaste re-keys only the node id (skips cycle guard, boundaryRev, ref-integrity); redo re-mints supposedly mint-once ids.</td><td><span class="sev sev-major">major</span></td><td>Route block paste/duplicate through <code>embedTabAsBlock</code>; replay redo verbatim with ids pinned; hard-block referenced-tab deletes.</td></tr>
+            <tr><td><strong>Embed cycle (A→B→A).</strong> A missed edit-time guard or hand-edited file infinite-recurses flatten/render.</td><td><span class="sev sev-major">major</span></td><td>DFS reachability check at embed/promote time + visited-set + depth cap inside flatten()/render; normalizeDocument breaks cycles at load.</td></tr>
+            <tr><td><strong>Single scalar rev cries wolf.</strong> Bumping <code>boundaryRev</code> on any sub-tab edit lights the amber ribbon on every embed, training reflexive refresh.</td><td><span class="sev sev-minor">minor</span></td><td>Compute rev from a hash of the boundary-port <em>set</em> (FNV, like <code>deviceContentHash</code>) so only real boundary mutations bump it; show an added/removed/changed diff before refresh.</td></tr>
+            <tr><td><strong>Mirror drift.</strong> A boundary's copied connector/grade diverges from its inner port after a refactor, so validate disagrees with reality.</td><td><span class="sev sev-minor">minor</span></td><td>Re-mirror on refresh; raise an “interface mismatch” warning when declared ≠ bound; cables to a removed/retyped port show Broken, never silently dropped.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <footer>
+        sigpath — local-first AV signal-flow. This document specs roadmap item
+        <code>p2-zonetab</code> (“Zone ⇄ tab — nested sub-diagrams”). Companion to
+        <a href="../ROADMAP.html">the roadmap</a>, the
+        <a href="SIGNAL-GRADE.html">signal-grade architecture</a>, and
+        <a href="COMMUNITY.html">the community architecture</a>.
+      </footer>
+    </div>
+  </body>
+</html>
