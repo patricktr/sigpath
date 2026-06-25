@@ -118,6 +118,7 @@ function editorToDiagram(d: EditorDiagram): Diagram {
     annotations,
     ...(blocks.length ? { blocks } : {}),
     ...(d.boundary ? { boundary: d.boundary } : {}),
+    ...(d.trunks?.length ? { trunks: d.trunks } : {}),
   };
 }
 
@@ -190,6 +191,7 @@ function diagramToEditor(d: Diagram, boundaryById: BoundaryLookup): EditorDiagra
     nodes: [...zoneNodes, ...deviceNodes, ...blockNodes, ...noteNodes],
     edges,
     ...(d.boundary ? { boundary: d.boundary } : {}),
+    ...(d.trunks ? { trunks: d.trunks } : {}),
   };
 }
 

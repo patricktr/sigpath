@@ -2,6 +2,7 @@ import type { DeviceInstance } from "./device";
 import type { Connection } from "./connection";
 import type { GradeScaleId, GradeId } from "./grades";
 import type { BoundaryPort } from "./boundary";
+import type { SignalKind } from "./signals";
 
 /**
  * Bumped whenever the persisted shape changes, so a future loader can migrate older
@@ -10,10 +11,11 @@ import type { BoundaryPort } from "./boundary";
  * `obstacle` flag on zones and annotations. v4 (2026-06-24) added nested sub-diagrams
  * (p2-zonetab): the optional `Diagram.boundary` (the ports a diagram publishes when
  * embedded) and `Diagram.blocks` (placed references to other diagrams). v5 (2026-06-25)
- * added the optional `Project.revisions` embedded history (p2-revisions). All additive,
+ * added the optional `Project.revisions` embedded history (p2-revisions). v6 (2026-06-25)
+ * added the optional `Diagram.trunks` (collapsible cable bundles, p2-trunk). All additive,
  * so an older file loads unchanged — a missing field reads as absent.
  */
-export const SIGPATH_SCHEMA_VERSION = 5;
+export const SIGPATH_SCHEMA_VERSION = 6;
 
 /** A labeled, colored region grouping devices (stage, rack, control room). */
 export type Zone = {
@@ -51,6 +53,25 @@ export type Diagram = {
   boundary?: { ports: BoundaryPort[]; rev: number };
   /** Placed references to other diagrams, rendered as blocks. Absent ⇒ none. */
   blocks?: BlockInstance[];
+  /** Collapsible cable bundles (p2-trunk). Absent ⇒ none. */
+  trunks?: Trunk[];
+};
+
+/**
+ * A bundle of like-cables sharing a corridor, drawn as one labeled spine when `collapsed`
+ * (p2-trunk). Membership is BY CONNECTION ID — stable through moves and reroutes — and the
+ * geometry is re-derived each render, never stored. The member {@link Connection}s are left
+ * untouched, so the pack list / BOM and validation ignore trunks entirely; a trunk is purely
+ * a presentation grouping. `signalKind` is the coarse family the members share (all audio,
+ * all video…), used to keep a bundle homogeneous.
+ */
+export type Trunk = {
+  id: string;
+  memberConnectionIds: string[];
+  collapsed: boolean;
+  /** Optional user label; defaults to a derived "N × <kind>" caption at render time. */
+  label?: string;
+  signalKind: SignalKind;
 };
 
 /**

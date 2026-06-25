@@ -1,5 +1,5 @@
 import type { Node, Edge } from "@xyflow/react";
-import type { DeviceModel, CableTypeId, GradeId, BoundaryPort, Port } from "../schema";
+import type { DeviceModel, CableTypeId, GradeId, BoundaryPort, Port, Trunk } from "../schema";
 import type { Pt } from "./obstacleRoute";
 
 /**
@@ -109,4 +109,6 @@ export type EditorDiagram = {
    *  metadata — not a node — so it rides here and round-trips through serialize. The
    *  spread in useProject's synced() preserves it across canvas edits. */
   boundary?: { ports: BoundaryPort[]; rev: number };
+  /** Collapsible cable bundles (p2-trunk). Diagram-level metadata like `boundary`. */
+  trunks?: Trunk[];
 };
