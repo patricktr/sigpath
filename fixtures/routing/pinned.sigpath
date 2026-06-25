@@ -1,0 +1,103 @@
+{
+  "schemaVersion": 5,
+  "project": {
+    "id": "proj-pinned",
+    "name": "pinned",
+    "diagrams": [
+      {
+        "id": "fix-pinned",
+        "name": "Diagram 1",
+        "devices": [
+          {
+            "id": "A",
+            "model": {
+              "id": "m-A",
+              "model": "Source",
+              "category": "other",
+              "source": "builtin",
+              "ports": [
+                {
+                  "id": "o1",
+                  "name": "O1",
+                  "direction": "output",
+                  "connector": "sdi"
+                },
+                {
+                  "id": "o2",
+                  "name": "O2",
+                  "direction": "output",
+                  "connector": "sdi"
+                }
+              ]
+            },
+            "label": "Source",
+            "position": {
+              "x": 0,
+              "y": 0
+            }
+          },
+          {
+            "id": "B",
+            "model": {
+              "id": "m-B",
+              "model": "Dest",
+              "category": "other",
+              "source": "builtin",
+              "ports": [
+                {
+                  "id": "i1",
+                  "name": "I1",
+                  "direction": "input",
+                  "connector": "sdi"
+                },
+                {
+                  "id": "i2",
+                  "name": "I2",
+                  "direction": "input",
+                  "connector": "sdi"
+                }
+              ]
+            },
+            "label": "Dest",
+            "position": {
+              "x": 460,
+              "y": 0
+            }
+          }
+        ],
+        "connections": [
+          {
+            "id": "p1",
+            "from": {
+              "instanceId": "A",
+              "portId": "o1"
+            },
+            "to": {
+              "instanceId": "B",
+              "portId": "i1"
+            },
+            "cableTypeId": "sdi",
+            "number": "p1"
+          },
+          {
+            "id": "p2",
+            "from": {
+              "instanceId": "A",
+              "portId": "o2"
+            },
+            "to": {
+              "instanceId": "B",
+              "portId": "i2"
+            },
+            "cableTypeId": "sdi",
+            "number": "p2",
+            "jogOffset": 80
+          }
+        ],
+        "zones": [],
+        "annotations": [],
+        "orientation": "free"
+      }
+    ]
+  }
+}

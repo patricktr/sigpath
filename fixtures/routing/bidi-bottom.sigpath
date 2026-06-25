@@ -1,0 +1,99 @@
+{
+  "schemaVersion": 5,
+  "project": {
+    "id": "proj-bidi-bottom",
+    "name": "bidi-bottom",
+    "diagrams": [
+      {
+        "id": "fix-bidi-bottom",
+        "name": "Diagram 1",
+        "devices": [
+          {
+            "id": "N1",
+            "model": {
+              "id": "m-N1",
+              "model": "Switch 1",
+              "category": "other",
+              "source": "builtin",
+              "ports": [
+                {
+                  "id": "net",
+                  "name": "Net",
+                  "direction": "bidirectional",
+                  "connector": "rj45"
+                }
+              ]
+            },
+            "label": "Switch 1",
+            "position": {
+              "x": 0,
+              "y": 0
+            }
+          },
+          {
+            "id": "N2",
+            "model": {
+              "id": "m-N2",
+              "model": "Switch 2",
+              "category": "other",
+              "source": "builtin",
+              "ports": [
+                {
+                  "id": "net",
+                  "name": "Net",
+                  "direction": "bidirectional",
+                  "connector": "rj45"
+                }
+              ]
+            },
+            "label": "Switch 2",
+            "position": {
+              "x": 460,
+              "y": 0
+            }
+          },
+          {
+            "id": "M",
+            "model": {
+              "id": "m-M",
+              "model": "Obstacle",
+              "category": "other",
+              "source": "builtin",
+              "ports": [
+                {
+                  "id": "i1",
+                  "name": "i1",
+                  "direction": "input",
+                  "connector": "sdi"
+                }
+              ]
+            },
+            "label": "Obstacle",
+            "position": {
+              "x": 220,
+              "y": 0
+            }
+          }
+        ],
+        "connections": [
+          {
+            "id": "net1",
+            "from": {
+              "instanceId": "N1",
+              "portId": "net"
+            },
+            "to": {
+              "instanceId": "N2",
+              "portId": "net"
+            },
+            "cableTypeId": "ethernet",
+            "number": "net1"
+          }
+        ],
+        "zones": [],
+        "annotations": [],
+        "orientation": "free"
+      }
+    ]
+  }
+}

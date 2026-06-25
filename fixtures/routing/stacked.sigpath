@@ -1,0 +1,140 @@
+{
+  "schemaVersion": 5,
+  "project": {
+    "id": "proj-stacked",
+    "name": "stacked",
+    "diagrams": [
+      {
+        "id": "fix-stacked",
+        "name": "Diagram 1",
+        "devices": [
+          {
+            "id": "S",
+            "model": {
+              "id": "m-S",
+              "model": "Source",
+              "category": "other",
+              "source": "builtin",
+              "ports": [
+                {
+                  "id": "o1",
+                  "name": "O1",
+                  "direction": "output",
+                  "connector": "sdi"
+                },
+                {
+                  "id": "o2",
+                  "name": "O2",
+                  "direction": "output",
+                  "connector": "sdi"
+                }
+              ]
+            },
+            "label": "Source",
+            "position": {
+              "x": 0,
+              "y": 120
+            }
+          },
+          {
+            "id": "T1",
+            "model": {
+              "id": "m-T1",
+              "model": "Target Top",
+              "category": "other",
+              "source": "builtin",
+              "ports": [
+                {
+                  "id": "i1",
+                  "name": "I1",
+                  "direction": "input",
+                  "connector": "sdi"
+                }
+              ]
+            },
+            "label": "Target Top",
+            "position": {
+              "x": 460,
+              "y": 0
+            }
+          },
+          {
+            "id": "T2",
+            "model": {
+              "id": "m-T2",
+              "model": "Target Bottom",
+              "category": "other",
+              "source": "builtin",
+              "ports": [
+                {
+                  "id": "i1",
+                  "name": "I1",
+                  "direction": "input",
+                  "connector": "sdi"
+                }
+              ]
+            },
+            "label": "Target Bottom",
+            "position": {
+              "x": 460,
+              "y": 260
+            }
+          },
+          {
+            "id": "M",
+            "model": {
+              "id": "m-M",
+              "model": "Obstacle",
+              "category": "other",
+              "source": "builtin",
+              "ports": [
+                {
+                  "id": "i1",
+                  "name": "i1",
+                  "direction": "input",
+                  "connector": "sdi"
+                }
+              ]
+            },
+            "label": "Obstacle",
+            "position": {
+              "x": 220,
+              "y": 100
+            }
+          }
+        ],
+        "connections": [
+          {
+            "id": "s1",
+            "from": {
+              "instanceId": "S",
+              "portId": "o1"
+            },
+            "to": {
+              "instanceId": "T1",
+              "portId": "i1"
+            },
+            "cableTypeId": "sdi",
+            "number": "s1"
+          },
+          {
+            "id": "s2",
+            "from": {
+              "instanceId": "S",
+              "portId": "o2"
+            },
+            "to": {
+              "instanceId": "T2",
+              "portId": "i1"
+            },
+            "cableTypeId": "sdi",
+            "number": "s2"
+          }
+        ],
+        "zones": [],
+        "annotations": [],
+        "orientation": "free"
+      }
+    ]
+  }
+}

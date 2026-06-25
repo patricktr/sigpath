@@ -1,0 +1,231 @@
+{
+  "schemaVersion": 5,
+  "project": {
+    "id": "proj-horizontal-tuned",
+    "name": "horizontal-tuned",
+    "diagrams": [
+      {
+        "id": "fix-horizontal-tuned",
+        "name": "Diagram 1",
+        "devices": [
+          {
+            "id": "A",
+            "model": {
+              "id": "m-A",
+              "model": "Source A",
+              "category": "other",
+              "source": "builtin",
+              "ports": [
+                {
+                  "id": "o1",
+                  "name": "O1",
+                  "direction": "output",
+                  "connector": "sdi"
+                },
+                {
+                  "id": "o2",
+                  "name": "O2",
+                  "direction": "output",
+                  "connector": "sdi"
+                },
+                {
+                  "id": "o3",
+                  "name": "O3",
+                  "direction": "output",
+                  "connector": "sdi"
+                }
+              ]
+            },
+            "label": "Source A",
+            "position": {
+              "x": 0,
+              "y": 0
+            }
+          },
+          {
+            "id": "B",
+            "model": {
+              "id": "m-B",
+              "model": "Dest B",
+              "category": "other",
+              "source": "builtin",
+              "ports": [
+                {
+                  "id": "i1",
+                  "name": "I1",
+                  "direction": "input",
+                  "connector": "sdi"
+                },
+                {
+                  "id": "i2",
+                  "name": "I2",
+                  "direction": "input",
+                  "connector": "sdi"
+                },
+                {
+                  "id": "i3",
+                  "name": "I3",
+                  "direction": "input",
+                  "connector": "sdi"
+                }
+              ]
+            },
+            "label": "Dest B",
+            "position": {
+              "x": 520,
+              "y": 0
+            }
+          },
+          {
+            "id": "M",
+            "model": {
+              "id": "m-M",
+              "model": "Obstacle",
+              "category": "other",
+              "source": "builtin",
+              "ports": [
+                {
+                  "id": "i1",
+                  "name": "i1",
+                  "direction": "input",
+                  "connector": "sdi"
+                }
+              ]
+            },
+            "label": "Obstacle",
+            "position": {
+              "x": 240,
+              "y": 0
+            }
+          },
+          {
+            "id": "A2",
+            "model": {
+              "id": "m-A2",
+              "model": "Source A2",
+              "category": "other",
+              "source": "builtin",
+              "ports": [
+                {
+                  "id": "o1",
+                  "name": "O1",
+                  "direction": "output",
+                  "connector": "sdi"
+                },
+                {
+                  "id": "o2",
+                  "name": "O2",
+                  "direction": "output",
+                  "connector": "sdi"
+                }
+              ]
+            },
+            "label": "Source A2",
+            "position": {
+              "x": 0,
+              "y": 240
+            }
+          },
+          {
+            "id": "B2",
+            "model": {
+              "id": "m-B2",
+              "model": "Dest B2",
+              "category": "other",
+              "source": "builtin",
+              "ports": [
+                {
+                  "id": "i1",
+                  "name": "I1",
+                  "direction": "input",
+                  "connector": "sdi"
+                },
+                {
+                  "id": "i2",
+                  "name": "I2",
+                  "direction": "input",
+                  "connector": "sdi"
+                }
+              ]
+            },
+            "label": "Dest B2",
+            "position": {
+              "x": 520,
+              "y": 240
+            }
+          }
+        ],
+        "connections": [
+          {
+            "id": "h1",
+            "from": {
+              "instanceId": "A",
+              "portId": "o1"
+            },
+            "to": {
+              "instanceId": "B",
+              "portId": "i1"
+            },
+            "cableTypeId": "sdi",
+            "number": "h1"
+          },
+          {
+            "id": "h2",
+            "from": {
+              "instanceId": "A",
+              "portId": "o2"
+            },
+            "to": {
+              "instanceId": "B",
+              "portId": "i2"
+            },
+            "cableTypeId": "sdi",
+            "number": "h2"
+          },
+          {
+            "id": "h3",
+            "from": {
+              "instanceId": "A",
+              "portId": "o3"
+            },
+            "to": {
+              "instanceId": "B",
+              "portId": "i3"
+            },
+            "cableTypeId": "sdi",
+            "number": "h3"
+          },
+          {
+            "id": "h4",
+            "from": {
+              "instanceId": "A2",
+              "portId": "o1"
+            },
+            "to": {
+              "instanceId": "B2",
+              "portId": "i1"
+            },
+            "cableTypeId": "sdi",
+            "number": "h4"
+          },
+          {
+            "id": "h5",
+            "from": {
+              "instanceId": "A2",
+              "portId": "o2"
+            },
+            "to": {
+              "instanceId": "B2",
+              "portId": "i2"
+            },
+            "cableTypeId": "sdi",
+            "number": "h5"
+          }
+        ],
+        "zones": [],
+        "annotations": [],
+        "orientation": "free"
+      }
+    ]
+  }
+}

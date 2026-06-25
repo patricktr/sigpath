@@ -183,7 +183,9 @@ function route(req: RouteRequest): RouteResult {
   // straight run) fall back to smooth-step.
   const waypoints = new Map<string, Pt[]>(nudged);
   for (const [id, wp] of waypointsById) waypoints.set(id, wp);
-  return { waypoints, jogInfo };
+  // `endsById` is the geometry this pipeline worked in (output→input runs only) — exposed
+  // for metrics/overlays; App ignores it, so drawing is unchanged.
+  return { waypoints, jogInfo, ends: endsById };
 }
 
 export const legacyRouter: Router = { route };

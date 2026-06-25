@@ -15,6 +15,9 @@ export type RouteRequest = {
   edges: CableEdgeType[];
 };
 
+/** The resolved endpoints of a routed run, in the geometry the router worked in. */
+export type EdgeEnds = { sx: number; sy: number; tx: number; ty: number };
+
 export type RouteResult = {
   /**
    * Interior bend points per edge — the `CableEdge` `data.waypoints` contract (the exact
@@ -27,6 +30,13 @@ export type RouteResult = {
    * the first ◀ ▶ nudge starts from where the run currently sits instead of jumping.
    */
   jogInfo: Map<string, { midX: number; jogX: number }>;
+  /**
+   * Resolved endpoints per routed edge — the geometry the router itself worked in. Exposed
+   * (App ignores it) so routeMetrics / the shadow overlay can reconstruct the full post-stitch
+   * polyline without duplicating endpoint resolution. Unrouted edges (bidi/bottom, today) are
+   * absent. The single source of endpoint truth, per design §3.4.
+   */
+  ends: Map<string, EdgeEnds>;
 };
 
 export interface Router {

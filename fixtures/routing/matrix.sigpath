@@ -1,0 +1,152 @@
+{
+  "schemaVersion": 5,
+  "project": {
+    "id": "proj-matrix",
+    "name": "matrix",
+    "diagrams": [
+      {
+        "id": "fix-matrix",
+        "name": "Diagram 1",
+        "devices": [
+          {
+            "id": "L",
+            "model": {
+              "id": "m-L",
+              "model": "Matrix Out",
+              "category": "other",
+              "source": "builtin",
+              "ports": [
+                {
+                  "id": "o1",
+                  "name": "O1",
+                  "direction": "output",
+                  "connector": "sdi"
+                },
+                {
+                  "id": "o2",
+                  "name": "O2",
+                  "direction": "output",
+                  "connector": "sdi"
+                },
+                {
+                  "id": "o3",
+                  "name": "O3",
+                  "direction": "output",
+                  "connector": "sdi"
+                },
+                {
+                  "id": "o4",
+                  "name": "O4",
+                  "direction": "output",
+                  "connector": "sdi"
+                }
+              ]
+            },
+            "label": "Matrix Out",
+            "position": {
+              "x": 0,
+              "y": 0
+            }
+          },
+          {
+            "id": "R",
+            "model": {
+              "id": "m-R",
+              "model": "Matrix In",
+              "category": "other",
+              "source": "builtin",
+              "ports": [
+                {
+                  "id": "i1",
+                  "name": "I1",
+                  "direction": "input",
+                  "connector": "sdi"
+                },
+                {
+                  "id": "i2",
+                  "name": "I2",
+                  "direction": "input",
+                  "connector": "sdi"
+                },
+                {
+                  "id": "i3",
+                  "name": "I3",
+                  "direction": "input",
+                  "connector": "sdi"
+                },
+                {
+                  "id": "i4",
+                  "name": "I4",
+                  "direction": "input",
+                  "connector": "sdi"
+                }
+              ]
+            },
+            "label": "Matrix In",
+            "position": {
+              "x": 460,
+              "y": 0
+            }
+          }
+        ],
+        "connections": [
+          {
+            "id": "m1",
+            "from": {
+              "instanceId": "L",
+              "portId": "o1"
+            },
+            "to": {
+              "instanceId": "R",
+              "portId": "i4"
+            },
+            "cableTypeId": "sdi",
+            "number": "m1"
+          },
+          {
+            "id": "m2",
+            "from": {
+              "instanceId": "L",
+              "portId": "o2"
+            },
+            "to": {
+              "instanceId": "R",
+              "portId": "i3"
+            },
+            "cableTypeId": "sdi",
+            "number": "m2"
+          },
+          {
+            "id": "m3",
+            "from": {
+              "instanceId": "L",
+              "portId": "o3"
+            },
+            "to": {
+              "instanceId": "R",
+              "portId": "i2"
+            },
+            "cableTypeId": "sdi",
+            "number": "m3"
+          },
+          {
+            "id": "m4",
+            "from": {
+              "instanceId": "L",
+              "portId": "o4"
+            },
+            "to": {
+              "instanceId": "R",
+              "portId": "i1"
+            },
+            "cableTypeId": "sdi",
+            "number": "m4"
+          }
+        ],
+        "zones": [],
+        "annotations": [],
+        "orientation": "free"
+      }
+    ]
+  }
+}

@@ -1,0 +1,232 @@
+{
+  "bidi-bottom.sigpath": {
+    "Diagram 1": {
+      "edges": 1,
+      "routed": 0,
+      "unrouted": 1,
+      "crossings": 0,
+      "bends": 0,
+      "overlaps": 0,
+      "length": 0,
+      "cost": 0,
+      "perEdge": {}
+    }
+  },
+  "dense-real.sigpath": {
+    "Diagram 1": {
+      "edges": 24,
+      "routed": 21,
+      "unrouted": 3,
+      "crossings": 4,
+      "bends": 38,
+      "overlaps": 0,
+      "length": 10032,
+      "cost": 47,
+      "perEdge": {
+        "cable-6980808a-974a-4d7c-b920-137752362a39": {
+          "bends": 2,
+          "length": 264
+        },
+        "cable-7b6de854-b150-4a3c-9b64-e07d6058230c": {
+          "bends": 2,
+          "length": 360
+        },
+        "cable-2b5fdaf4-aa0a-42d1-b036-ca03ecf5375b": {
+          "bends": 0,
+          "length": 216
+        },
+        "xy-edge__a54bcf26-0b90-4077-8711-002d48a95565rear-outlet-8-c863dee0-a23a-4b06-a06b-bee23e689000ac-in": {
+          "bends": 2,
+          "length": 984
+        },
+        "cable-41499e70-31d3-4cb2-9016-b03224b83bc7": {
+          "bends": 2,
+          "length": 240
+        },
+        "cable-cc3f64bd-4add-4d11-b719-feb21144245d": {
+          "bends": 2,
+          "length": 936
+        },
+        "cable-358832e5-2796-427b-ad94-b63ed6df600f": {
+          "bends": 2,
+          "length": 528
+        },
+        "cable-7ea90581-3d37-4f1f-b76c-c64eb8a83d12": {
+          "bends": 2,
+          "length": 528
+        },
+        "cable-cef2b0c0-7a6d-44e0-8a9c-131315067783": {
+          "bends": 2,
+          "length": 528
+        },
+        "cable-a03e6f04-52b3-4bd5-ab5d-a8a48481d185": {
+          "bends": 2,
+          "length": 528
+        },
+        "cable-7e931eac-bc46-48e7-b83e-41f5814db973": {
+          "bends": 2,
+          "length": 528
+        },
+        "cable-c24ef8d0-924f-43b8-8cab-98eeec2f234b": {
+          "bends": 2,
+          "length": 528
+        },
+        "cable-0a3c2b9a-f3c5-4651-9976-14c848fb7d6d": {
+          "bends": 2,
+          "length": 528
+        },
+        "cable-a8721e40-e3ff-4451-9aad-0805b09a9fdc": {
+          "bends": 2,
+          "length": 528
+        },
+        "cable-676dc3bc-656a-4d31-b84c-7d177e8feba1": {
+          "bends": 2,
+          "length": 528
+        },
+        "cable-b2b886f3-7fef-4d60-a3ab-44013cff317d": {
+          "bends": 2,
+          "length": 528
+        },
+        "cable-e961f425-aa9f-402a-ad35-c6de9f5b1cc9": {
+          "bends": 2,
+          "length": 264
+        },
+        "cable-01aa1bdb-ede8-4d8d-9d48-7c37ba99bcd8": {
+          "bends": 2,
+          "length": 504
+        },
+        "cable-35f8382c-779e-4f02-a501-7291c206cdb2": {
+          "bends": 2,
+          "length": 528
+        },
+        "cable-d352e778-6342-4b51-9bb0-542cdd5891c3": {
+          "bends": 0,
+          "length": 216
+        },
+        "xy-edge__4a41be62-3d2d-4f62-a1f8-840d0ecc3dfdsdi-out-3-2af94bbd-32be-492f-9583-1f77ba3d4759sdi-in-6": {
+          "bends": 2,
+          "length": 240
+        }
+      }
+    },
+    "Diagram 2": {
+      "edges": 0,
+      "routed": 0,
+      "unrouted": 0,
+      "crossings": 0,
+      "bends": 0,
+      "overlaps": 0,
+      "length": 0,
+      "cost": 0,
+      "perEdge": {}
+    }
+  },
+  "horizontal-tuned.sigpath": {
+    "Diagram 1": {
+      "edges": 5,
+      "routed": 5,
+      "unrouted": 0,
+      "crossings": 2,
+      "bends": 4,
+      "overlaps": 0,
+      "length": 1840,
+      "cost": 8.18,
+      "perEdge": {
+        "h1": {
+          "bends": 4,
+          "length": 432
+        },
+        "h2": {
+          "bends": 0,
+          "length": 352
+        },
+        "h3": {
+          "bends": 0,
+          "length": 352
+        },
+        "h4": {
+          "bends": 0,
+          "length": 352
+        },
+        "h5": {
+          "bends": 0,
+          "length": 352
+        }
+      }
+    }
+  },
+  "matrix.sigpath": {
+    "Diagram 1": {
+      "edges": 4,
+      "routed": 4,
+      "unrouted": 0,
+      "crossings": 6,
+      "bends": 16,
+      "overlaps": 0,
+      "length": 1372,
+      "cost": 28.14,
+      "perEdge": {
+        "m1": {
+          "bends": 4,
+          "length": 364
+        },
+        "m2": {
+          "bends": 4,
+          "length": 316
+        },
+        "m3": {
+          "bends": 4,
+          "length": 322
+        },
+        "m4": {
+          "bends": 4,
+          "length": 370
+        }
+      }
+    }
+  },
+  "pinned.sigpath": {
+    "Diagram 1": {
+      "edges": 2,
+      "routed": 2,
+      "unrouted": 0,
+      "crossings": 0,
+      "bends": 0,
+      "overlaps": 0,
+      "length": 584,
+      "cost": 0.06,
+      "perEdge": {
+        "p1": {
+          "bends": 0,
+          "length": 292
+        },
+        "p2": {
+          "bends": 0,
+          "length": 292
+        }
+      }
+    }
+  },
+  "stacked.sigpath": {
+    "Diagram 1": {
+      "edges": 2,
+      "routed": 2,
+      "unrouted": 0,
+      "crossings": 0,
+      "bends": 4,
+      "overlaps": 0,
+      "length": 820,
+      "cost": 4.08,
+      "perEdge": {
+        "s1": {
+          "bends": 2,
+          "length": 412
+        },
+        "s2": {
+          "bends": 2,
+          "length": 408
+        }
+      }
+    }
+  }
+}
