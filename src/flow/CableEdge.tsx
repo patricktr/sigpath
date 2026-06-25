@@ -2,6 +2,7 @@ import {
   BaseEdge,
   EdgeLabelRenderer,
   getSmoothStepPath,
+  Position,
   type EdgeProps,
 } from "@xyflow/react";
 import type { CableEdgeType } from "./types";
@@ -69,14 +70,27 @@ export function CableEdge({
   const edgeStyle = gradient ? { ...style, stroke: `url(#${gradientId})` } : style;
   const number = data?.number;
 
-  // The cable ID rides near BOTH ports (just outside each), not at the midpoint, so a
-  // run reads at whichever end you trace from even when the middle is a dense tangle.
-  // Ports exit/enter horizontally, so the badges sit at the port Y, a short way along
-  // the cable; the offset shrinks on a short run so the two badges don't collide.
-  const dir = targetX >= sourceX ? 1 : -1;
-  const inset = Math.min(34, Math.max(12, Math.abs(targetX - sourceX) * 0.38));
-  const srcLabelX = sourceX + dir * inset;
-  const tgtLabelX = targetX - dir * inset;
+  // The cable ID rides near BOTH ports (just OUTSIDE each, along its exit stub), not at
+  // the midpoint, so a run reads at whichever end you trace from even when the middle is a
+  // dense tangle. The badge follows the port's actual side — outward, never inset toward
+  // the far end (which buries it inside the port's own device when a run doubles back) and
+  // never on a horizontal offset for a bottom/top jack (where it would hide under the node).
+  const inset = Math.min(34, Math.max(14, Math.abs(targetX - sourceX) * 0.38));
+  const place = (x: number, y: number, pos: Position) => {
+    switch (pos) {
+      case Position.Left:
+        return { x: x - inset, y };
+      case Position.Top:
+        return { x, y: y - 20 };
+      case Position.Bottom:
+        return { x, y: y + 20 };
+      case Position.Right:
+      default:
+        return { x: x + inset, y };
+    }
+  };
+  const srcLabel = place(sourceX, sourceY, sourcePosition);
+  const tgtLabel = place(targetX, targetY, targetPosition);
 
   return (
     <>
@@ -100,13 +114,13 @@ export function CableEdge({
         <EdgeLabelRenderer>
           <div
             className="cable-id-label"
-            style={{ transform: `translate(-50%, -50%) translate(${srcLabelX}px, ${sourceY}px)` }}
+            style={{ transform: `translate(-50%, -50%) translate(${srcLabel.x}px, ${srcLabel.y}px)` }}
           >
             {number}
           </div>
           <div
             className="cable-id-label"
-            style={{ transform: `translate(-50%, -50%) translate(${tgtLabelX}px, ${targetY}px)` }}
+            style={{ transform: `translate(-50%, -50%) translate(${tgtLabel.x}px, ${tgtLabel.y}px)` }}
           >
             {number}
           </div>
