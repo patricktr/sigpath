@@ -179,11 +179,26 @@ if (CHECK) {
         fails.push(`${f}/${name}: no baseline entry`);
         continue;
       }
-      if (m.crossings > b.crossings) fails.push(`${f}/${name}: crossings ${b.crossings} → ${m.crossings}`);
-      if (m.cost > b.cost * COST_SLACK) fails.push(`${f}/${name}: cost ${b.cost} → ${m.cost} (> ${(b.cost * COST_SLACK).toFixed(2)})`);
-      for (const [id, pe] of Object.entries(m.perEdge ?? {})) {
-        const bpe = b.perEdge?.[id];
-        if (bpe && pe.bends > bpe.bends) fails.push(`${f}/${name}/${id}: bends ${bpe.bends} → ${pe.bends}`);
+      // Per-edge PARITY on the baseline (output→input) runs: each must still route with no
+      // more bends and the same length. This is the real "don't regress the tuned case" gate,
+      // and it holds even when the new router additionally routes bidi runs the baseline lacked.
+      for (const [id, bpe] of Object.entries(b.perEdge ?? {})) {
+        const pe = m.perEdge?.[id];
+        if (!pe) fails.push(`${f}/${name}/${id}: baseline run no longer routed`);
+        else {
+          if (pe.bends > bpe.bends) fails.push(`${f}/${name}/${id}: bends ${bpe.bends} → ${pe.bends}`);
+          if (Math.abs(pe.length - bpe.length) > 1) fails.push(`${f}/${name}/${id}: length ${bpe.length} → ${pe.length}`);
+        }
+      }
+      // Diagram-wide totals are only comparable when the routed-edge SET is unchanged. When the
+      // new router routes runs the baseline didn't (bidi/bottom), those legitimately add
+      // crossings/cost, so gate totals only at an equal routed count; otherwise rely on per-edge.
+      const newlyRouted = m.routed - b.routed;
+      if (newlyRouted <= 0) {
+        if (m.crossings > b.crossings) fails.push(`${f}/${name}: crossings ${b.crossings} → ${m.crossings}`);
+        if (m.cost > b.cost * COST_SLACK) fails.push(`${f}/${name}: cost ${b.cost} → ${m.cost} (> ${(b.cost * COST_SLACK).toFixed(2)})`);
+      } else {
+        console.log(`  · ${f}/${name}: +${newlyRouted} newly-routed run(s) — totals not gated; per-edge parity enforced on ${Object.keys(b.perEdge ?? {}).length} baseline run(s)`);
       }
     }
   }
