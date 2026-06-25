@@ -48,6 +48,7 @@ import {
 } from "./schema";
 import { approxPortY, LANE_GAP } from "./flow/parallelLanes";
 import { pickRouter } from "./flow/router";
+import { planMakeRoom } from "./flow/makeRoom";
 import { EdgeMarqueeSelect } from "./flow/EdgeMarqueeSelect";
 import { rectHitsRun } from "./flow/marqueeHit";
 import type { DeviceModel } from "./schema";
@@ -445,6 +446,27 @@ function AppInner() {
     setNodes((nds) => arrangeLeftToRight(nds, edgesRef.current));
     window.setTimeout(() => rf.current?.fitView({ duration: 400, padding: 0.2 }), 50);
     setStatus("Arranged left-to-right");
+  }, [setNodes, takeSnapshot]);
+
+  // Make room / Tidy: widen congested routing channels by nudging device columns apart, then
+  // let the router reroute. Opt-in, crossing-guarded, and a single undo step — never silent.
+  const handleTidy = useCallback(() => {
+    const plan = planMakeRoom(nodesRef.current, edgesRef.current);
+    if (plan.kind === "none") {
+      setStatus("Nothing to tidy — routing channels have room");
+      return;
+    }
+    if (plan.kind === "refused") {
+      const n = plan.addedCrossings;
+      setStatus(`Make room skipped — widening would add ${n} crossing${n === 1 ? "" : "s"}`);
+      return;
+    }
+    takeSnapshot();
+    setNodes((nds) => nds.map((n) => (plan.shifts.has(n.id) ? { ...n, position: plan.shifts.get(n.id)! } : n)));
+    window.setTimeout(() => rf.current?.fitView({ duration: 400, padding: 0.2 }), 50);
+    const ch = plan.channelsWidened;
+    const cb = plan.cablesAffected;
+    setStatus(`Made room — widened ${ch} channel${ch === 1 ? "" : "s"} for ${cb} cable${cb === 1 ? "" : "s"}`);
   }, [setNodes, takeSnapshot]);
 
   const handleZoomToZone = useCallback(() => {
@@ -1328,6 +1350,7 @@ function AppInner() {
     zoomZone: handleZoomToZone,
     theme: applyTheme,
     arrange: handleArrange,
+    tidy: handleTidy,
   };
   const menuActionsRef = useRef(menuActions);
   menuActionsRef.current = menuActions;
@@ -1355,6 +1378,7 @@ function AppInner() {
     track(listen("menu:zoomZone", () => menuActionsRef.current.zoomZone()));
     track(listen<"system" | "light" | "dark">("menu:theme", (e) => menuActionsRef.current.theme(e.payload)));
     track(listen("menu:arrange", () => menuActionsRef.current.arrange()));
+    track(listen("menu:tidy", () => menuActionsRef.current.tidy()));
     return () => {
       disposed = true;
       cleanups.forEach((un) => un());
@@ -1521,6 +1545,14 @@ function AppInner() {
           }}
         >
           Revisions
+        </button>
+        <button
+          type="button"
+          className="tbtn"
+          onClick={handleTidy}
+          title="Make room — nudge device columns apart to open crowded cable channels (undoable)"
+        >
+          Make room
         </button>
         <button
           type="button"

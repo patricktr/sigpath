@@ -31,6 +31,7 @@ const args = process.argv.slice(2);
 const WRITE = args.includes("--write");
 const CHECK = args.includes("--check");
 const BOXCHECK = args.includes("--boxcheck");
+const MAKEROOM = args.includes("--makeroom");
 const ROUTER = (args.find((a) => a.startsWith("--router=")) ?? "--router=legacy").split("=")[1];
 
 const SELFTEST = args.includes("--selftest");
@@ -41,6 +42,7 @@ const { legacyRouter } = await server.ssrLoadModule("/src/flow/router/legacyRout
 const { newRouter, collectObstacleRects } = await server.ssrLoadModule("/src/flow/router/newRouter.ts");
 const metricsMod = await server.ssrLoadModule("/src/flow/routeMetrics.ts");
 const { metricsFromResult, polylinesFromResult, boxInteriorHits, routeCrossings, totalCrossings, totalOverlaps, bendCount } = metricsMod;
+const { planMakeRoom } = await server.ssrLoadModule("/src/flow/makeRoom.ts");
 
 // Table-driven unit tests for the canonical crossing/overlap/bend counters — the keystone of
 // the gate (design §3.4 / P1). Hand-built polylines with known answers.
@@ -158,6 +160,35 @@ if (BOXCHECK) {
     process.exit(1);
   }
   console.log(`\n✓ no routed run enters a device box`);
+}
+
+if (MAKEROOM) {
+  const P = (id, direction) => ({ id, name: id, direction, connector: "sdi" });
+  const dev = (id, x, y, ports) => ({ id, type: "device", position: { x, y }, data: { model: { id: "m-" + id, model: id, category: "other", source: "builtin", ports } } });
+  const outs = (n) => Array.from({ length: n }, (_, i) => P("o" + (i + 1), "output"));
+  const ins = (n) => Array.from({ length: n }, (_, i) => P("i" + (i + 1), "input"));
+  const edge = (id, s, sh, t, th) => ({ id, source: s, sourceHandle: sh, target: t, targetHandle: th, type: "cable", data: { cableTypeId: "sdi" } });
+  // 6 PARALLEL runs (R shifted down so each jogs uniformly — a nested fan, 0 crossings) that
+  // need lane width in the corridor. Cramped gap → congested; wide gap → not. Make-room should
+  // widen the cramped one WITHOUT adding crossings (so the guard must NOT refuse).
+  const fan = () => Array.from({ length: 6 }, (_, k) => edge("c" + k, "L", "o" + (k + 1), "R", "i" + (k + 1)));
+  const cramped = planMakeRoom([dev("L", 0, 0, outs(6)), dev("R", 216, 144, ins(6))], fan()); // 48px gap
+  const spacious = planMakeRoom([dev("L", 0, 0, outs(6)), dev("R", 700, 144, ins(6))], fan()); // wide gap
+  console.log(`make-room logic:`);
+  console.log(`  cramped (48px gap, 6 crossing runs): ${cramped.kind}` + (cramped.kind === "ok" ? ` — widened ${cramped.channelsWidened} channel(s) for ${cramped.cablesAffected} cable(s), ${cramped.shifts.size} node(s) moved` : ""));
+  console.log(`  spacious (wide gap): ${spacious.kind}`);
+  console.log(`  corpus (expect 'none' — fixtures are spacious):`);
+  for (const f of fixtures) {
+    const { diagrams } = fromDocument(parseDocument(readFileSync(join(FIX_DIR, f), "utf8")));
+    for (const d of diagrams) {
+      if (!d.edges.length) continue;
+      const r = planMakeRoom(d.nodes, d.edges);
+      console.log(`    ${f}/${d.name}: ${r.kind}` + (r.kind === "ok" ? ` (+${r.channelsWidened}ch/${r.cablesAffected}cables)` : ""));
+    }
+  }
+  const pass = cramped.kind === "ok" && cramped.shifts.size > 0 && spacious.kind === "none";
+  console.log(pass ? `\n✓ make-room detects the cramped channel and leaves the spacious one` : `\n✗ make-room logic check failed`);
+  process.exit(pass ? 0 : 1);
 }
 
 if (WRITE) {
