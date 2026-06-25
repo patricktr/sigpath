@@ -1,6 +1,6 @@
 import type { Pt, Rect } from "./obstacleRoute";
 import { segmentHitsRect } from "./obstacleRoute";
-import type { RouteResult } from "./router/types";
+import type { RouteResult, PortSide } from "./router/types";
 
 /**
  * The canonical routing metric — the objective measure that drives the non-regression
@@ -139,7 +139,7 @@ export function boxInteriorHits(route: Pt[], rects: Rect[]): number {
   return n;
 }
 
-export type Side = "L" | "R" | "T" | "B";
+export type Side = PortSide;
 
 /**
  * Reconstruct the full polyline `CableEdge` draws: the exact port endpoints plus the
@@ -171,7 +171,7 @@ export function polylinesFromResult(result: Pick<RouteResult, "ends" | "waypoint
   const out: { id: string; pts: Pt[] }[] = [];
   for (const [id, e] of result.ends) {
     const interior = result.waypoints.get(id) ?? [];
-    out.push({ id, pts: stitchPolyline({ x: e.sx, y: e.sy }, { x: e.tx, y: e.ty }, "R", "L", interior) });
+    out.push({ id, pts: stitchPolyline({ x: e.sx, y: e.sy }, { x: e.tx, y: e.ty }, e.sourceSide, e.targetSide, interior) });
   }
   return out;
 }

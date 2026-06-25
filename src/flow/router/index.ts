@@ -1,5 +1,6 @@
 import type { Router } from "./types";
 import { legacyRouter } from "./legacyRouter";
+import { newRouter } from "./newRouter";
 
 export type { Router, RouteRequest, RouteResult } from "./types";
 
@@ -27,15 +28,16 @@ export function routerChoice(): RouterChoice {
 }
 
 /**
- * The active router. The flag is read now so the seam and override path exist and can be
- * exercised in dev; until the general router lands (p2-bidiroute → p2-router) every choice
- * resolves to the lifted legacy pipeline.
+ * The active router. `"new"`/`"shadow"` select the general router, which owns the bidi/bottom
+ * runs and delegates the tuned output→input case back to legacy (p2-bidiroute). The default is
+ * still `"legacy"`; it flips to `"new"` at P4 once the full corpus passes the parity gate.
  */
 export function pickRouter(): Router {
   switch (routerChoice()) {
-    case "legacy":
     case "new":
     case "shadow":
+      return newRouter;
+    case "legacy":
     default:
       return legacyRouter;
   }

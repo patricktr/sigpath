@@ -30,6 +30,7 @@ const COST_SLACK = 1.02;
 const args = process.argv.slice(2);
 const WRITE = args.includes("--write");
 const CHECK = args.includes("--check");
+const BOXCHECK = args.includes("--boxcheck");
 const ROUTER = (args.find((a) => a.startsWith("--router=")) ?? "--router=legacy").split("=")[1];
 
 const SELFTEST = args.includes("--selftest");
@@ -37,8 +38,9 @@ const SELFTEST = args.includes("--selftest");
 const server = await createServer({ server: { middlewareMode: true }, appType: "custom", logLevel: "error" });
 const { parseDocument, fromDocument } = await server.ssrLoadModule("/src/io/serialize.ts");
 const { legacyRouter } = await server.ssrLoadModule("/src/flow/router/legacyRouter.ts");
+const { newRouter, collectObstacleRects } = await server.ssrLoadModule("/src/flow/router/newRouter.ts");
 const metricsMod = await server.ssrLoadModule("/src/flow/routeMetrics.ts");
-const { metricsFromResult, routeCrossings, totalCrossings, totalOverlaps, bendCount } = metricsMod;
+const { metricsFromResult, polylinesFromResult, boxInteriorHits, routeCrossings, totalCrossings, totalOverlaps, bendCount } = metricsMod;
 
 // Table-driven unit tests for the canonical crossing/overlap/bend counters — the keystone of
 // the gate (design §3.4 / P1). Hand-built polylines with known answers.
@@ -65,8 +67,7 @@ if (SELFTEST) {
   process.exit(failed ? 1 : 0);
 }
 
-// The general router lands at P2 (newRouter). Until then only legacy is wired here.
-const routers = { legacy: legacyRouter };
+const routers = { legacy: legacyRouter, new: newRouter };
 const router = routers[ROUTER];
 if (!router) {
   console.error(`unknown --router=${ROUTER} (have: ${Object.keys(routers).join(", ")})`);
@@ -95,6 +96,29 @@ function measure(file) {
   return out;
 }
 
+// The hard "never behind a device" gate (P2): no routed run may pass through any device box —
+// INCLUDING its own two endpoints (a bottom-port run must route around its own device, not back
+// up through it). Each rect is deflated by INSET so the legitimate perpendicular exit stub
+// touching the port's own edge isn't counted, while a real pass-through (well inside any box) is.
+// The router keeps a 16px margin off other devices, so they're never grazed. Estimated geometry
+// here; the browser check validates the same on measured geometry.
+const BOXCHECK_INSET = 14;
+function boxcheck(file) {
+  const { diagrams } = fromDocument(parseDocument(readFileSync(join(FIX_DIR, file), "utf8")));
+  const hits = [];
+  for (const d of diagrams) {
+    const result = router.route({ nodes: d.nodes, edges: d.edges });
+    const cores = collectObstacleRects(d.nodes)
+      .map((r) => ({ x: r.rect.x + BOXCHECK_INSET, y: r.rect.y + BOXCHECK_INSET, w: r.rect.w - 2 * BOXCHECK_INSET, h: r.rect.h - 2 * BOXCHECK_INSET }))
+      .filter((r) => r.w > 0 && r.h > 0);
+    for (const { id, pts } of polylinesFromResult(result)) {
+      const n = boxInteriorHits(pts, cores);
+      if (n > 0) hits.push(`${d.name}/${id}: ${n} segment(s) cross a device box`);
+    }
+  }
+  return hits;
+}
+
 const fixtures = existsSync(FIX_DIR) ? readdirSync(FIX_DIR).filter((f) => f.endsWith(".sigpath")).sort() : [];
 if (!fixtures.length) {
   console.error(`no fixtures in ${FIX_DIR}`);
@@ -114,6 +138,26 @@ for (const f of fixtures) {
         `crossings=${m.crossings} bends=${m.bends} overlaps=${m.overlaps} length=${m.length} cost=${m.cost}`,
     );
   }
+}
+
+if (BOXCHECK) {
+  let total = 0;
+  console.log(`\nbox-interior gate (router=${ROUTER}):`);
+  for (const f of fixtures) {
+    const hits = boxcheck(f);
+    if (hits.length) {
+      console.error(`  ✗ ${f}`);
+      for (const x of hits) console.error(`      ${x}`);
+      total += hits.length;
+    } else {
+      console.log(`  ✓ ${f}: no routed run enters a box`);
+    }
+  }
+  if (total) {
+    console.error(`\n✗ ${total} box-interior violation(s)`);
+    process.exit(1);
+  }
+  console.log(`\n✓ no routed run enters a device box`);
 }
 
 if (WRITE) {

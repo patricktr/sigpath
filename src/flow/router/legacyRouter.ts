@@ -13,7 +13,7 @@ import {
 import type { Rect, Pt } from "../obstacleRoute";
 import { inputPorts, outputPorts } from "../../schema";
 import { isPortBearing } from "../types";
-import type { Router, RouteRequest, RouteResult } from "./types";
+import type { Router, RouteRequest, RouteResult, EdgeEnds } from "./types";
 
 /**
  * The original five-pass routing pipeline, lifted verbatim out of App's `displayEdges`
@@ -60,8 +60,7 @@ function route(req: RouteRequest): RouteResult {
   // routing and the parallel-lane pass. Only output(right)→input(left) device runs;
   // bidi (bottom) ports are deferred. The real offset is computed from exact
   // endpoints in CableEdge — this approximation only drives grouping + reroute.
-  type Ends = { sx: number; sy: number; tx: number; ty: number };
-  const endsById = new Map<string, Ends>();
+  const endsById = new Map<string, EdgeEnds>();
   for (const e of edges) {
     const src = byId.get(e.source);
     const tgt = byId.get(e.target);
@@ -77,6 +76,8 @@ function route(req: RouteRequest): RouteResult {
       sy: src.position.y + approxPortY(si < 0 ? 0 : si),
       tx: tgt.position.x,
       ty: tgt.position.y + approxPortY(ti < 0 ? 0 : ti),
+      sourceSide: "R", // output exits the right edge
+      targetSide: "L", // input enters the left edge
     });
   }
 

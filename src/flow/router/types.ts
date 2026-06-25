@@ -15,8 +15,19 @@ export type RouteRequest = {
   edges: CableEdgeType[];
 };
 
-/** The resolved endpoints of a routed run, in the geometry the router worked in. */
-export type EdgeEnds = { sx: number; sy: number; tx: number; ty: number };
+/** Which edge of its device a port sits on: left input, right output, top, bottom (bidi). */
+export type PortSide = "L" | "R" | "T" | "B";
+
+/** The resolved endpoints of a routed run, in the geometry the router worked in. `*Side`
+ *  drives the perpendicular exit (and the metric's post-stitch snap): Y for L/R, X for T/B. */
+export type EdgeEnds = {
+  sx: number;
+  sy: number;
+  tx: number;
+  ty: number;
+  sourceSide: PortSide;
+  targetSide: PortSide;
+};
 
 export type RouteResult = {
   /**

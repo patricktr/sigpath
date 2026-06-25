@@ -41,16 +41,20 @@ export function CableEdge({
 
   const waypoints = data?.waypoints;
   if (waypoints && waypoints.length) {
-    // Stitch exact ports onto the routed interior. The first/last bend share the
-    // port's Y (the run leaves/enters horizontally), so snap them to the exact port
-    // Y — the approximate routing Y can be a pixel or two off — keeping it orthogonal.
+    // Stitch the exact (measured) ports onto the routed interior, then snap the first/last
+    // bend to the port's exit axis so the stub is exactly perpendicular: Y for a left/right
+    // port (horizontal exit), X for a top/bottom (bidi) port (vertical exit). This both
+    // absorbs the pixel-or-two of routing approximation AND pins a bidi run's exit to the
+    // real jack X regardless of the router's estimated bottom-port anchor.
     const pts: Pt[] = [
       { x: sourceX, y: sourceY },
       ...waypoints.map((p) => ({ ...p })),
       { x: targetX, y: targetY },
     ];
-    pts[1].y = sourceY;
-    pts[pts.length - 2].y = targetY;
+    if (sourcePosition === Position.Left || sourcePosition === Position.Right) pts[1].y = sourceY;
+    else pts[1].x = sourceX;
+    if (targetPosition === Position.Left || targetPosition === Position.Right) pts[pts.length - 2].y = targetY;
+    else pts[pts.length - 2].x = targetX;
     path = orthogonalPathD(pts, BEND_RADIUS);
   } else {
     // A clean straight run (no waypoints) — React Flow's default smooth-step path.
