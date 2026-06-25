@@ -3,7 +3,9 @@ import type { MutableRefObject } from "react";
 import type { CableEdgeType, SigNode, EditorDiagram, ZoneNodeType } from "../flow/types";
 import { deriveBoundary, embedWouldCycle, makeBlockNode, planPromoteZone } from "../flow/nesting";
 import { emptyEditorDiagram, fromDocument, toDocument } from "../io/serialize";
-import type { SigpathDocument, SignalProfile } from "../schema";
+import { pruneRevisions, snapshotHash } from "./revisions";
+import { SIGPATH_SCHEMA_VERSION } from "../schema";
+import type { Revision, RevisionSnapshot, SigpathDocument, SignalProfile } from "../schema";
 
 type Options = {
   setNodes: (nodes: SigNode[]) => void;
@@ -37,6 +39,12 @@ export function useProject(initial: EditorDiagram[], opts: Options) {
   const [signalProfile, setSignalProfile] = useState<SignalProfile | undefined>(undefined);
   const [diagrams, setDiagrams] = useState<EditorDiagram[]>(initial);
   const [activeId, setActiveId] = useState<string>(initial[0]?.id ?? "");
+
+  // Embedded revision history (p2-revisions). Mirrored to a ref so getDocument() / save can
+  // read the just-captured list synchronously, before the state update re-renders.
+  const [revisions, setRevisions] = useState<Revision[]>([]);
+  const revisionsRef = useRef<Revision[]>([]);
+  revisionsRef.current = revisions;
 
   const past = useRef<ProjectSnapshot[]>([]);
   const future = useRef<ProjectSnapshot[]>([]);
@@ -259,11 +267,84 @@ export function useProject(initial: EditorDiagram[], opts: Options) {
     [nodesRef, edgesRef, synced, takeSnapshot, setDiagrams, setNodes, setEdges],
   );
 
-  /** Snapshot the whole project (active diagram synced) for saving. */
+  /** Snapshot the whole project (active diagram synced) for saving, including history. */
   const getDocument = useCallback(
     (): SigpathDocument =>
-      toDocument(synced(), { projectId: projectId.current, projectName, signalProfile }),
+      toDocument(synced(), {
+        projectId: projectId.current,
+        projectName,
+        signalProfile,
+        revisions: revisionsRef.current,
+      }),
     [synced, projectName, signalProfile],
+  );
+
+  /**
+   * Capture the current working state as a revision (p2-revisions). Called on save; pass a
+   * `label` to mark a named milestone. Automatic (unnamed) save points dedupe against the
+   * last revision and are pruned to the most recent N — named ones are kept forever. Updates
+   * the ref synchronously so a save reads the new list immediately. Returns false if skipped.
+   */
+  const captureRevision = useCallback(
+    (label?: string): boolean => {
+      const project = toDocument(synced(), { projectId: projectId.current, projectName, signalProfile }).project;
+      const snapshot: RevisionSnapshot = {
+        name: project.name,
+        diagrams: project.diagrams,
+        signalProfile: project.signalProfile,
+      };
+      const hash = snapshotHash(snapshot);
+      const prev = revisionsRef.current;
+      // Skip an automatic save point that changed nothing since the last revision.
+      if (!label && prev.length > 0 && prev[prev.length - 1].hash === hash) return false;
+      const rev: Revision = { id: crypto.randomUUID(), at: Date.now(), label, hash, snapshot };
+      const next = pruneRevisions([...prev, rev]);
+      revisionsRef.current = next;
+      setRevisions(next);
+      return true;
+    },
+    [synced, projectName, signalProfile],
+  );
+
+  /** Restore a revision into the live editor — NON-DESTRUCTIVE: snapshots first (so undo
+   *  brings the current state right back) and leaves the history untouched. */
+  const restoreRevision = useCallback(
+    (id: string) => {
+      const rev = revisionsRef.current.find((r) => r.id === id);
+      if (!rev) return;
+      takeSnapshot();
+      const parsed = fromDocument({
+        schemaVersion: SIGPATH_SCHEMA_VERSION,
+        project: {
+          id: projectId.current,
+          name: rev.snapshot.name,
+          diagrams: rev.snapshot.diagrams,
+          signalProfile: rev.snapshot.signalProfile,
+        },
+      });
+      setProjectName(parsed.projectName);
+      setSignalProfile(parsed.signalProfile);
+      setDiagrams(parsed.diagrams);
+      setActiveId(parsed.diagrams[0].id);
+      loadActive(parsed.diagrams, parsed.diagrams[0].id);
+      onChange?.();
+    },
+    [takeSnapshot, loadActive, onChange],
+  );
+
+  /** Name (or rename / clear) a revision. A label promotes a save point to a kept-forever
+   *  milestone; clearing it demotes the revision back to a prunable save point. */
+  const nameRevision = useCallback(
+    (id: string, label: string) => {
+      const trimmed = label.trim();
+      const next = revisionsRef.current.map((r) =>
+        r.id === id ? { ...r, label: trimmed || undefined } : r,
+      );
+      revisionsRef.current = next;
+      setRevisions(next);
+      onChange?.();
+    },
+    [onChange],
   );
 
   const loadProject = useCallback(
@@ -275,6 +356,8 @@ export function useProject(initial: EditorDiagram[], opts: Options) {
       setDiagrams(parsed.diagrams);
       setActiveId(parsed.diagrams[0].id);
       loadActive(parsed.diagrams, parsed.diagrams[0].id);
+      revisionsRef.current = parsed.revisions;
+      setRevisions(parsed.revisions);
       clearHistory();
     },
     [loadActive, clearHistory],
@@ -288,6 +371,8 @@ export function useProject(initial: EditorDiagram[], opts: Options) {
     setDiagrams([fresh]);
     setActiveId(fresh.id);
     loadActive([fresh], fresh.id);
+    revisionsRef.current = [];
+    setRevisions([]);
     clearHistory();
   }, [loadActive, clearHistory]);
 
@@ -306,6 +391,10 @@ export function useProject(initial: EditorDiagram[], opts: Options) {
     blockRefCount,
     embedTabAsBlock,
     promoteZoneToTab,
+    revisions,
+    captureRevision,
+    restoreRevision,
+    nameRevision,
     getDocument,
     loadProject,
     newProject,

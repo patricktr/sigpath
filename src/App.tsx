@@ -84,6 +84,7 @@ import { DiagramTabs } from "./ui/DiagramTabs";
 import { ZoneNode, ZoneActionsContext, ZONE_COLORS } from "./ui/ZoneNode";
 import { NoteNode, NoteActionsContext } from "./ui/NoteNode";
 import { ListsPanel } from "./ui/ListsPanel";
+import { RevisionsPanel } from "./ui/RevisionsPanel";
 import { deriveLists } from "./lists/derive";
 import {
   cablePrefixFromConnector,
@@ -151,6 +152,10 @@ function AppInner() {
     blockRefCount,
     embedTabAsBlock,
     promoteZoneToTab,
+    revisions,
+    captureRevision,
+    restoreRevision,
+    nameRevision,
     getDocument,
     loadProject,
     signalProfile,
@@ -197,6 +202,7 @@ function AppInner() {
     { pairKey: string; pairLabel: string; deviceName: string }[]
   >([]);
   const [listsOpen, setListsOpen] = useState(false);
+  const [revisionsOpen, setRevisionsOpen] = useState(false);
   const [closePrompt, setClosePrompt] = useState(false);
   const [validationOpen, setValidationOpen] = useState(false);
   const [snap, setSnap] = useState(true);
@@ -1364,6 +1370,7 @@ function AppInner() {
         path = await promptSavePath(`${projectName}.sigpath`);
         if (!path) return false; // cancelled
       }
+      captureRevision(); // record a save point before serializing
       await writeTextToPath(path, JSON.stringify(getDocument(), null, 2));
       setCurrentPath(path);
       setProjectName(fileStem(path));
@@ -1374,13 +1381,14 @@ function AppInner() {
       setStatus(`Save failed: ${String(err)}`);
       return false;
     }
-  }, [currentPath, projectName, getDocument, setProjectName]);
+  }, [currentPath, projectName, getDocument, setProjectName, captureRevision]);
 
   // Save As always prompts for a fresh path (File ▸ Save As).
   const handleSaveAs = useCallback(async (): Promise<boolean> => {
     try {
       const path = await promptSavePath(`${projectName}.sigpath`);
       if (!path) return false;
+      captureRevision(); // record a save point before serializing
       await writeTextToPath(path, JSON.stringify(getDocument(), null, 2));
       setCurrentPath(path);
       setProjectName(fileStem(path));
@@ -1391,7 +1399,7 @@ function AppInner() {
       setStatus(`Save failed: ${String(err)}`);
       return false;
     }
-  }, [projectName, getDocument, setProjectName]);
+  }, [projectName, getDocument, setProjectName, captureRevision]);
 
   const handleOpen = useCallback(async () => {
     try {
@@ -1633,6 +1641,7 @@ function AppInner() {
           onClick={() => {
             setValidationOpen((v) => !v);
             setListsOpen(false);
+            setRevisionsOpen(false);
           }}
         >
           Validate
@@ -1643,9 +1652,21 @@ function AppInner() {
           onClick={() => {
             setListsOpen((v) => !v);
             setValidationOpen(false);
+            setRevisionsOpen(false);
           }}
         >
           Lists
+        </button>
+        <button
+          type="button"
+          className={revisionsOpen ? "tbtn is-on" : "tbtn"}
+          onClick={() => {
+            setRevisionsOpen((v) => !v);
+            setListsOpen(false);
+            setValidationOpen(false);
+          }}
+        >
+          Revisions
         </button>
         <button
           type="button"
@@ -2001,6 +2022,17 @@ function AppInner() {
               lists={lists}
               onClose={() => setListsOpen(false)}
               onRenumber={renumberAll}
+            />
+          )}
+          {revisionsOpen && (
+            <RevisionsPanel
+              revisions={revisions}
+              onClose={() => setRevisionsOpen(false)}
+              onRestore={(id) => {
+                restoreRevision(id);
+                setStatus("Restored a revision · undo to go back");
+              }}
+              onName={nameRevision}
             />
           )}
           {validationOpen && (

@@ -9,11 +9,11 @@ import type { BoundaryPort } from "./boundary";
  * optional grade fields on ports and connections. v3 (2026-06-23) added the optional
  * `obstacle` flag on zones and annotations. v4 (2026-06-24) added nested sub-diagrams
  * (p2-zonetab): the optional `Diagram.boundary` (the ports a diagram publishes when
- * embedded) and `Diagram.blocks` (placed references to other diagrams). All additive,
- * so an older file loads unchanged — a missing field reads as absent, i.e. the diagram
- * simply isn't embeddable yet and holds no blocks. See design/ZONE-TAB.html.
+ * embedded) and `Diagram.blocks` (placed references to other diagrams). v5 (2026-06-25)
+ * added the optional `Project.revisions` embedded history (p2-revisions). All additive,
+ * so an older file loads unchanged — a missing field reads as absent.
  */
-export const SIGPATH_SCHEMA_VERSION = 4;
+export const SIGPATH_SCHEMA_VERSION = 5;
 
 /** A labeled, colored region grouping devices (stage, rack, control room). */
 export type Zone = {
@@ -86,6 +86,31 @@ export type SignalProfile = {
   targets?: Partial<Record<GradeScaleId, GradeId>>;
 };
 
+/**
+ * A point-in-time snapshot of the project's WORKING content — deliberately excludes the
+ * revision history itself, so revisions never nest recursively (p2-revisions). v1 stores
+ * the full content; a later version may content-hash-dedup it. See design discussion.
+ */
+export type RevisionSnapshot = {
+  name: string;
+  diagrams: Diagram[];
+  signalProfile?: SignalProfile;
+};
+
+/**
+ * One entry in the project's revision history. An unnamed revision is an automatic save
+ * point (pruned to the most recent N); a `label` marks a named milestone, kept forever.
+ */
+export type Revision = {
+  id: string;
+  /** Unix epoch ms when captured. */
+  at: number;
+  label?: string;
+  /** Content hash of `snapshot` — dedupes identical consecutive saves. */
+  hash: string;
+  snapshot: RevisionSnapshot;
+};
+
 /** A project groups multiple diagrams (Phase 2). */
 export type Project = {
   id: string;
@@ -93,6 +118,8 @@ export type Project = {
   diagrams: Diagram[];
   /** Project-wide signal demand ceiling for grade validation. Added in schema v2. */
   signalProfile?: SignalProfile;
+  /** Revision history embedded in the file (p2-revisions, schema v5). Absent ⇒ none. */
+  revisions?: Revision[];
 };
 
 /** Root persisted document — the contents of a `.sigpath` file (Phase 1). */

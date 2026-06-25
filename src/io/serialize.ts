@@ -8,6 +8,7 @@ import type {
   DeviceModel,
   Diagram,
   Project,
+  Revision,
   SignalProfile,
   SigpathDocument,
   Zone,
@@ -200,23 +201,25 @@ export function emptyEditorDiagram(name = "Diagram 1"): EditorDiagram {
 /** Wrap all of the project's diagrams in a versioned document for saving. */
 export function toDocument(
   diagrams: EditorDiagram[],
-  meta: { projectId: string; projectName: string; signalProfile?: SignalProfile },
+  meta: { projectId: string; projectName: string; signalProfile?: SignalProfile; revisions?: Revision[] },
 ): SigpathDocument {
   const project: Project = {
     id: meta.projectId,
     name: meta.projectName,
     diagrams: diagrams.map(editorToDiagram),
     ...(meta.signalProfile ? { signalProfile: meta.signalProfile } : {}),
+    ...(meta.revisions && meta.revisions.length ? { revisions: meta.revisions } : {}),
   };
   return { schemaVersion: SIGPATH_SCHEMA_VERSION, project };
 }
 
-/** Reconstruct the project (name + all diagrams + signal profile) from a loaded document. */
+/** Reconstruct the project (name + all diagrams + signal profile + history) from a loaded document. */
 export function fromDocument(doc: SigpathDocument): {
   projectId: string;
   projectName: string;
   diagrams: EditorDiagram[];
   signalProfile?: SignalProfile;
+  revisions: Revision[];
 } {
   const project = normalizeDocument(doc).project;
   // Index every diagram's published interface first, so a block can synthesize its port
@@ -231,6 +234,7 @@ export function fromDocument(doc: SigpathDocument): {
     projectName: project?.name ?? "Untitled",
     diagrams: diagrams.length > 0 ? diagrams : [emptyEditorDiagram()],
     signalProfile: project?.signalProfile,
+    revisions: project?.revisions ?? [],
   };
 }
 
