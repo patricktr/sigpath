@@ -1,0 +1,694 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>sigpath — Cable Routing: a general orthogonal router</title>
+    <style>
+      :root {
+        --bg: #f6f8fb;
+        --panel: #ffffff;
+        --ink: #0f172a;
+        --muted: #64748b;
+        --line: #e2e8f0;
+        --accent: #2563eb;
+        --accent-soft: #dbeafe;
+        --done: #16a34a;
+        --next: #d97706;
+        --planned: #94a3b8;
+        --code-bg: #0f172a;
+        --code-ink: #e2e8f0;
+        --shadow: 0 1px 2px rgba(15, 23, 42, 0.06), 0 8px 24px rgba(15, 23, 42, 0.06);
+        /* signal palette — mirrors the app */
+        --video: #3b82f6;
+        --audio: #22c55e;
+        --av: #8b5cf6;
+        --network: #06b6d4;
+        --control: #f59e0b;
+        --power: #ef4444;
+        --radius: 12px;
+        --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica,
+          Arial, sans-serif;
+        --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas,
+          "Liberation Mono", monospace;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #0b1120;
+          --panel: #131c2e;
+          --ink: #e2e8f0;
+          --muted: #94a3b8;
+          --line: #25304a;
+          --accent: #60a5fa;
+          --accent-soft: #1e293b;
+          --code-bg: #0a1020;
+          --code-ink: #d8e2f1;
+          --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 10px 30px rgba(0, 0, 0, 0.35);
+        }
+      }
+      * { box-sizing: border-box; }
+      html { scroll-behavior: smooth; }
+      body {
+        margin: 0;
+        font-family: var(--font);
+        color: var(--ink);
+        background: var(--bg);
+        line-height: 1.55;
+        -webkit-font-smoothing: antialiased;
+      }
+      .wrap { max-width: 980px; margin: 0 auto; padding: 0 20px 80px; }
+
+      header.hero {
+        background:
+          radial-gradient(1200px 240px at 15% -40%, var(--accent-soft), transparent),
+          var(--panel);
+        border-bottom: 1px solid var(--line);
+        padding: 40px 0 28px;
+        margin-bottom: 28px;
+      }
+      .hero-inner { max-width: 980px; margin: 0 auto; padding: 0 20px; }
+      .wordmark { display: flex; align-items: center; gap: 12px; }
+      .wordmark .logo {
+        display: inline-flex; gap: 4px; align-items: center;
+        padding: 6px 8px; border-radius: 8px; background: var(--ink);
+      }
+      .wordmark .logo span { width: 8px; height: 18px; border-radius: 2px; display: block; }
+      .wordmark h1 { font-size: 26px; margin: 0; letter-spacing: -0.02em; }
+      .hero p.tagline { color: var(--muted); margin: 6px 0 0; font-size: 15px; max-width: 70ch; }
+      .meta { margin-top: 14px; font-size: 13px; color: var(--muted); }
+      .meta a { color: var(--accent); text-decoration: none; }
+      .meta a:hover { text-decoration: underline; }
+
+      h2.section { font-size: 19px; margin: 40px 0 14px; letter-spacing: -0.01em; scroll-margin-top: 16px; }
+      h2.section .num {
+        display: inline-grid; place-items: center; width: 24px; height: 24px;
+        font-size: 13px; border-radius: 7px; background: var(--accent-soft);
+        color: var(--accent); margin-right: 9px; vertical-align: 2px;
+      }
+      h3.sub { font-size: 14.5px; margin: 20px 0 8px; letter-spacing: -0.01em; }
+      p.lead { color: var(--muted); margin: 0 0 18px; max-width: 78ch; }
+      p { max-width: 78ch; }
+
+      .principles { background: var(--accent-soft); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px 20px; }
+      .principles ul { margin: 8px 0 0; padding-left: 18px; }
+      .principles li { margin: 5px 0; }
+      .principles strong { color: var(--ink); }
+
+      .tag { font-size: 11px; padding: 1px 7px; border-radius: 6px; background: var(--accent-soft); color: var(--accent); margin-left: 6px; white-space: nowrap; }
+      .pill {
+        display: inline-block; font-size: 11px; font-weight: 600; letter-spacing: 0.03em;
+        padding: 2px 9px; border-radius: 999px; border: 1px solid var(--line); color: var(--muted);
+      }
+      .pill.host  { color: var(--accent); border-color: color-mix(in srgb, var(--accent) 40%, var(--line)); }
+      .pill.sub   { color: var(--av); border-color: color-mix(in srgb, var(--av) 40%, var(--line)); }
+      .pill.hard  { color: var(--power); border-color: color-mix(in srgb, var(--power) 40%, var(--line)); }
+      .pill.soft  { color: var(--done); border-color: color-mix(in srgb, var(--done) 40%, var(--line)); }
+
+      /* TWO-LANE DIAGRAM */
+      .diagram { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 6px 0 10px; }
+      @media (max-width: 720px) { .diagram { grid-template-columns: 1fr; } }
+      .lane { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); padding: 14px 14px 16px; border-top-width: 3px; }
+      .lane--sub { border-top-color: var(--av); }
+      .lane--host { border-top-color: var(--accent); }
+      .lane--bad { border-top-color: var(--power); }
+      .lane--good { border-top-color: var(--done); }
+      .lane-head { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+      .node { background: var(--bg); border: 1px solid var(--line); border-radius: 9px; padding: 9px 11px; font-size: 13.5px; font-weight: 600; margin-bottom: 8px; }
+      .node small { display: block; font-weight: 400; color: var(--muted); font-size: 11.5px; margin-top: 2px; }
+      .node--new { border-style: dashed; border-color: color-mix(in srgb, var(--accent) 45%, var(--line)); }
+      .node--block { border-style: dashed; border-color: color-mix(in srgb, var(--av) 55%, var(--line)); background: color-mix(in srgb, var(--av) 8%, var(--bg)); }
+      .arrow { text-align: center; color: var(--muted); font-size: 12px; padding: 5px 0; }
+      .diagram-note { font-size: 13px; color: var(--muted); background: var(--accent-soft); border: 1px solid var(--line); border-radius: 9px; padding: 10px 13px; margin: 4px 0 0; }
+      .diagram-note strong { color: var(--ink); }
+
+      ol.flow { list-style: none; counter-reset: step; padding: 0; margin: 12px 0; }
+      ol.flow > li { position: relative; padding: 4px 0 14px 40px; border-left: 2px solid var(--line); margin-left: 13px; }
+      ol.flow > li:last-child { border-left-color: transparent; padding-bottom: 0; }
+      ol.flow > li::before {
+        counter-increment: step; content: counter(step);
+        position: absolute; left: -14px; top: 0; width: 26px; height: 26px;
+        display: grid; place-items: center; border-radius: 50%;
+        background: var(--accent); color: #fff; font-size: 13px; font-weight: 700;
+      }
+      ol.flow.sub > li::before { background: var(--av); }
+      ol.flow .st { font-weight: 600; }
+      ol.flow .sd { color: var(--muted); font-size: 13.5px; }
+
+      pre {
+        background: var(--code-bg); color: var(--code-ink); border-radius: 10px;
+        padding: 13px 15px; overflow-x: auto; font-family: var(--mono);
+        font-size: 12.5px; line-height: 1.5; border: 1px solid var(--line); margin: 12px 0;
+      }
+      pre .c { color: #7e8aa3; }
+      pre .k { color: #7dd3fc; }
+      pre .s { color: #86efac; }
+      pre .n { color: #fcd34d; }
+      code { font-family: var(--mono); font-size: 0.9em; background: color-mix(in srgb, var(--accent-soft) 60%, var(--panel)); padding: 1px 5px; border-radius: 5px; }
+      pre code { background: none; padding: 0; font-size: inherit; }
+
+      .table-scroll { overflow-x: auto; border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); margin: 8px 0; }
+      table { border-collapse: collapse; width: 100%; font-size: 13.5px; background: var(--panel); }
+      th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+      th { background: color-mix(in srgb, var(--accent-soft) 50%, var(--panel)); font-size: 12px; text-transform: uppercase; letter-spacing: 0.03em; color: var(--muted); }
+      tr:last-child td { border-bottom: none; }
+      td strong { color: var(--ink); }
+      td code { white-space: nowrap; }
+      .ok { color: var(--done); font-weight: 600; }
+      .bad { color: var(--power); font-weight: 600; }
+      .mono-cell { font-family: var(--mono); font-size: 12px; white-space: nowrap; }
+      .eff { font-family: var(--mono); font-size: 11px; font-weight: 700; padding: 1px 7px; border-radius: 5px; }
+      .eff-s { color: var(--done); background: color-mix(in srgb, var(--done) 14%, transparent); }
+      .eff-m { color: var(--next); background: color-mix(in srgb, var(--next) 14%, transparent); }
+      .eff-l { color: var(--power); background: color-mix(in srgb, var(--power) 14%, transparent); }
+      .eff-xl { color: #fff; background: var(--power); }
+      .sev { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em; padding: 1px 7px; border-radius: 5px; white-space: nowrap; }
+      .sev-blocker { color: var(--power); background: color-mix(in srgb, var(--power) 14%, transparent); }
+      .sev-major { color: var(--next); background: color-mix(in srgb, var(--next) 14%, transparent); }
+      .sev-minor { color: var(--planned); background: color-mix(in srgb, var(--planned) 18%, transparent); }
+
+      .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 12px; margin: 8px 0; }
+      .card { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px 16px; box-shadow: var(--shadow); }
+      .card h4 { margin: 0 0 5px; font-size: 14.5px; display: flex; align-items: center; gap: 8px; }
+      .card p { margin: 0; font-size: 13px; color: var(--muted); }
+      .card p + p { margin-top: 7px; }
+      .card .rec { display: inline-block; margin-top: 9px; font-size: 11.5px; font-weight: 600; color: var(--done); }
+      .card .rec.graft { color: var(--av); }
+      .card .rec.reject { color: var(--planned); }
+      .card .rec.risk { color: var(--power); }
+      .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+
+      .callout { border-left: 3px solid var(--accent); background: color-mix(in srgb, var(--accent-soft) 55%, var(--panel)); padding: 12px 16px; border-radius: 0 10px 10px 0; margin: 14px 0; font-size: 13.5px; }
+      .callout strong { color: var(--ink); }
+      .callout.warn { border-left-color: var(--next); background: color-mix(in srgb, #fde68a 30%, var(--panel)); }
+      .callout.good { border-left-color: var(--done); background: color-mix(in srgb, var(--done) 12%, var(--panel)); }
+
+      footer { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--line); font-size: 12.5px; color: var(--muted); }
+      footer a { color: var(--accent); }
+    </style>
+  </head>
+  <body>
+    <header class="hero">
+      <div class="hero-inner">
+        <div class="wordmark">
+          <span class="logo" aria-hidden="true">
+            <span style="background: var(--video)"></span>
+            <span style="background: var(--av)"></span>
+            <span style="background: var(--power)"></span>
+          </span>
+          <h1>sigpath</h1>
+        </div>
+        <p class="tagline">
+          <strong>Cable routing — one general orthogonal router.</strong> Replace the five
+          horizontal-only passes with a single router that routes every cable — including the
+          ethernet/USB runs the current pipeline drops on the floor — around devices, with
+          guaranteed clearance and a tunable bias toward legibility. The design behind roadmap items
+          <code>p2-bidiroute</code>, <code>p2-router</code>, <code>p2-makeroom</code>, and
+          <code>p2-trunk</code>.
+        </p>
+        <div class="meta">
+          Last updated June 25, 2026 ·
+          <a href="../ROADMAP.html">← Product roadmap</a> ·
+          <a href="ZONE-TAB.html">Zone ↔ tab →</a> ·
+          <a href="SIGNAL-GRADE.html">Signal-grade →</a> ·
+          <a href="https://github.com/patricktr/sigpath">github.com/patricktr/sigpath</a>
+        </div>
+      </div>
+    </header>
+
+    <div class="wrap">
+      <!-- TL;DR -->
+      <h2 class="section">The one idea</h2>
+      <div class="principles">
+        <ul>
+          <li><strong>One router behind one frozen seam.</strong> Everything between
+            <code>displayEdges</code> and the screen becomes a pure function
+            <code>route(req) → Map&lt;edgeId, Pt[]&gt;</code>. Old pipeline and new router both
+            implement it, so they are swappable behind a flag and the rest of the render path
+            (validation styling, gradients, the cable-ID badges, the <code>jogOffset</code> nudge)
+            never moves.</li>
+          <li><strong>Boxes are a hard wall; crossing a cable is a soft cost.</strong> A device's
+            interior and a clearance gutter around it are <em>never</em> entered — that's an
+            inviolable A* constraint, not a penalty. Crossing another cable is just a weighted cost,
+            traded against bends and length. This is exactly your “never behind a device, never
+            adjacent; minimize crossings <em>when you can</em>” split, made literal.</li>
+          <li><strong>One joint cost, one legibility slider.</strong> Today crossings and bends are
+            minimized in separate passes with no common currency, so “bias toward legibility” can't
+            even be expressed. The new router scores every route by
+            <code>w·length + bends + crossings</code> at a fixed ~2:1 crossing:bend ratio, surfaced
+            as a single slider.</li>
+          <li><strong>Don't trust the rewrite — measure it.</strong> A prior attempt to generalize
+            the router regressed crossings 1→3 and was reverted. So non-regression is a
+            <em>gate</em>, not a hope: one canonical crossing counter, a tracked fixture corpus, and
+            a parity-or-better bar that the default flip cannot pass without. The new router earns
+            each case before it owns it.</li>
+          <li><strong>Placement bounds routing.</strong> Real pro-AV sheets get their clarity from
+            aligned device columns with clean vertical channels between them — not from a clever path
+            through a cramped layout. So “Make room” (nudge devices to open channels) and trunk
+            bundling are first-class follow-ons, not afterthoughts.</li>
+        </ul>
+      </div>
+
+      <!-- 1. TODAY -->
+      <h2 class="section"><span class="num">1</span>Today: five passes, and a gate that drops half the cables</h2>
+      <p class="lead">
+        All cable geometry is computed in one React <code>useMemo</code> — <code>displayEdges</code>
+        (<code>App.tsx:518–703</code>) — that runs five sequential passes per render and hands each
+        edge its interior bend points via <code>data.waypoints</code>. <code>CableEdge.tsx</code>
+        draws that rounded orthogonal path, or — if a run carries no waypoints — falls back to React
+        Flow's <code>getSmoothStepPath</code>.
+      </p>
+      <ol class="flow">
+        <li><span class="st">Collect obstacles.</span> <span class="sd">Every port-bearing node (device, block) becomes a rect at measured-or-estimated size; zones/notes join only if <code>data.obstacle</code> is set (<code>App.tsx:530–544</code>).</span></li>
+        <li><span class="st">Resolve endpoints — and gate.</span> <span class="sd">For each edge, resolve its two ports, then <code>App.tsx:558</code>: <code>if (sp?.direction !== "output" || tp?.direction !== "input") continue;</code> Only a right-side output → left-side input run survives. Everything else is dropped here.</span></li>
+        <li><span class="st">Detour blocked runs.</span> <span class="sd"><code>routeAroundObstacles</code> (<code>obstacleRoute.ts:108</code>): a fewest-bends A* over a sparse Hanan grid — <em>hardwired horizontal</em> (exit <code>+x</code>, enter <code>−x</code>, obstacles filtered to the x-corridor, <code>TURN_COST=100000</code> to minimize bends).</span></li>
+        <li><span class="st">Fan parallel runs into lanes.</span> <span class="sd"><code>spreadDetourBundles</code> + <code>assignLanes</code> (<code>parallelLanes.ts:184</code>) cluster nearby runs and pick a crossing-minimizing track order — but only <em>within</em> a cluster.</span></li>
+        <li><span class="st">Nudge collinear overlaps.</span> <span class="sd"><code>nudgeCollinearOverlaps</code> (<code>obstacleRoute.ts:646</code>) fans any two different cables sharing a line apart by <code>NUDGE_GAP=6</code> with a small port hop.</span></li>
+      </ol>
+
+      <p>
+        For the common case — a right-output to left-input run — this is genuinely good, and finely
+        tuned. The problem is everything it <em>doesn't</em> cover, and a structural ceiling on what
+        it can express:
+      </p>
+
+      <div class="diagram">
+        <div class="lane lane--bad">
+          <div class="lane-head"><span class="dot" style="background: var(--power)"></span>The bug</div>
+          <div class="node">NETGEAR · port 6 <small>bottom / bidirectional port (ethernet)</small></div>
+          <div class="arrow">│ &nbsp; dropped at the gate (App.tsx:558)</div>
+          <div class="node node--block" style="border-color: color-mix(in srgb, var(--power) 50%, var(--line));">smooth-step fallback <small>zero obstacle awareness → cuts straight through the LG OLED box</small></div>
+          <div class="node">LG OLED · ethernet <small>bottom / bidirectional port</small></div>
+          <div class="diagram-note"><strong>Bidirectional / bottom-port runs</strong> (ethernet, USB) never enter routing at all. They wander through unrelated devices. This is the reported defect.</div>
+        </div>
+        <div class="lane lane--good">
+          <div class="lane-head"><span class="dot" style="background: var(--done)"></span>The ceiling</div>
+          <div class="node">assignLanes <small>minimizes crossings only <em>within</em> one jog cluster</small></div>
+          <div class="node">spreadDetourBundles <small>minimizes only <em>within</em> one detour bundle</small></div>
+          <div class="node">nudgeCollinearOverlaps <small>reactive separation, not crossing-aware</small></div>
+          <div class="diagram-note"><strong>No diagram-wide crossing count</strong> and <strong>no shared cost.</strong> Bends and crossings are optimized in different passes, so “a slightly higher crossing count if it reads better” is inexpressible.</div>
+        </div>
+      </div>
+
+      <h3 class="sub">Where each goal stands today</h3>
+      <div class="table-scroll">
+        <table>
+          <thead><tr><th>Your goal</th><th>Today</th><th>Gap</th><th>Severity</th></tr></thead>
+          <tbody>
+            <tr>
+              <td><strong>Never behind a device</strong></td>
+              <td>Enforced for routed horizontal runs via a 16px obstacle inflation + <code>segmentHitsRect</code>.</td>
+              <td>Bidi/bottom runs and A*-bailouts (&gt;40 obstacles, <code>tx≤sx</code>) bypass it and cut through boxes.</td>
+              <td><span class="sev sev-blocker">High</span></td>
+            </tr>
+            <tr>
+              <td><strong>Bidi/bottom routed at all</strong></td>
+              <td>Dropped at <code>App.tsx:558</code> → smooth-step.</td>
+              <td>Completely unrouted. The router and the <code>CableEdge</code> stitch both assume horizontal exits.</td>
+              <td><span class="sev sev-blocker">High</span></td>
+            </tr>
+            <tr>
+              <td><strong>Minimize crossings, bias to legibility</strong></td>
+              <td>Local, per-cluster crossing-min only.</td>
+              <td>No global count, no shared cost, no knob — the bias can't be expressed.</td>
+              <td><span class="sev sev-major">Medium</span></td>
+            </tr>
+            <tr>
+              <td><strong>Never adjacent to a device</strong></td>
+              <td>16px clearance applies only to A* detours.</td>
+              <td>Clean/lane/bidi runs have no guaranteed gutter — a jog can hug a neighbor's ports.</td>
+              <td><span class="sev sev-major">Medium</span></td>
+            </tr>
+            <tr>
+              <td><strong>Auto-nudge devices for room</strong></td>
+              <td>Doesn't exist; <code>autoLayout.ts</code> ignores cables entirely.</td>
+              <td>No coupling between placement and routing.</td>
+              <td><span class="sev sev-minor">Low</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- 2. DECISIONS -->
+      <h2 class="section"><span class="num">2</span>The calls you made</h2>
+      <p class="lead">
+        Research surfaced four directions and several cost/benefit forks; these are the answers that
+        drive the rest of the design. Two of them follow directly from your own words and were locked
+        without asking.
+      </p>
+      <div class="grid">
+        <div class="card">
+          <h4><span class="dot" style="background: var(--done)"></span>Build a general router</h4>
+          <p>Replace the pass-by-pass pipeline with <strong>one self-built general orthogonal
+            router</strong> — not a patch, not a library (no libavoid/WASM, no LGPL; stays MIT and
+            local-first).</p>
+          <span class="rec">your pick · Q1 + Q2</span>
+        </div>
+        <div class="card">
+          <h4><span class="dot" style="background: var(--done)"></span>Opt-in “Make room”</h4>
+          <p>Auto-nudging devices to open channels ships as an <strong>opt-in “Make room / Tidy”
+            command</strong> — grid-snapped, previewed, undoable, never silent.</p>
+          <span class="rec">your pick · Q3</span>
+        </div>
+        <div class="card">
+          <h4><span class="dot" style="background: var(--done)"></span>Offer trunks at ≥4</h4>
+          <p>≤3 like-cables stay fanned; at <strong>≥4 sharing a corridor, offer</strong> (never
+            force) a collapsible labeled trunk with a count badge. Per-cable detail survives.</p>
+          <span class="rec">your pick · Q4</span>
+        </div>
+        <div class="card">
+          <h4><span class="dot" style="background: var(--av)"></span>Hard wall, soft crossing</h4>
+          <p>Box interior + clearance gutter = <span class="pill hard">hard</span> constraint;
+            crossing a cable = <span class="pill soft">soft</span> penalized cost. Derived from
+            “never behind/adjacent” (absolute) vs “minimize crossings when they can” (soft).</p>
+          <span class="rec graft">locked from your brief</span>
+        </div>
+        <div class="card">
+          <h4><span class="dot" style="background: var(--av)"></span>Legibility = a 2:1 slider</h4>
+          <p>A joint cost <code>w·len + bends + crossings</code> with a tunable ~2:1 crossing:bend
+            ratio, surfaced as one slider. Materializes only because there's now a unified router to
+            host it.</p>
+          <span class="rec graft">locked from your brief</span>
+        </div>
+        <div class="card">
+          <h4><span class="dot" style="background: var(--power)"></span>The hard constraint</h4>
+          <p>The tuned horizontal output→input case <strong>must not regress</strong>. So the rewrite
+            is phased and gated — see §4. This is the one rule everything else bends around.</p>
+          <span class="rec risk">non-negotiable</span>
+        </div>
+      </div>
+
+      <div class="callout">
+        <strong>The scope resolution.</strong> “Full rewrite” and “build small/scoped” aren't in
+        tension once the rewrite is <em>phased</em>: we build one general router, but it first owns
+        <em>only</em> the cases that are unrouted today (where there is nothing to regress), then
+        expands to own everything once the parity gate passes, then becomes the default, then the
+        legacy code is deleted. Ambition and safety, same plan.
+      </div>
+
+      <!-- 3. THE ROUTER -->
+      <h2 class="section"><span class="num">3</span>The router: one two-phase orthogonal engine</h2>
+      <p class="lead">
+        A new module <code>src/flow/router/</code> exporting <code>routeAll(req): RouteResult</code>.
+        It is a textbook two-phase orthogonal connector router (visibility/Hanan graph + A*, then a
+        nudging pass) specialized to this app, replacing legacy stages 2–5. It is a <em>pure
+        function</em> of geometry — no React Flow or DOM types cross its boundary.
+      </p>
+
+      <h3 class="sub">3.1 — Geometry in, no DOM out</h3>
+      <p>
+        App builds a <code>RouteCtx</code> once per render and passes it in. Every box is inflated by
+        the clearance gutter; no graph vertex or segment may lie in any inflated interior (the
+        existing strict <code>segmentHitsRect</code>, <code>obstacleRoute.ts:62</code>, reused
+        verbatim).
+      </p>
+      <pre><code><span class="k">type</span> PortGeom = {
+  nodeId: <span class="k">string</span>; portId: <span class="k">string</span>;
+  side: <span class="s">'L'</span> | <span class="s">'R'</span> | <span class="s">'B'</span>;     <span class="c">// left input · right output · bottom bidi</span>
+  anchor: Pt;                  <span class="c">// the exact jack position on the canvas</span>
+  stubEnd: Pt;                 <span class="c">// anchor + PORT_STUB along outDir (perpendicular exit)</span>
+  outDir: <span class="s">'+x'</span> | <span class="s">'-x'</span> | <span class="s">'+y'</span>;  <span class="c">// L:-x  R:+x  B:+y</span>
+};</code></pre>
+      <div class="callout warn">
+        <strong>The bottom-port trap (critique fix).</strong> Left/right ports sit on the 24px grid
+        rows, so their anchor is computed from the rect. <strong>Bottom (bidi) ports are different.</strong>
+        The CSS is <code>.device-node__io { display:flex; flex-wrap:wrap; gap:8px 14px;
+        justify-content:center }</code> — each port a label-width-driven column, ports wrapping to
+        multiple rows. No fixed-pitch “centered, 14px apart” formula can place them; a formula would
+        attach cables <em>beside</em> the jack. So App <strong>reads each bottom handle's measured
+        center</strong> from React Flow's <code>handleBounds</code> and passes it in as
+        <code>anchor</code>. The router never synthesizes bidi geometry. And any run touching a bidi
+        port is routed only once the node <em>and</em> its handles are measured — until then it keeps
+        the gate's old behavior for that frame, because the port-count size estimate omits the bottom
+        IO bank and would under-cover the box.
+      </div>
+
+      <h3 class="sub">3.2 — Phase 1: a shared grid + direction-aware A*</h3>
+      <p>
+        Build <em>one</em> sparse Hanan grid over the full bounding region (not a per-run x-corridor —
+        that corridor filter is exactly what starved vertical travel of gridlines and let the last
+        attempt cut through stacked boxes). X gridlines: inflated box edges, port-stub columns, and a
+        channel midline between each horizontally-adjacent box pair (this subsumes
+        <code>centerDetourVerticals</code>). Y gridlines mirror it. Total gridlines are capped, with a
+        box-edge-only fallback above the cap to bound the <code>O(B²)</code> midline blow-up.
+      </p>
+      <ol class="flow sub">
+        <li><span class="st">No privileged axis.</span> <span class="sd">A* state is <code>(xi, yi, dir∈{H,V})</code>, reusing the existing binary heap (<code>obstacleRoute.ts:150–179</code>). A mandatory first move <code>anchor→stubEnd</code> along <code>outDir</code> gives every port a clean perpendicular exit on all four sides; the goal is accepted only on an axis-matched final move into the target anchor.</span></li>
+        <li><span class="st">One joint cost.</span> <span class="sd">Per expansion: <code>w_len·len + w_bend·(turned?1:0) + w_cross·estCross(seg)</code>. Box-piercing segments are simply never expanded (hard wall). The heuristic uses only the length term, so it stays admissible and the optimal-bend guarantee today's <code>TURN_COST</code> relies on is preserved.</span></li>
+        <li><span class="st">Two sweeps, crossing-aware.</span> <span class="sd"><em>1a</em> routes every run with <code>w_cross=0</code> (pure bend+length) to get provisional polylines and build per-gridline occupancy. <em>1b</em> — <strong>mandatory</strong> for any run sharing a congested corridor — re-routes with the crossing penalty active, <em>seeded from the previous frame's committed routes</em> so route choice (not just track order) avoids crossings and stays temporally stable.</span></li>
+      </ol>
+
+      <h3 class="sub">3.3 — Phase 2: channel order + 1-D separation</h3>
+      <p>
+        One unified pass replaces all four of today's geometry passes
+        (<code>assignLanes</code> / <code>spreadDetourBundles</code> /
+        <code>nudgeCollinearOverlaps</code> / <code>centerDetourVerticals</code>). Extract every
+        axis-aligned segment; union-find cluster the co-linear, span-overlapping ones; per cluster,
+        <strong>order</strong> to minimize <em>real</em> crossings (the proven
+        brute(≤7)/greedy(≤20) ladder from <code>bestOrder</code>, <code>parallelLanes.ts:129</code>),
+        then <strong>separate</strong> into evenly-spaced, non-adjacent tracks using
+        <code>spreadDetourBundles</code>' flanking-wall room logic. A <code>jogOffset</code>-pinned run
+        is an immovable track the others order around. This is a per-cluster greedy 1-D projection —
+        no VPSC solver, no new dependency.
+      </p>
+
+      <h3 class="sub">3.4 — The one render edit, and one canonical crossing count</h3>
+      <p>
+        <code>CableEdge.tsx:52–53</code> hardcodes <code>pts[1].y = sourceY</code> /
+        <code>pts[len−2].y = targetY</code> — the horizontal-exit snap. Make it axis-aware off the
+        <code>sourcePosition</code>/<code>targetPosition</code> already in <code>EdgeProps</code>:
+        snap <strong>Y</strong> for left/right exits, snap <strong>X</strong> for top/bottom. The
+        label placer already handles bottom (<code>CableEdge.tsx:82–86</code>), so bidi cable IDs work
+        the moment the path does.
+      </p>
+      <div class="callout">
+        <strong>One crossing function, measured on the same geometry.</strong> Three crossing
+        definitions exist today. The router's <em>internal objective</em> and the parity <em>gate</em>
+        must call the <em>same</em> canonical counter on the <em>same</em> post-stitch polylines —
+        otherwise v2 can pass/fail the gate for the wrong reason. Since the port-snap can move a
+        near-port segment and create or remove a crossing, the router runs the stitch as a pure
+        function before counting.
+      </div>
+
+      <!-- 4. NON-REGRESSION -->
+      <h2 class="section"><span class="num">4</span>Not regressing the good case</h2>
+      <p class="lead">
+        This is the section the last attempt didn't have. The rewrite is fenced behind one seam, one
+        flag, one metric, and one corpus, so “don't regress the tuned horizontal path” becomes a
+        number that gates the cutover — not a thing we eyeball.
+      </p>
+
+      <div class="diagram">
+        <div class="lane lane--host">
+          <div class="lane-head"><span class="dot" style="background: var(--accent)"></span>The frozen seam</div>
+          <div class="node node--new">interface Router <small>route(req): { waypoints, jogInfo }</small></div>
+          <div class="arrow">▲ implemented by both</div>
+          <div class="node">legacyRouter <small>App.tsx:530–666 lifted verbatim, gate@558 intact</small></div>
+          <div class="node node--new">newRouter <small>the two-phase engine; delegates unhandled edges back to legacy</small></div>
+          <div class="diagram-note"><code>pickRouter()</code> mirrors <code>catalogSource.ts</code>: <code>localStorage['sigpath.router']</code> → <code>VITE_ROUTER</code> → default. A <code>'shadow'</code> mode renders legacy but runs both and diffs — zero pixel risk.</div>
+        </div>
+        <div class="lane">
+          <div class="lane-head"><span class="dot" style="background: var(--next)"></span>Parity-or-better, per fixture</div>
+          <div class="node">crossings<sub>new</sub> ≤ crossings<sub>legacy</sub> <small>hard — never add a crossing on any fixture</small></div>
+          <div class="node">cost<sub>new</sub> ≤ cost<sub>legacy</sub> × 1.02 <small>2% slack on the joint cost</small></div>
+          <div class="node">per-edge bends<sub>new</sub> ≤ bends<sub>legacy</sub> <small>on the output→input subset — the exact granularity that regressed last time</small></div>
+          <div class="diagram-note">All three checked on <strong>measured</strong> geometry, never the size estimate.</div>
+        </div>
+      </div>
+
+      <h3 class="sub">The corpus</h3>
+      <p>
+        <code>fixtures/routing/*.sigpath</code>, tracked in git, deterministic because both routers
+        are pure:
+      </p>
+      <div class="table-scroll">
+        <table>
+          <thead><tr><th>Fixture</th><th>What it guards</th></tr></thead>
+          <tbody>
+            <tr><td><code>horizontal-tuned</code></td><td>The must-not-regress parallel-bundle common case.</td></tr>
+            <tr><td><code>bidi-bottom</code></td><td>The core bug — ethernet/USB runs dropped at the gate.</td></tr>
+            <tr><td><code>stacked</code></td><td>Vertically-stacked devices — the 1→3 regression topology.</td></tr>
+            <tr><td><code>matrix</code></td><td>A dense crossbar (worst-case crossings).</td></tr>
+            <tr><td><code>pinned</code></td><td><code>jogOffset</code> overrides survive the new router.</td></tr>
+            <tr><td><code>dense-real</code></td><td>A copy of the real <code>test3.sigpath</code> — realistic scale.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>
+        Metrics run headlessly via the existing preview-stub harness, importing the real bundled
+        <code>routeAll</code> / <code>routeMetrics</code> (pure logic — no Tauri stub needed), plus a
+        side-by-side screenshot diff for human sign-off. Rollback is a one-line flag flip at three
+        latencies: per-user (localStorage), per-build (env), and code (legacy stays until the final
+        delete phase).
+      </p>
+
+      <!-- 5. MAKE ROOM -->
+      <h2 class="section"><span class="num">5</span>Make room / Tidy <span class="tag">p2-makeroom</span></h2>
+      <p class="lead">
+        Not auto-layout. It preserves your arrangement and only widens vertical channels where the
+        router reports cables can't keep clearance — by small, grid-snapped column shifts — then
+        reroutes. The biggest single legibility lever, because a clean route needs a clean channel to
+        live in.
+      </p>
+      <ol class="flow">
+        <li><span class="st">Detect.</span> <span class="sd">Cluster device left-edges into columns; an adjacent column pair is a channel. It's congested when demand &gt; supply, or clearance violations touch it, or a lane gap was compressed. The router emits a small <code>RoutingReport</code> for this; a polyline-derived fallback (count vertical segments per gap) means Make-room is never blocked on it.</span></li>
+        <li><span class="st">Propose.</span> <span class="sd">Shift the right-hand column group right by <code>min(neededWidth, MAX_TIDY_SHIFT)</code>; report “partially tidied” when capped. The source column never moves. Zones ride along as rigid units via <code>nodesInZone</code> (the same primitive drag uses), assigned whole to their majority side.</span></li>
+        <li><span class="st">Legalize.</span> <span class="sd">Snap moved X to the 24px grid; one overlap sweep enforcing a 2×gutter minimum gap.</span></li>
+        <li><span class="st">Crossing guard.</span> <span class="sd">Recompute total crossings on the proposal; <strong>refuse</strong> any proposal that increases them. The locked non-regression rule applies to Make-room too.</span></li>
+        <li><span class="st">Preview &amp; commit.</span> <span class="sd">Ghost positions + highlighted channels + “Make room for N cables in M channels — Apply / Cancel.” Apply goes through <code>takeSnapshot()</code> (one undo step). No congestion → no-op + status, no snapshot.</span></li>
+      </ol>
+
+      <!-- 6. TRUNKS -->
+      <h2 class="section"><span class="num">6</span>Trunk bundling <span class="tag">p2-trunk</span></h2>
+      <p class="lead">
+        At ≥4 like-cables sharing a source-region → dest-region corridor, offer one orthogonal labeled
+        spine with a count badge and expand/collapse. A derived candidate per render; a persisted
+        entity only once accepted.
+      </p>
+      <div class="grid">
+        <div class="card">
+          <h4>Detect &amp; offer</h4>
+          <p>Group edges by <code>(signalKind, sourceRegion, destRegion)</code>; cluster by shared
+            corridor (reusing the <code>assignLanes</code> same-corridor test). A cluster of ≥4 raises
+            a non-modal chip: “Bundle 4 audio cables into a trunk?” Dismissals are remembered so it
+            never nags.</p>
+        </div>
+        <div class="card">
+          <h4>Route as one spine</h4>
+          <p>A collapsed trunk is <strong>one virtual edge through the general router</strong> —
+            members suppressed from router input — so the backbone obeys the same box+gutter wall and
+            counts in the global crossing total. Numbered fan-out stubs run from each real port to the
+            spine, crossing-minimized.</p>
+        </div>
+        <div class="card">
+          <h4>Traceability survives</h4>
+          <p>Each member keeps its own <code>Connection</code> untouched; the BOM and pack list
+            (<code>deriveLists</code>) read connections directly and are unaffected. Selecting the
+            badge highlights members; selecting a stub selects its cable.</p>
+        </div>
+        <div class="card">
+          <h4>Persistence <span class="pill">schema v6</span></h4>
+          <p>Additive <code>Diagram.trunks?</code> keyed by connection id; round-trips through
+            <code>serialize</code> both directions and the revision snapshot/hash — fixture-gated so a
+            saved trunk survives save/load <em>and</em> restore. Old files load unchanged.</p>
+        </div>
+      </div>
+
+      <!-- 7. THE PLAN -->
+      <h2 class="section"><span class="num">7</span>The plan: seven phases, gated</h2>
+      <p class="lead">
+        Each phase has a crisp exit criterion measured on the corpus. The router only widens its scope
+        after the gate for its current scope passes. Roadmap ids in the right column.
+      </p>
+      <div class="table-scroll">
+        <table>
+          <thead><tr><th>Phase</th><th>Goal &amp; exit criterion</th><th>Effort</th><th>Roadmap</th></tr></thead>
+          <tbody>
+            <tr>
+              <td><strong>P0 · Lossless lift</strong></td>
+              <td>Extract the legacy pipeline behind <code>interface Router</code> + <code>pickRouter()</code>, zero behavior change. <em>Exit:</em> byte-identical waypoints on all fixtures.</td>
+              <td><span class="eff eff-m">M</span></td>
+              <td class="mono-cell">—</td>
+            </tr>
+            <tr>
+              <td><strong>P1 · Metric + corpus</strong></td>
+              <td>One canonical crossing counter, <code>routeMetrics.ts</code>, the headless harness, the 6-fixture corpus, shadow-mode overlay. <em>Exit:</em> legacy baselines recorded; counter unit tests pass.</td>
+              <td><span class="eff eff-m">M</span></td>
+              <td class="mono-cell">—</td>
+            </tr>
+            <tr>
+              <td><strong>P2 · Bidi/bottom</strong></td>
+              <td>The new router owns <em>only</em> the dropped runs; delegates output→input to legacy. Fixes the box-cut bug. <em>Exit:</em> on <code>bidi-bottom</code>, zero box-interior hits AND crossings ≤ legacy.</td>
+              <td><span class="eff eff-xl">XL</span></td>
+              <td class="mono-cell">p2-bidiroute</td>
+            </tr>
+            <tr>
+              <td><strong>P3 · Own all cases</strong></td>
+              <td>Extend to output→input with the joint cost, unified Phase 2, jog pins. <em>Exit:</em> parity-or-better on all 6 fixtures + visual diff + a profiled per-render budget at 100 devices / 200 cables.</td>
+              <td><span class="eff eff-xl">XL</span></td>
+              <td class="mono-cell">p2-router</td>
+            </tr>
+            <tr>
+              <td><strong>P4 · Flip default</strong></td>
+              <td>Make v2 the default (legacy reachable ≥1 release); emit the <code>RoutingReport</code>. <em>Exit:</em> no open regression after a soak; report validated against the metric.</td>
+              <td><span class="eff eff-m">M</span></td>
+              <td class="mono-cell">p2-router</td>
+            </tr>
+            <tr>
+              <td><strong>P5 · Make room</strong></td>
+              <td>Opt-in channel widening with preview + undo + crossing guard. <em>Exit:</em> widens congestion without raising crossings; zone membership invariant; single undo.</td>
+              <td><span class="eff eff-l">L</span></td>
+              <td class="mono-cell">p2-makeroom</td>
+            </tr>
+            <tr>
+              <td><strong>P6 · Trunks</strong></td>
+              <td>Offer + collapse + persist (schema v6). <em>Exit:</em> a saved trunk survives save/load and revision restore; BOM unchanged; spine obeys box+gutter and counts in crossings.</td>
+              <td><span class="eff eff-l">L</span></td>
+              <td class="mono-cell">p2-trunk</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="callout good">
+        <strong>The first shippable win is P2.</strong> P0–P1 are scaffolding with no user-visible
+        change; P2 fixes the ethernet/USB-through-boxes bug for real, and by construction it can't
+        touch the horizontal case (those runs are still delegated to legacy). Everything riskier waits
+        behind the parity gate.
+      </div>
+
+      <!-- 8. RISKS -->
+      <h2 class="section"><span class="num">8</span>Risks &amp; how each is pinned</h2>
+      <div class="table-scroll">
+        <table>
+          <thead><tr><th>Risk</th><th>Mitigation</th><th></th></tr></thead>
+          <tbody>
+            <tr>
+              <td><strong>Bottom-port anchors can't be formula-derived</strong> — flex-wrap + label-width pitch means a fixed-pitch guess attaches cables beside the jack.</td>
+              <td>Read exact measured handle rects from React Flow internals; the router receives geometry, never derives bidi anchors.</td>
+              <td><span class="sev sev-blocker">High</span></td>
+            </tr>
+            <tr>
+              <td><strong>Estimated rect under-covers bidi devices</strong> (the size estimate omits the bottom IO bank), so a “legal” segment routes through real pixels — and the gate certifies false parity.</td>
+              <td>Route bidi-bearing runs only on measured geometry; run all box-interior + parity assertions on measured rects, never estimates.</td>
+              <td><span class="sev sev-blocker">High</span></td>
+            </tr>
+            <tr>
+              <td><strong>Phase-2 can't move a route to another gutter</strong>, so the stacked 1→3 regression could recur if Phase-1 picks bend-minimal-but-crossing-heavy routes.</td>
+              <td>Phase-1b is mandatory for congested corridors, seeded from the prior frame; gate on the <code>stacked</code> fixture specifically before flipping the default.</td>
+              <td><span class="sev sev-major">Medium</span></td>
+            </tr>
+            <tr>
+              <td><strong>Per-render performance is unverified</strong> — <code>O(B²)</code> midlines, A* per edge possibly twice, <code>displayEdges</code> re-runs on every drag/measure/selection.</td>
+              <td>Profiling at 100 devices / 200 cables is a <em>gate</em>: gridline cap + box-edge fallback, cache <code>RouteResult</code> on a structural hash excluding selection, A* expansion cap with safe-Z fallback.</td>
+              <td><span class="sev sev-major">Medium</span></td>
+            </tr>
+            <tr>
+              <td><strong>Multiple crossing definitions</strong> — optimizing pre-stitch while gating post-stitch passes for the wrong reason.</td>
+              <td>One canonical counter for both objective and gate, run on identical post-stitch polylines.</td>
+              <td><span class="sev sev-major">Medium</span></td>
+            </tr>
+            <tr>
+              <td><strong>Deleting the gate too early</strong> breaks legacy (its <code>assignLanes</code>/Z-builder are horizontal-only) during coexistence.</td>
+              <td>Split by router selection, not by deleting <code>App.tsx:558</code>; the line is removed only at the final delete phase.</td>
+              <td><span class="sev sev-minor">Low</span></td>
+            </tr>
+            <tr>
+              <td><strong>Trunks dropped on revision restore</strong> or mis-hashed by <code>snapshotHash</code>.</td>
+              <td>Scope to schema v6; route save/load through <code>editorToDiagram</code> (which feeds the snapshot + hash automatically); fixture test asserts survival + hash sensitivity.</td>
+              <td><span class="sev sev-minor">Low</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <footer>
+        <p>
+          sigpath — cable routing redesign · the design behind <code>p2-bidiroute</code>,
+          <code>p2-router</code>, <code>p2-makeroom</code>, <code>p2-trunk</code>. Sibling designs:
+          <a href="ZONE-TAB.html">Zone ↔ tab</a> · <a href="SIGNAL-GRADE.html">Signal-grade</a> ·
+          <a href="COMMUNITY.html">Community</a>. Back to the
+          <a href="../ROADMAP.html">product roadmap</a>.
+        </p>
+      </footer>
+    </div>
+  </body>
+</html>
