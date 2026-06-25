@@ -12,6 +12,8 @@ type Props = {
   onDelete: (id: string) => void;
   /** Embed this tab into the active diagram as a block (p2-zonetab). */
   onEmbed: (id: string) => void;
+  /** Move `draggedId` to sit at `targetId`'s position (drag-to-reorder). */
+  onReorder: (draggedId: string, targetId: string) => void;
 };
 
 /**
@@ -19,9 +21,22 @@ type Props = {
  * (the OS handles organizing projects into folders). Double-click a tab to
  * rename it inline.
  */
-export function DiagramTabs({ diagrams, activeId, onSwitch, onAdd, onRename, onDelete, onEmbed }: Props) {
+export function DiagramTabs({
+  diagrams,
+  activeId,
+  onSwitch,
+  onAdd,
+  onRename,
+  onDelete,
+  onEmbed,
+  onReorder,
+}: Props) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [draft, setDraft] = useState("");
+  // Drag-to-reorder state: which tab is being dragged, and which it's hovering over
+  // (for the drop-line indicator).
+  const [dragId, setDragId] = useState<string | null>(null);
+  const [overId, setOverId] = useState<string | null>(null);
 
   function startEdit(tab: TabInfo) {
     setEditingId(tab.id);
@@ -38,10 +53,41 @@ export function DiagramTabs({ diagrams, activeId, onSwitch, onAdd, onRename, onD
       {diagrams.map((d) => (
         <div
           key={d.id}
-          className={d.id === activeId ? "tab tab--active" : "tab"}
+          className={
+            [
+              "tab",
+              d.id === activeId && "tab--active",
+              dragId === d.id && "tab--dragging",
+              overId === d.id && dragId && dragId !== d.id && "tab--dropbefore",
+            ]
+              .filter(Boolean)
+              .join(" ")
+          }
+          draggable={editingId !== d.id}
           onClick={() => onSwitch(d.id)}
           onDoubleClick={() => startEdit(d)}
-          title="Double-click to rename"
+          onDragStart={(e) => {
+            setDragId(d.id);
+            e.dataTransfer.effectAllowed = "move";
+          }}
+          onDragOver={(e) => {
+            if (dragId && dragId !== d.id) {
+              e.preventDefault();
+              e.dataTransfer.dropEffect = "move";
+              setOverId(d.id);
+            }
+          }}
+          onDrop={(e) => {
+            e.preventDefault();
+            if (dragId && dragId !== d.id) onReorder(dragId, d.id);
+            setDragId(null);
+            setOverId(null);
+          }}
+          onDragEnd={() => {
+            setDragId(null);
+            setOverId(null);
+          }}
+          title="Double-click to rename · drag to reorder"
         >
           {editingId === d.id ? (
             <input

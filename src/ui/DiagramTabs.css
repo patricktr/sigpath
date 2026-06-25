@@ -36,6 +36,25 @@
   font-weight: 600;
 }
 
+/* Drag-to-reorder: the lifted tab dims; the drop target shows an accent line on its
+   leading edge marking where the tab will land. */
+.tab--dragging {
+  opacity: 0.4;
+}
+.tab--dropbefore {
+  position: relative;
+}
+.tab--dropbefore::before {
+  content: "";
+  position: absolute;
+  left: -2px;
+  top: 4px;
+  bottom: 4px;
+  width: 2px;
+  border-radius: 1px;
+  background: var(--accent);
+}
+
 .tab__name {
   user-select: none;
 }

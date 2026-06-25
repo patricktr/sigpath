@@ -146,6 +146,7 @@ function AppInner() {
     switchDiagram,
     addDiagram,
     renameDiagram,
+    reorderDiagrams,
     deleteDiagram,
     blockRefCount,
     embedTabAsBlock,
@@ -2034,6 +2035,7 @@ function AppInner() {
         onRename={renameDiagram}
         onDelete={handleDeleteDiagram}
         onEmbed={handleEmbedTab}
+        onReorder={reorderDiagrams}
       />
 
       <footer className="statusbar">

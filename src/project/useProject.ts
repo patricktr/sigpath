@@ -139,6 +139,24 @@ export function useProject(initial: EditorDiagram[], opts: Options) {
     [takeSnapshot],
   );
 
+  /** Move `draggedId` to sit at `targetId`'s position (tab reorder). Persisted order, so
+   *  it's a snapshot'd, undoable edit. activeId is unchanged. */
+  const reorderDiagrams = useCallback(
+    (draggedId: string, targetId: string) => {
+      if (draggedId === targetId) return;
+      const cur = synced();
+      const from = cur.findIndex((d) => d.id === draggedId);
+      const to = cur.findIndex((d) => d.id === targetId);
+      if (from < 0 || to < 0) return;
+      takeSnapshot();
+      const next = cur.slice();
+      const [moved] = next.splice(from, 1);
+      next.splice(to, 0, moved);
+      setDiagrams(next);
+    },
+    [synced, takeSnapshot, setDiagrams],
+  );
+
   /** How many blocks in OTHER diagrams reference this diagram — so a delete can warn the
    *  user those blocks will degrade to "Missing tab" placeholders (decision 5). Counts
    *  the live canvas via synced(), so it's accurate for the active diagram too. */
@@ -283,6 +301,7 @@ export function useProject(initial: EditorDiagram[], opts: Options) {
     switchDiagram,
     addDiagram,
     renameDiagram,
+    reorderDiagrams,
     deleteDiagram,
     blockRefCount,
     embedTabAsBlock,
