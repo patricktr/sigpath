@@ -32,6 +32,7 @@ const WRITE = args.includes("--write");
 const CHECK = args.includes("--check");
 const BOXCHECK = args.includes("--boxcheck");
 const MAKEROOM = args.includes("--makeroom");
+const TRUNK = args.includes("--trunk");
 const ROUTER = (args.find((a) => a.startsWith("--router=")) ?? "--router=legacy").split("=")[1];
 
 const SELFTEST = args.includes("--selftest");
@@ -43,6 +44,7 @@ const { newRouter, collectObstacleRects } = await server.ssrLoadModule("/src/flo
 const metricsMod = await server.ssrLoadModule("/src/flow/routeMetrics.ts");
 const { metricsFromResult, polylinesFromResult, boxInteriorHits, routeCrossings, totalCrossings, totalOverlaps, bendCount } = metricsMod;
 const { planMakeRoom } = await server.ssrLoadModule("/src/flow/makeRoom.ts");
+const { detectTrunkCandidates, collapsedTrunkWaypoints } = await server.ssrLoadModule("/src/flow/trunks.ts");
 
 // Table-driven unit tests for the canonical crossing/overlap/bend counters — the keystone of
 // the gate (design §3.4 / P1). Hand-built polylines with known answers.
@@ -188,6 +190,30 @@ if (MAKEROOM) {
   }
   const pass = cramped.kind === "ok" && cramped.shifts.size > 0 && spacious.kind === "none";
   console.log(pass ? `\n✓ make-room detects the cramped channel and leaves the spacious one` : `\n✗ make-room logic check failed`);
+  process.exit(pass ? 0 : 1);
+}
+
+if (TRUNK) {
+  console.log(`trunk detection (≥4 like-cables sharing a corridor):`);
+  for (const f of fixtures) {
+    const { diagrams } = fromDocument(parseDocument(readFileSync(join(FIX_DIR, f), "utf8")));
+    for (const d of diagrams) {
+      if (!d.edges.length) continue;
+      const result = router.route({ nodes: d.nodes, edges: d.edges });
+      const cands = detectTrunkCandidates(d.nodes, d.edges, result.ends);
+      console.log(`  ${f}/${d.name}: ${cands.length} candidate(s)` + cands.map((c) => ` [${c.memberConnectionIds.length}× ${c.signalKind}]`).join(""));
+      if (cands.length) {
+        const rects = collectObstacleRects(d.nodes).map((r) => r.rect);
+        const w = collapsedTrunkWaypoints(cands[0], result.ends, rects);
+        if (w) console.log(`      collapse: ${w.perEdge.size} members fan onto a spine, badge @ (${Math.round(w.badge.x)},${Math.round(w.badge.y)})`);
+      }
+    }
+  }
+  const { diagrams } = fromDocument(parseDocument(readFileSync(join(FIX_DIR, "matrix.sigpath"), "utf8")));
+  const r = router.route({ nodes: diagrams[0].nodes, edges: diagrams[0].edges });
+  const mc = detectTrunkCandidates(diagrams[0].nodes, diagrams[0].edges, r.ends);
+  const pass = mc.length === 1 && mc[0].memberConnectionIds.length === 4 && !!collapsedTrunkWaypoints(mc[0], r.ends, collectObstacleRects(diagrams[0].nodes).map((x) => x.rect));
+  console.log(pass ? `\n✓ trunk detection finds the 4-cable matrix bundle and collapses it` : `\n✗ trunk detection failed`);
   process.exit(pass ? 0 : 1);
 }
 
