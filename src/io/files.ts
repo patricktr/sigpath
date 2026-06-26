@@ -68,6 +68,27 @@ export async function confirmPromoteZone(name: string, deviceCount: number): Pro
   );
 }
 
+/** Confirm before refreshing a tab's published boundary (p2-blockdrift) — destructive when it
+ *  prunes a port that still carries a host cable, so the user previews the blast radius first.
+ *  Returns true to proceed. */
+export async function confirmRefreshBoundary(
+  roomName: string,
+  opts: { removed: string[]; remirrored: number },
+): Promise<boolean> {
+  const parts: string[] = [];
+  if (opts.removed.length) {
+    parts.push(`remove ${opts.removed.length} port${opts.removed.length === 1 ? "" : "s"} (${opts.removed.join(", ")})`);
+  }
+  if (opts.remirrored) parts.push(`re-mirror ${opts.remirrored} port${opts.remirrored === 1 ? "" : "s"}`);
+  const removedNote = opts.removed.length ? " Cables to removed ports will show as “Broken connection”." : "";
+  return await confirm(`Refresh “${roomName}” — ${parts.join(" and ")}.${removedNote}`, {
+    title: "Refresh block ports",
+    kind: "info",
+    okLabel: "Refresh",
+    cancelLabel: "Cancel",
+  });
+}
+
 /** Prompt for a path and write a text file (e.g. CSV). Returns the path, or null if cancelled. */
 export async function saveText(text: string, defaultName: string, ext: string): Promise<string | null> {
   const path = await save({ filters: [{ name: ext.toUpperCase(), extensions: [ext] }], defaultPath: defaultName });

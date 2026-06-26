@@ -21,7 +21,8 @@ import {
 import "@xyflow/react/dist/style.css";
 
 import { DeviceNode } from "./flow/DeviceNode";
-import { BlockNode } from "./flow/BlockNode";
+import { BlockNode, BlockDriftContext } from "./flow/BlockNode";
+import { hasBoundaryDrift, planBoundaryRefresh } from "./flow/boundaryDrift";
 import { flatten } from "./flow/nesting";
 import { nodesInZone } from "./flow/zoneMembership";
 import { CableEdge } from "./flow/CableEdge";
@@ -67,6 +68,7 @@ import {
   fileStem,
   confirmDeleteDiagram,
   confirmPromoteZone,
+  confirmRefreshBoundary,
   saveText,
   saveBinary,
 } from "./io/files";
@@ -154,6 +156,7 @@ function AppInner() {
     buildFromTab,
     buildFromZone,
     insertBuild,
+    refreshTabBoundary,
     revisions,
     captureRevision,
     restoreRevision,
@@ -531,6 +534,18 @@ function AppInner() {
     }
     return counts;
   }, [diagrams, activeId, nodes]);
+
+  // Which referenced tabs have drifted — their published boundary no longer matches their room
+  // (p2-blockdrift). A derived layer that drives the amber flag on every block referencing them.
+  // Referenced tabs are always non-active, so their stored `diagrams` content is current.
+  const driftedTabIds = useMemo(() => {
+    const set = new Set<string>();
+    for (const d of diagrams) {
+      if (d.boundary && d.boundary.ports.length > 0 && hasBoundaryDrift(d)) set.add(d.id);
+    }
+    return set;
+  }, [diagrams]);
+
   const validation = useMemo(
     () => validate(nodes, edges, signalProfile),
     [nodes, edges, signalProfile],
@@ -1357,6 +1372,38 @@ function AppInner() {
     [insertBuild],
   );
 
+  // Refresh a drifted block's ports (p2-blockdrift): preview the prune/re-mirror diff, confirm
+  // (pruning can break a host cable), then re-publish the room's boundary and re-bind its blocks.
+  const handleRefreshBoundary = useCallback(
+    async (tabId: string) => {
+      const room = diagrams.find((d) => d.id === tabId);
+      if (!room) return;
+      const plan = planBoundaryRefresh(room);
+      const remirrored = plan.changed.length + plan.rebound.length;
+      if (plan.removed.length === 0 && remirrored === 0) {
+        setStatus(`“${room.name}” is already up to date.`);
+        return;
+      }
+      if (!(await confirmRefreshBoundary(room.name, { removed: plan.removed.map((p) => p.name), remirrored }))) return;
+      const res = refreshTabBoundary(tabId);
+      if (res.error) {
+        setStatus(res.error);
+        return;
+      }
+      // Block ports changed → re-measure handles so block-touching cables don't mis-route.
+      for (const n of nodesRef.current) {
+        if (n.type === "block" && n.data.refDiagramId === tabId) updateNodeInternals(n.id);
+      }
+      setStatus(`Refreshed “${room.name}” — pruned ${res.removed}, re-mirrored ${res.remirrored}`);
+    },
+    [diagrams, refreshTabBoundary, updateNodeInternals],
+  );
+
+  const blockDrift = useMemo(
+    () => ({ drifted: driftedTabIds, onRefresh: handleRefreshBoundary }),
+    [driftedTabIds, handleRefreshBoundary],
+  );
+
   const handleSave = useCallback(async (): Promise<boolean> => {
     try {
       let path = currentPath;
@@ -1984,6 +2031,7 @@ function AppInner() {
           <ZoneActionsContext.Provider value={zoneActions}>
             <NoteActionsContext.Provider value={noteActions}>
              <BulkPatchContext.Provider value={bulkPatchValue}>
+              <BlockDriftContext.Provider value={blockDrift}>
               <ReactFlow
                 nodes={nodes}
                 edges={displayEdges}
@@ -2065,6 +2113,7 @@ function AppInner() {
                 </ViewportPortal>
                 <EdgeMarqueeSelect onMarqueeEnd={selectEdgesInMarquee} />
               </ReactFlow>
+              </BlockDriftContext.Provider>
              </BulkPatchContext.Provider>
             </NoteActionsContext.Provider>
           </ZoneActionsContext.Provider>

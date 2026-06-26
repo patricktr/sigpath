@@ -141,8 +141,10 @@ function diagramToEditor(d: Diagram, boundaryById: BoundaryLookup): EditorDiagra
         label: b.label,
         model: synthesizeBlockModel(b.refDiagramId, ref),
         boundaryRev: b.boundaryRev,
-        // Drift = the referenced interface moved on since this block was bound.
-        drift: ref ? b.boundaryRev < ref.rev : false,
+        // Bound to a different published rev than the tab now exposes (rev is a content hash
+        // of the boundary, p2-blockdrift). A coarse load-time hint; the live amber flag is
+        // computed per render from the room content (hasBoundaryDrift), not this field.
+        drift: ref ? b.boundaryRev !== ref.rev : false,
         obstacle: b.obstacle,
       },
     };

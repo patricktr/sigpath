@@ -1,6 +1,7 @@
 import { deviceTitle } from "../schema";
 import type { BoundaryPort } from "../schema";
 import { synthesizeBlockModel } from "../io/serialize";
+import { boundaryHash } from "./boundaryDrift";
 import { nodesInZone } from "./zoneMembership";
 import type { BlockNodeType, CableEdgeType, EditorDiagram, SigNode, ZoneNodeType } from "./types";
 
@@ -40,7 +41,7 @@ export function deriveBoundary(ed: EditorDiagram): Boundary {
       });
     }
   }
-  return { ports, rev: 1 };
+  return { ports, rev: boundaryHash(ports) };
 }
 
 /**
@@ -185,7 +186,7 @@ export function planPromoteZone(
     }
   }
 
-  const boundary: Boundary = { ports: boundaryPorts, rev: 1 };
+  const boundary: Boundary = { ports: boundaryPorts, rev: boundaryHash(boundaryPorts) };
   const block = blockNode(ids.blockId, ids.diagramId, zone.data.label || "Room", boundary, zone.position);
   const hostNodesOut = hostNodes.filter((n) => n.id !== zone.id && !memberIds.has(n.id)).concat(block);
 

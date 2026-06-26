@@ -4,7 +4,8 @@ import type { CableEdgeType, SigNode, EditorDiagram, ZoneNodeType } from "../flo
 import { deriveBoundary, embedWouldCycle, makeBlockNode, planPromoteZone } from "../flow/nesting";
 import { extractTabAsBuild, extractZoneAsBuild, remapBuildIds } from "../flow/buildExtract";
 import type { BuildMeta } from "../flow/buildExtract";
-import { emptyEditorDiagram, fromDocument, toDocument } from "../io/serialize";
+import { boundaryHash, planBoundaryRefresh } from "../flow/boundaryDrift";
+import { emptyEditorDiagram, fromDocument, synthesizeBlockModel, toDocument } from "../io/serialize";
 import { pruneRevisions, snapshotHash } from "./revisions";
 import { SIGPATH_SCHEMA_VERSION } from "../schema";
 import type { Build, Revision, RevisionSnapshot, SigpathDocument, SignalProfile, Trunk } from "../schema";
@@ -331,6 +332,54 @@ export function useProject(initial: EditorDiagram[], opts: Options) {
     [synced, projectName, takeSnapshot, setDiagrams, setNodes, nodesRef],
   );
 
+  /**
+   * Re-publish a tab's boundary against its live room and re-bind every block referencing it
+   * (p2-blockdrift). One undoable snapshot: re-mirror / prune the published ports (keeping ids
+   * stable so host cables survive), recompute `rev` as a content hash, and re-synthesize the
+   * model + boundaryRev on every block — in other diagrams' snapshots AND on the live canvas.
+   * Cables to a pruned port are left in place and surface as "Broken connection". Returns a
+   * summary, or an error.
+   */
+  const refreshTabBoundary = useCallback(
+    (tabId: string): { ok: boolean; removed: number; remirrored: number; error?: string } => {
+      const cur = synced();
+      const room = cur.find((d) => d.id === tabId);
+      if (!room) return { ok: false, removed: 0, remirrored: 0, error: "That tab no longer exists." };
+      if (!room.boundary || room.boundary.ports.length === 0) {
+        return { ok: false, removed: 0, remirrored: 0, error: "This tab publishes no ports to refresh." };
+      }
+      const plan = planBoundaryRefresh(room);
+      const boundary = { ports: plan.nextPorts, rev: boundaryHash(plan.nextPorts) };
+      takeSnapshot();
+      const rebind = (n: SigNode): SigNode =>
+        n.type === "block" && n.data.refDiagramId === tabId
+          ? {
+              ...n,
+              data: {
+                ...n.data,
+                model: synthesizeBlockModel(tabId, { name: room.name, ports: boundary.ports }),
+                boundaryRev: boundary.rev,
+                drift: false,
+              },
+            }
+          : n;
+      setDiagrams(
+        cur.map((d) => {
+          const withBoundary = d.id === tabId ? { ...d, boundary } : d;
+          return withBoundary.nodes.some((n) => n.type === "block" && n.data.refDiagramId === tabId)
+            ? { ...withBoundary, nodes: withBoundary.nodes.map(rebind) }
+            : withBoundary;
+        }),
+      );
+      // Re-bind the blocks on the live canvas too, so the host re-renders refreshed handles.
+      if (nodesRef.current.some((n) => n.type === "block" && n.data.refDiagramId === tabId)) {
+        setNodes(nodesRef.current.map(rebind));
+      }
+      return { ok: true, removed: plan.removed.length, remirrored: plan.changed.length + plan.rebound.length };
+    },
+    [synced, takeSnapshot, setDiagrams, setNodes, nodesRef],
+  );
+
   /** Snapshot the whole project (active diagram synced) for saving, including history. */
   const getDocument = useCallback(
     (): SigpathDocument =>
@@ -459,6 +508,7 @@ export function useProject(initial: EditorDiagram[], opts: Options) {
     buildFromTab,
     buildFromZone,
     insertBuild,
+    refreshTabBoundary,
     revisions,
     captureRevision,
     restoreRevision,

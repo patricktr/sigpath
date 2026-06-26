@@ -1,7 +1,19 @@
+import { createContext, useContext } from "react";
 import { Handle, Position, type NodeProps } from "@xyflow/react";
 import { cableColor, inputPorts, outputPorts, bidirectionalPorts, deviceTitle } from "../schema";
 import type { BlockNodeType } from "./types";
 import "./DeviceNode.css";
+
+/**
+ * Which referenced tabs have drifted (their published boundary no longer matches their room,
+ * p2-blockdrift) and the action to refresh one. Provided above ReactFlow by App and read by
+ * every BlockNode, so a block flags itself amber without threading drift through node data —
+ * the same context shape ZoneNode uses for its actions.
+ */
+export const BlockDriftContext = createContext<{ drifted: Set<string>; onRefresh: (tabId: string) => void }>({
+  drifted: new Set(),
+  onRefresh: () => {},
+});
 
 /**
  * A nested-diagram reference rendered as a block (p2-zonetab — design/ZONE-TAB.html).
@@ -12,16 +24,38 @@ import "./DeviceNode.css";
  * real device. Opening the referenced tab is wired in a later Phase-A slice.
  */
 export function BlockNode({ data }: NodeProps<BlockNodeType>) {
-  const { model, label } = data;
+  const { model, label, refDiagramId } = data;
   const inputs = inputPorts(model);
   const outputs = outputPorts(model);
   const bidi = bidirectionalPorts(model);
 
+  const { drifted, onRefresh } = useContext(BlockDriftContext);
+  const isDrifted = drifted.has(refDiagramId);
+
   return (
-    <div className="device-node device-node--block">
+    <div
+      className="device-node device-node--block"
+      style={isDrifted ? { borderColor: "#f59e0b", borderStyle: "solid" } : undefined}
+    >
       <header className="device-node__header">
         <span className="device-node__name">{deviceTitle(model, label)}</span>
-        <span className="device-node__category" title="Nested sub-diagram — opens its tab">⧉ tab</span>
+        {isDrifted ? (
+          <button
+            type="button"
+            className="device-node__category"
+            style={{ color: "#f59e0b", background: "none", border: "none", cursor: "pointer", padding: 0 }}
+            title="The room changed — refresh this block's ports"
+            onMouseDown={(e) => e.stopPropagation()}
+            onClick={(e) => {
+              e.stopPropagation();
+              onRefresh(refDiagramId);
+            }}
+          >
+            ⟳ refresh
+          </button>
+        ) : (
+          <span className="device-node__category" title="Nested sub-diagram — opens its tab">⧉ tab</span>
+        )}
       </header>
 
       {(inputs.length > 0 || outputs.length > 0) && (
