@@ -755,3 +755,38 @@
   border-radius: var(--radius);
   box-shadow: var(--modal-shadow);
 }
+
+/* Trunk overlay (p2-trunk): offer chips + collapse/expand count badges, drawn in flow space. */
+.trunk-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--panel-border, #d7dbe3);
+  background: var(--panel-bg, #fff);
+  color: var(--text, #0f172a);
+  box-shadow: 0 1px 4px rgba(15, 23, 42, 0.18);
+  cursor: pointer;
+}
+.trunk-chip--offer {
+  border-style: dashed;
+  border-color: var(--accent, #2563eb);
+}
+.trunk-chip--offer button {
+  font: inherit;
+  border: none;
+  cursor: pointer;
+  border-radius: 6px;
+  padding: 1px 6px;
+}
+.trunk-chip--offer button:first-of-type {
+  background: var(--accent, #2563eb);
+  color: #fff;
+}
+.trunk-chip--badge {
+  font-family: var(--mono, ui-monospace, monospace);
+}

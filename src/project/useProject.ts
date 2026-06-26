@@ -5,7 +5,7 @@ import { deriveBoundary, embedWouldCycle, makeBlockNode, planPromoteZone } from 
 import { emptyEditorDiagram, fromDocument, toDocument } from "../io/serialize";
 import { pruneRevisions, snapshotHash } from "./revisions";
 import { SIGPATH_SCHEMA_VERSION } from "../schema";
-import type { Revision, RevisionSnapshot, SigpathDocument, SignalProfile } from "../schema";
+import type { Revision, RevisionSnapshot, SigpathDocument, SignalProfile, Trunk } from "../schema";
 
 type Options = {
   setNodes: (nodes: SigNode[]) => void;
@@ -145,6 +145,16 @@ export function useProject(initial: EditorDiagram[], opts: Options) {
       setDiagrams((ds) => ds.map((d) => (d.id === id ? { ...d, name } : d)));
     },
     [takeSnapshot],
+  );
+
+  /** Update the active diagram's cable trunks (p2-trunk) — an undoable, persisted edit. The
+   *  active diagram's stale nodes/edges are untouched; synced() refreshes them on the next save. */
+  const setActiveTrunks = useCallback(
+    (updater: (trunks: Trunk[]) => Trunk[]) => {
+      takeSnapshot();
+      setDiagrams((ds) => ds.map((d) => (d.id === activeId ? { ...d, trunks: updater(d.trunks ?? []) } : d)));
+    },
+    [takeSnapshot, activeId],
   );
 
   /** Move `draggedId` to sit at `targetId`'s position (tab reorder). Persisted order, so
@@ -386,6 +396,7 @@ export function useProject(initial: EditorDiagram[], opts: Options) {
     switchDiagram,
     addDiagram,
     renameDiagram,
+    setActiveTrunks,
     reorderDiagrams,
     deleteDiagram,
     blockRefCount,

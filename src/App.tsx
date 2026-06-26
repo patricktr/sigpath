@@ -9,6 +9,7 @@ import {
   BackgroundVariant,
   Controls,
   MiniMap,
+  ViewportPortal,
   addEdge,
   reconnectEdge,
   useNodesState,
@@ -48,7 +49,11 @@ import {
 } from "./schema";
 import { approxPortY, LANE_GAP } from "./flow/parallelLanes";
 import { pickRouter } from "./flow/router";
+import { collectObstacleRects } from "./flow/router/newRouter";
 import { planMakeRoom } from "./flow/makeRoom";
+import { detectTrunkCandidates, collapsedTrunkWaypoints } from "./flow/trunks";
+import type { TrunkCandidate } from "./flow/trunks";
+import type { Pt } from "./flow/obstacleRoute";
 import { EdgeMarqueeSelect } from "./flow/EdgeMarqueeSelect";
 import { rectHitsRun } from "./flow/marqueeHit";
 import type { DeviceModel } from "./schema";
@@ -137,6 +142,7 @@ function AppInner() {
     switchDiagram,
     addDiagram,
     renameDiagram,
+    setActiveTrunks,
     reorderDiagrams,
     deleteDiagram,
     blockRefCount,
@@ -526,7 +532,18 @@ function AppInner() {
   // errors are solid red + animated, warnings are dashed amber. A selected edge
   // is then thickened and given a glow halo on top, so a selected error edge
   // still reads as red AND clearly looks selected.
-  const displayEdges = useMemo<CableEdgeType[]>(() => {
+  // Trunks (p2-trunk): the active diagram's bundles, and offers the user has dismissed this session.
+  const activeTrunks = useMemo(
+    () => diagrams.find((d) => d.id === activeId)?.trunks ?? [],
+    [diagrams, activeId],
+  );
+  const [dismissedTrunks, setDismissedTrunks] = useState<Set<string>>(new Set());
+
+  // Routing + validation styling + trunk collapse, in one pass. The router (P0 lossless lift →
+  // P3 general router) gives interior waypoints, jog info, and endpoints; we then overlay
+  // validation styling, fold collapsed-trunk members onto their shared spine, and surface the
+  // trunk overlay data (offer chips for ≥4-cable candidates, count badges for existing trunks).
+  const rendered = useMemo(() => {
     const { errorEdges, warnEdges } = validation;
     const byId = new Map(nodes.map((n) => [n.id, n]));
     const portColor = (nodeId: string, handleId: string | null | undefined): string | undefined => {
@@ -534,14 +551,42 @@ function AppInner() {
       return port ? cableColor(port.connector) : undefined;
     };
 
-    // All cable geometry comes from the active router (P0 lossless lift — the legacy
-    // five-pass pipeline now lives behind the Router seam in flow/router). Pure geometry
-    // in (nodes + edges), interior waypoints + jog info out. flow/router/index.ts picks
-    // the engine off the sigpath.router flag; today every choice is the legacy pipeline.
-    const { waypoints, jogInfo } = pickRouter().route({ nodes, edges });
+    const { waypoints, jogInfo, ends } = pickRouter().route({ nodes, edges });
     jogInfoRef.current = jogInfo;
 
-    return edges.map((e) => {
+    // Collapsed trunks: replace each member's path with a shared, box-avoided spine + fan stubs,
+    // and place a count badge; expanded trunks keep normal member paths + a re-collapse badge.
+    const obstacles = collectObstacleRects(nodes).map((r) => r.rect);
+    const trunkOverride = new Map<string, Pt[]>();
+    const trunkBadges: { id: string; collapsed: boolean; label: string; x: number; y: number }[] = [];
+    const trunkIds = new Set(activeTrunks.map((t) => t.id));
+    const anchor = (ids: string[]) => {
+      const es = ids.map((id) => ends.get(id)).filter((e): e is NonNullable<typeof e> => !!e);
+      const n = es.length || 1;
+      return {
+        x: es.reduce((a, e) => a + (e.sx + e.tx) / 2, 0) / n,
+        y: es.reduce((a, e) => a + (e.sy + e.ty) / 2, 0) / n,
+      };
+    };
+    for (const t of activeTrunks) {
+      const label = t.label ?? `${t.memberConnectionIds.length}× ${t.signalKind}`;
+      if (t.collapsed) {
+        const w = collapsedTrunkWaypoints(t, ends, obstacles);
+        if (w) {
+          for (const [id, pts] of w.perEdge) trunkOverride.set(id, pts);
+          trunkBadges.push({ id: t.id, collapsed: true, label, x: w.badge.x, y: w.badge.y });
+          continue;
+        }
+      }
+      const a = anchor(t.memberConnectionIds);
+      trunkBadges.push({ id: t.id, collapsed: false, label, x: a.x, y: a.y });
+    }
+
+    const candidates = detectTrunkCandidates(nodes, edges, ends).filter(
+      (c) => !trunkIds.has(c.id) && !dismissedTrunks.has(c.id),
+    );
+
+    const styled: CableEdgeType[] = edges.map((e) => {
       let style: CSSProperties;
       let animated = e.animated;
       let data = e.data;
@@ -569,14 +614,38 @@ function AppInner() {
           filter: `drop-shadow(0 0 2px ${glow}) drop-shadow(0 0 6px ${glow})`,
         };
       }
-      // Geometry from the router: interior waypoints for an obstacle detour or a
-      // lane-offset Z. Empty/absent = a clean straight run — let CableEdge fall back to
-      // its smooth-step default.
-      const wp = waypoints.get(e.id);
+      // A collapsed-trunk member rides the shared spine; otherwise the router's own waypoints.
+      // Empty/absent = a clean straight run — CableEdge falls back to its smooth-step default.
+      const wp = trunkOverride.get(e.id) ?? waypoints.get(e.id);
       if (wp && wp.length) data = { ...(data ?? { cableTypeId: "" }), waypoints: wp };
       return { ...e, style, animated, data };
     });
-  }, [edges, validation, nodes]);
+
+    return { edges: styled, candidates, trunkBadges };
+  }, [edges, validation, nodes, activeTrunks, dismissedTrunks]);
+
+  const displayEdges = rendered.edges;
+
+  // Trunk actions (p2-trunk): accept an offered bundle (created collapsed), toggle collapse/expand,
+  // or dismiss an offer for this session. All persisted edits go through setActiveTrunks (undoable).
+  const handleBundle = useCallback(
+    (c: TrunkCandidate) => {
+      setActiveTrunks((ts) => [
+        ...ts,
+        { id: c.id, memberConnectionIds: c.memberConnectionIds, collapsed: true, signalKind: c.signalKind },
+      ]);
+      setStatus(`Bundled ${c.memberConnectionIds.length} ${c.signalKind} cables into a trunk`);
+    },
+    [setActiveTrunks],
+  );
+  const handleToggleTrunk = useCallback(
+    (id: string) => setActiveTrunks((ts) => ts.map((t) => (t.id === id ? { ...t, collapsed: !t.collapsed } : t))),
+    [setActiveTrunks],
+  );
+  const handleDismissOffer = useCallback(
+    (id: string) => setDismissedTrunks((s) => new Set(s).add(id)),
+    [],
+  );
 
   const focusIssue = useCallback(
     (issue: ValidationIssue) => {
@@ -1898,6 +1967,37 @@ function AppInner() {
                 />
                 <MiniMap pannable zoomable />
                 <Controls />
+                <ViewportPortal>
+                  {rendered.candidates.map((c) => (
+                    <div
+                      key={c.id}
+                      className="trunk-chip trunk-chip--offer"
+                      style={{ position: "absolute", left: c.corridorX, top: c.anchorY, transform: "translate(-50%, -50%)" }}
+                    >
+                      <span>
+                        Bundle {c.memberConnectionIds.length}× {c.signalKind}?
+                      </span>
+                      <button type="button" onClick={() => handleBundle(c)}>
+                        Bundle
+                      </button>
+                      <button type="button" aria-label="Dismiss" title="Dismiss" onClick={() => handleDismissOffer(c.id)}>
+                        ✕
+                      </button>
+                    </div>
+                  ))}
+                  {rendered.trunkBadges.map((b) => (
+                    <button
+                      key={b.id}
+                      type="button"
+                      className="trunk-chip trunk-chip--badge"
+                      style={{ position: "absolute", left: b.x, top: b.y, transform: "translate(-50%, -50%)" }}
+                      onClick={() => handleToggleTrunk(b.id)}
+                      title={b.collapsed ? "Expand bundle" : "Collapse bundle"}
+                    >
+                      {b.label} {b.collapsed ? "▾" : "▸"}
+                    </button>
+                  ))}
+                </ViewportPortal>
                 <EdgeMarqueeSelect onMarqueeEnd={selectEdgesInMarquee} />
               </ReactFlow>
              </BulkPatchContext.Provider>
