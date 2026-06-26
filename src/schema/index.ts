@@ -11,3 +11,4 @@ export * from "./device";
 export * from "./connection";
 export * from "./boundary";
 export * from "./document";
+export * from "./build";

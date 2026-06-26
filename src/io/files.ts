@@ -2,6 +2,7 @@ import { save, open, confirm } from "@tauri-apps/plugin-dialog";
 import { invoke } from "@tauri-apps/api/core";
 
 const FILTERS = [{ name: "sigpath diagram", extensions: ["sigpath", "json"] }];
+const BUILD_FILTERS = [{ name: "sigpath build", extensions: ["sigbuild"] }];
 
 /** Native "save as" dialog. Returns the chosen path, or null if cancelled. */
 export async function promptSavePath(defaultName = "diagram.sigpath"): Promise<string | null> {
@@ -11,6 +12,17 @@ export async function promptSavePath(defaultName = "diagram.sigpath"): Promise<s
 /** Native "open" dialog. Returns the chosen path, or null if cancelled. */
 export async function promptOpenPath(): Promise<string | null> {
   const result = await open({ multiple: false, directory: false, filters: FILTERS });
+  return typeof result === "string" ? result : null;
+}
+
+/** Native "save as" dialog for a reusable build (`.sigbuild`, p2-savebuild). */
+export async function promptSaveBuildPath(defaultName = "build.sigbuild"): Promise<string | null> {
+  return await save({ filters: BUILD_FILTERS, defaultPath: defaultName });
+}
+
+/** Native "open" dialog for a `.sigbuild` file. Returns the chosen path, or null if cancelled. */
+export async function promptOpenBuildPath(): Promise<string | null> {
+  const result = await open({ multiple: false, directory: false, filters: BUILD_FILTERS });
   return typeof result === "string" ? result : null;
 }
 

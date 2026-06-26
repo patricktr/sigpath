@@ -12,6 +12,8 @@ type Props = {
   onDelete: (id: string) => void;
   /** Embed this tab into the active diagram as a block (p2-zonetab). */
   onEmbed: (id: string) => void;
+  /** Save this tab as a reusable build (p2-savebuild). */
+  onSaveAsBuild: (id: string) => void;
   /** Move `draggedId` to sit at `targetId`'s position (drag-to-reorder). */
   onReorder: (draggedId: string, targetId: string) => void;
 };
@@ -29,6 +31,7 @@ export function DiagramTabs({
   onRename,
   onDelete,
   onEmbed,
+  onSaveAsBuild,
   onReorder,
 }: Props) {
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -125,6 +128,20 @@ export function DiagramTabs({
               title="Embed in the current diagram as a block"
             >
               ⧉
+            </button>
+          )}
+          {editingId !== d.id && (
+            <button
+              type="button"
+              className="tab__embed"
+              onClick={(e) => {
+                e.stopPropagation();
+                onSaveAsBuild(d.id);
+              }}
+              aria-label={`Save ${d.name} as a reusable build`}
+              title="Save as a reusable build"
+            >
+              ⤓
             </button>
           )}
           {diagrams.length > 1 && editingId !== d.id && (

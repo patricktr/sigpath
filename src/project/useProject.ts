@@ -2,10 +2,12 @@ import { useCallback, useRef, useState } from "react";
 import type { MutableRefObject } from "react";
 import type { CableEdgeType, SigNode, EditorDiagram, ZoneNodeType } from "../flow/types";
 import { deriveBoundary, embedWouldCycle, makeBlockNode, planPromoteZone } from "../flow/nesting";
+import { extractTabAsBuild, extractZoneAsBuild, remapBuildIds } from "../flow/buildExtract";
+import type { BuildMeta } from "../flow/buildExtract";
 import { emptyEditorDiagram, fromDocument, toDocument } from "../io/serialize";
 import { pruneRevisions, snapshotHash } from "./revisions";
 import { SIGPATH_SCHEMA_VERSION } from "../schema";
-import type { Revision, RevisionSnapshot, SigpathDocument, SignalProfile, Trunk } from "../schema";
+import type { Build, Revision, RevisionSnapshot, SigpathDocument, SignalProfile, Trunk } from "../schema";
 
 type Options = {
   setNodes: (nodes: SigNode[]) => void;
@@ -277,6 +279,58 @@ export function useProject(initial: EditorDiagram[], opts: Options) {
     [nodesRef, edgesRef, synced, takeSnapshot, setDiagrams, setNodes, setEdges],
   );
 
+  /**
+   * Save a tab as a reusable build (p2-savebuild) — a pure read of the project returning a
+   * self-contained {@link Build} (the tab plus its embed closure) or an error. Persisting it to
+   * the builds library and toasting are the caller's job, keeping this hook storage-agnostic.
+   */
+  const buildFromTab = useCallback(
+    (tabId: string, meta: BuildMeta): Build | { error: string } => extractTabAsBuild(tabId, synced(), meta),
+    [synced],
+  );
+
+  /** Save a zone within the active tab as a reusable build (p2-savebuild). */
+  const buildFromZone = useCallback(
+    (zoneId: string, meta: BuildMeta): Build | { error: string } => {
+      const zone = nodesRef.current.find((n) => n.id === zoneId && n.type === "zone") as ZoneNodeType | undefined;
+      if (!zone) return { error: "Zone not found." };
+      return extractZoneAsBuild(zone, nodesRef.current, edgesRef.current, synced(), meta);
+    },
+    [synced, nodesRef, edgesRef],
+  );
+
+  /**
+   * Stamp a saved build into the active diagram as a block (p2-savebuild). The build's diagrams
+   * are re-minted to fresh ids and appended as tabs, then its root is embedded as a block on the
+   * current canvas — one undoable snapshot, mirroring {@link embedTabAsBlock}. Fresh ids can't
+   * close an embed cycle (the build is disjoint from the project), so no cycle guard is needed.
+   * Returns an error message, or null on success.
+   */
+  const insertBuild = useCallback(
+    (build: Build, position: { x: number; y: number } = { x: 96, y: 96 }): string | null => {
+      if (build.diagrams.length === 0) return "This build is empty.";
+      const { diagrams: remapped, rootId } = remapBuildIds(build);
+      const parsed = fromDocument({
+        schemaVersion: build.schemaVersion ?? SIGPATH_SCHEMA_VERSION,
+        project: { id: projectId.current, name: projectName, diagrams: remapped },
+      });
+      const newRoot = parsed.diagrams.find((d) => d.id === rootId);
+      if (!newRoot) return "This build could not be loaded.";
+      takeSnapshot();
+      let boundary = newRoot.boundary;
+      let appended = [...synced(), ...parsed.diagrams];
+      if (!boundary || boundary.ports.length === 0) {
+        boundary = deriveBoundary(newRoot);
+        appended = appended.map((d) => (d.id === rootId ? { ...d, boundary } : d));
+      }
+      const block = makeBlockNode(rootId, newRoot.name, boundary, position);
+      setDiagrams(appended);
+      setNodes([...nodesRef.current, block]);
+      return null;
+    },
+    [synced, projectName, takeSnapshot, setDiagrams, setNodes, nodesRef],
+  );
+
   /** Snapshot the whole project (active diagram synced) for saving, including history. */
   const getDocument = useCallback(
     (): SigpathDocument =>
@@ -402,6 +456,9 @@ export function useProject(initial: EditorDiagram[], opts: Options) {
     blockRefCount,
     embedTabAsBlock,
     promoteZoneToTab,
+    buildFromTab,
+    buildFromZone,
+    insertBuild,
     revisions,
     captureRevision,
     restoreRevision,

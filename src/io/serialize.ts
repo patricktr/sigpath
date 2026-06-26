@@ -52,7 +52,7 @@ function numberOr(value: number | string | undefined, fallback: number): number 
   return typeof value === "number" ? value : fallback;
 }
 
-function editorToDiagram(d: EditorDiagram): Diagram {
+export function editorToDiagram(d: EditorDiagram): Diagram {
   const deviceNodes = d.nodes.filter((n): n is DeviceNodeType => n.type === "device");
   const zoneNodes = d.nodes.filter((n): n is ZoneNodeType => n.type === "zone");
   const noteNodes = d.nodes.filter((n): n is NoteNodeType => n.type === "note");

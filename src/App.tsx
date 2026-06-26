@@ -76,6 +76,9 @@ import { addToPersonalLibrary } from "./library/personalLibrary";
 import { hydrateCatalogFromCache, checkForCatalogUpdate } from "./library/catalogUpdate";
 import type { AddSurface } from "./ui/AddDevice/addDevice";
 import { DiagramTabs } from "./ui/DiagramTabs";
+import { BuildsPanel } from "./ui/BuildsPanel";
+import { saveBuild } from "./library/buildsLibrary";
+import type { Build } from "./schema";
 import { ZoneNode, ZoneActionsContext, ZONE_COLORS } from "./ui/ZoneNode";
 import { NoteNode, NoteActionsContext } from "./ui/NoteNode";
 import { ListsPanel } from "./ui/ListsPanel";
@@ -148,6 +151,9 @@ function AppInner() {
     blockRefCount,
     embedTabAsBlock,
     promoteZoneToTab,
+    buildFromTab,
+    buildFromZone,
+    insertBuild,
     revisions,
     captureRevision,
     restoreRevision,
@@ -170,6 +176,8 @@ function AppInner() {
   const [currentPath, setCurrentPath] = useState<string | null>(null);
   const [status, setStatus] = useState("");
   const [addSurface, setAddSurface] = useState<AddSurface>("none");
+  // Whether the "Custom builds" library panel is open (p2-savebuild).
+  const [buildsOpen, setBuildsOpen] = useState(false);
   // Device being edited, and the placed node it came from (if any).
   const [editModel, setEditModel] = useState<DeviceModel | null>(null);
   const [editNodeId, setEditNodeId] = useState<string | null>(null);
@@ -1308,6 +1316,47 @@ function AppInner() {
     [promoteZoneToTab],
   );
 
+  // Save a tab as a reusable build (p2-savebuild) and persist it to the local builds library.
+  const handleSaveTabAsBuild = useCallback(
+    async (tabId: string) => {
+      const tab = diagrams.find((d) => d.id === tabId);
+      const result = buildFromTab(tabId, { name: tab?.name ?? "Build" });
+      if ("error" in result) {
+        setStatus(result.error);
+        return;
+      }
+      await saveBuild(result);
+      setStatus(`Saved “${result.name}” to your builds`);
+    },
+    [diagrams, buildFromTab],
+  );
+
+  // Save the selected zone as a reusable build (p2-savebuild).
+  const handleSaveZoneAsBuild = useCallback(
+    async (zoneId: string) => {
+      const zone = nodesRef.current.find((n) => n.id === zoneId && n.type === "zone");
+      const name = zone && zone.type === "zone" ? zone.data.label || "Build" : "Build";
+      const result = buildFromZone(zoneId, { name });
+      if ("error" in result) {
+        setStatus(result.error);
+        return;
+      }
+      await saveBuild(result);
+      setStatus(`Saved “${result.name}” to your builds`);
+    },
+    [buildFromZone],
+  );
+
+  // Stamp a saved build into the active diagram as a block, then close the panel (p2-savebuild).
+  const handleInsertBuild = useCallback(
+    (build: Build) => {
+      const err = insertBuild(build);
+      setStatus(err ?? `Inserted build “${build.name}”`);
+      setBuildsOpen(false);
+    },
+    [insertBuild],
+  );
+
   const handleSave = useCallback(async (): Promise<boolean> => {
     try {
       let path = currentPath;
@@ -1634,6 +1683,14 @@ function AppInner() {
         </button>
         <button
           type="button"
+          className="tbtn"
+          onClick={() => setBuildsOpen(true)}
+          title="Insert a saved zone/tab build"
+        >
+          ❏ Builds
+        </button>
+        <button
+          type="button"
           className="tbtn tbtn--primary"
           onClick={() => setAddSurface("palette")}
           title="Add device (⌘K)"
@@ -1697,6 +1754,14 @@ function AppInner() {
                 title="Move this zone's contents into their own tab and reference it here as a block"
               >
                 ⤴ Promote to tab
+              </button>
+              <button
+                type="button"
+                className="contextbar__btn"
+                onClick={() => handleSaveZoneAsBuild(activeZone.id)}
+                title="Save this zone's contents as a reusable build you can drop into other projects"
+              >
+                ⤓ Save as build
               </button>
               <button type="button" className="contextbar__btn" onClick={deleteSelection}>
                 Delete
@@ -2053,6 +2118,7 @@ function AppInner() {
         onRename={renameDiagram}
         onDelete={handleDeleteDiagram}
         onEmbed={handleEmbedTab}
+        onSaveAsBuild={handleSaveTabAsBuild}
         onReorder={reorderDiagrams}
       />
 
@@ -2139,6 +2205,9 @@ function AppInner() {
           onPlace={placeDevice}
           onClose={() => setAddSurface("none")}
         />
+      )}
+      {buildsOpen && (
+        <BuildsPanel onInsert={handleInsertBuild} onStatus={setStatus} onClose={() => setBuildsOpen(false)} />
       )}
       {editModel && (
         <div className="adv-scrim" onMouseDown={cancelEdit}>
