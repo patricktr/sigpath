@@ -11,6 +11,8 @@ export type DeviceNodeData = {
   model: DeviceModel;
   /** Per-placement label override. */
   label?: string;
+  /** Per-output-port signal cap (p2-deepgrade), keyed by Port.id — see DeviceInstance.signalPins. */
+  signalPins?: Record<string, GradeId>;
 };
 
 export type DeviceNodeType = Node<DeviceNodeData, "device">;

@@ -63,6 +63,7 @@ export function editorToDiagram(d: EditorDiagram): Diagram {
     model: n.data.model,
     label: n.data.label,
     position: n.position,
+    ...(n.data.signalPins ? { signalPins: n.data.signalPins } : {}),
   }));
 
   const connections: Connection[] = d.edges.map((e) => ({
@@ -127,7 +128,7 @@ function diagramToEditor(d: Diagram, boundaryById: BoundaryLookup): EditorDiagra
     id: dev.id,
     type: "device",
     position: dev.position,
-    data: { model: dev.model, label: dev.label },
+    data: { model: dev.model, label: dev.label, ...(dev.signalPins ? { signalPins: dev.signalPins } : {}) },
   }));
 
   const blockNodes: SigNode[] = (d.blocks ?? []).map((b) => {

@@ -999,6 +999,24 @@ function AppInner() {
     [setEdges, takeSnapshot],
   );
 
+  // Cap a device output's emitted signal grade (p2-deepgrade) — propagates downstream in
+  // grade validation. undefined clears the cap (output emits up to the show format).
+  const setSignalPin = useCallback(
+    (nodeId: string, portId: string, grade: string | undefined) => {
+      takeSnapshot();
+      setNodes((nds) =>
+        nds.map((n) => {
+          if (n.id !== nodeId || n.type !== "device") return n;
+          const pins = { ...(n.data.signalPins ?? {}) };
+          if (grade) pins[portId] = grade;
+          else delete pins[portId];
+          return { ...n, data: { ...n.data, signalPins: Object.keys(pins).length ? pins : undefined } };
+        }),
+      );
+    },
+    [setNodes, takeSnapshot],
+  );
+
   // Re-sequence every cable's ID by signal group (VID-001, VID-002, AUD-001…).
   const renumberAll = useCallback(() => {
     takeSnapshot();
@@ -2152,6 +2170,9 @@ function AppInner() {
         <Inspector
           model={inspectorDevice?.data.model ?? null}
           label={inspectorDevice?.data.label}
+          nodeId={inspectorDevice?.id}
+          signalPins={inspectorDevice?.data.signalPins}
+          onSetPin={setSignalPin}
         />
       </div>
 

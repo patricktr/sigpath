@@ -1,17 +1,8 @@
-import {
-  checkPortCompatibility,
-  deviceTitle,
-  groupForConnector,
-  gradeScaleForConnector,
-  gradeLabel,
-  meetsDemand,
-  minGrade,
-  scaleOfGrade,
-  videoFormatToGrade,
-} from "../schema";
-import type { GradeId, GradeScaleId, Port, SignalKind, SignalProfile } from "../schema";
+import { checkPortCompatibility, deviceTitle, groupForConnector, gradeLabel, meetsDemand } from "../schema";
+import type { SignalKind, SignalProfile } from "../schema";
+import { propagateDemand } from "./gradeFlow";
 import { isPortBearing } from "../flow/types";
-import type { CableEdgeData, CableEdgeType, PortBearingNode, SigNode } from "../flow/types";
+import type { CableEdgeType, PortBearingNode, SigNode } from "../flow/types";
 
 export type Severity = "error" | "warning";
 
@@ -46,37 +37,6 @@ export type ValidationResult = {
   needsShowFormat: boolean;
 };
 
-/** Resolved demand for a run, or a signal that it can't be resolved. */
-type DemandResult = { scale: GradeScaleId; demand: GradeId } | "pending" | null;
-
-/**
- * Image-domain scales — the ones a project's frame size/rate (show format) speaks to.
- * Only these drive the "set a show format" prompt; network/USB grades are set via
- * explicit targets, so a bare LAN run shouldn't nag for a video format.
- */
-const IMAGE_SCALES = new Set<GradeScaleId>(["sdi", "hdmi", "displayport"]);
-
-/**
- * The grade a run actually carries. A per-run override wins; otherwise the project
- * ceiling for the source's scale (an explicit target, else the video format), clamped
- * to what the source can emit (a 3G source in a 4K show still only emits 3G). Returns
- * "pending" when the run is graded but no ceiling is set yet (→ prompt for a format),
- * or null when the family is ungraded (→ skip the grade gate entirely).
- */
-function runDemand(
-  source: Port,
-  data: CableEdgeData | undefined,
-  profile: SignalProfile | undefined,
-): DemandResult {
-  const scale = gradeScaleForConnector(source.connector);
-  if (!scale) return null;
-  const override = data?.signalGrade;
-  if (override && scaleOfGrade(override) === scale) return { scale, demand: override };
-  const ceiling = profile?.targets?.[scale] ?? videoFormatToGrade(profile?.videoFormat, scale);
-  if (!ceiling) return "pending";
-  return { scale, demand: minGrade(source.grade, ceiling) ?? ceiling };
-}
-
 /**
  * Live signal validation over the current diagram. Pure and cheap so it can run
  * on every nodes/edges change. Connection-level rules are grounded in the
@@ -97,8 +57,10 @@ export function validate(
   const issues: ValidationIssue[] = [];
   const errorEdges = new Set<string>();
   const warnEdges = new Set<string>();
-  // Graded run seen with no resolvable demand ceiling → drives the "pick a format" prompt.
-  let needsShowFormat = false;
+  // Gate 2 demand is computed by a forward propagation over the whole graph (a router's outputs
+  // carry the worst-case grade reaching it), not per-cable-local — see gradeFlow. needsShowFormat
+  // (a graded image run with no format) falls out of the same pass.
+  const { demandByEdge, needsShowFormat } = propagateDemand(nodes, edges, signalProfile);
   // `${nodeId}:${portId}` -> edge ids touching that physical port (each jack = one cable).
   const portUsage = new Map<string, string[]>();
   const addUse = (key: string, id: string) => {
@@ -175,38 +137,31 @@ export function validate(
         });
       }
 
-      // Gate 2 — bandwidth grade. Only when the connectors aren't already a hard
-      // mismatch (no point grading a broken pairing) and only on graded families.
-      // Capability unknown ⇒ meetsDemand returns undefined ⇒ no flag (never a false
-      // positive). Sink-too-small and cable-under-rated are both hard errors.
+      // Gate 2 — bandwidth grade. Only when the connectors aren't already a hard mismatch
+      // (no point grading a broken pairing). The demand is the worst-case grade propagated to
+      // this cable (gradeFlow); absent ⇒ ungraded family or no ceiling ⇒ no flag. Capability
+      // unknown ⇒ meetsDemand returns undefined ⇒ no flag. Both checks are hard errors.
       if (compat.status !== "error") {
-        const dem = runDemand(out, e.data, signalProfile);
-        if (dem === "pending") {
-          // A video run (SDI/HDMI/DisplayPort) with no show format set — prompt for
-          // one. Keyed on the connector's scale, not on a port grade value, so it
-          // fires for any video run even before grades are filled in (and on older
-          // projects whose embedded device snapshots predate grades).
-          const sc = gradeScaleForConnector(out.connector);
-          if (sc && IMAGE_SCALES.has(sc)) needsShowFormat = true;
-        } else if (dem) {
-          if (meetsDemand(inp.grade, dem.demand) === false) {
+        const demand = demandByEdge.get(e.id);
+        if (demand) {
+          if (meetsDemand(inp.grade, demand) === false) {
             errorEdges.add(e.id);
             issues.push({
               id: `grade-sink:${e.id}`,
               severity: "error",
               title: "Signal grade exceeds input",
-              detail: `${path}: the run carries ${gradeLabel(dem.demand)}, but ${inp.name} only supports ${gradeLabel(inp.grade)}.`,
+              detail: `${path}: the run carries ${gradeLabel(demand)}, but ${inp.name} only supports ${gradeLabel(inp.grade)}.`,
               edgeId: e.id,
               focusNodeIds: [e.source, e.target],
             });
           }
-          if (meetsDemand(e.data?.cableGrade, dem.demand) === false) {
+          if (meetsDemand(e.data?.cableGrade, demand) === false) {
             errorEdges.add(e.id);
             issues.push({
               id: `grade-cable:${e.id}`,
               severity: "error",
               title: "Cable under-rated",
-              detail: `${path}: the run carries ${gradeLabel(dem.demand)}, but the cable is rated ${gradeLabel(e.data?.cableGrade)} — use a ${gradeLabel(dem.demand)} cable.`,
+              detail: `${path}: the run carries ${gradeLabel(demand)}, but the cable is rated ${gradeLabel(e.data?.cableGrade)} — use a ${gradeLabel(demand)} cable.`,
               edgeId: e.id,
               focusNodeIds: [e.source, e.target],
             });

@@ -160,6 +160,21 @@ export function minGrade(a: GradeId | undefined, b: GradeId | undefined): GradeI
 }
 
 /**
+ * The higher-capability of two grades in the same scale — the fan-in merge for grade
+ * propagation (a device fed by several signals could route the worst onto any output, so
+ * its outputs carry the max). Symmetric to {@link minGrade}: undefined/cross-scale inputs
+ * degrade gracefully (a defined grade wins over undefined; mismatched scales return `a`).
+ */
+export function maxGrade(a: GradeId | undefined, b: GradeId | undefined): GradeId | undefined {
+  if (a === undefined) return b;
+  if (b === undefined) return a;
+  const ra = gradeRank(a);
+  const rb = gradeRank(b);
+  if (ra === undefined || rb === undefined || scaleOfGrade(a) !== scaleOfGrade(b)) return a;
+  return ra >= rb ? a : b;
+}
+
+/**
  * Common production video formats → the *minimum* grade that reliably carries each
  * in the image-domain families (SDI/HDMI/DisplayPort). "Minimum that carries", not
  * "modern default", is deliberate: it's what keeps an HDMI 1.4 link from being

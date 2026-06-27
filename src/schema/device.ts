@@ -181,6 +181,13 @@ export type DeviceInstance = {
   /** User override for this placement, e.g. "Stage-Left Camera". */
   label?: string;
   position: { x: number; y: number };
+  /**
+   * Per-output-port signal cap (p2-deepgrade): "this output emits at most grade X". Keyed by
+   * {@link Port.id}. Propagates downstream through grade validation, so a feed known to run
+   * below the show format (a dedicated 3G camera in a 4K show) isn't graded against the format.
+   * Per-instance (this placement), not the shared model. Optional/additive.
+   */
+  signalPins?: Record<string, GradeId>;
 };
 
 /** Pure input ports — rendered on the left edge. Bidirectional ports are kept
