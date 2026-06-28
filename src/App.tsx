@@ -104,6 +104,7 @@ import {
 import { diagramImageBase64, diagramPdfBase64, listsToCsv, type ExportKind } from "./io/export";
 import { ValidationPanel } from "./ui/ValidationPanel";
 import { validate, type ValidationIssue } from "./validation/validate";
+import { deepGrade } from "./validation/deepGrade";
 import { LeftRail } from "./ui/LeftRail";
 import { Inspector } from "./ui/Inspector";
 import "./App.css";
@@ -551,6 +552,14 @@ function AppInner() {
     [nodes, edges, signalProfile],
   );
 
+  // Deep cross-boundary grade check (p2-deepgrade): the worst-case demand propagated over the
+  // flattened project, surfacing under-rated cables INSIDE embedded rooms (the active diagram's
+  // own cables are already covered by `validation`). Drives the block error badge + panel section.
+  const deep = useMemo(() => {
+    const current = diagrams.map((d) => (d.id === activeId ? { ...d, nodes, edges } : d));
+    return deepGrade(current, activeId, signalProfile);
+  }, [diagrams, activeId, nodes, edges, signalProfile]);
+
   // Overlay validation styling onto the live edges without mutating state:
   // errors are solid red + animated, warnings are dashed amber. A selected edge
   // is then thickened and given a glow halo on top, so a selected error edge
@@ -686,6 +695,27 @@ function AppInner() {
     },
     [setEdges],
   );
+
+  // Jump to a deep (inner-room) grade issue (p2-deepgrade): switch to the room's tab, then
+  // select + frame the inner cable once its canvas has loaded.
+  const pendingFocus = useRef<ValidationIssue | null>(null);
+  const jumpToInnerIssue = useCallback(
+    (roomId: string, issue: ValidationIssue) => {
+      if (roomId === activeId) {
+        focusIssue(issue);
+        return;
+      }
+      pendingFocus.current = issue;
+      switchDiagram(roomId);
+    },
+    [activeId, switchDiagram, focusIssue],
+  );
+  useEffect(() => {
+    const issue = pendingFocus.current;
+    if (!issue) return;
+    pendingFocus.current = null;
+    requestAnimationFrame(() => focusIssue(issue));
+  }, [activeId, focusIssue]);
 
   const handleExport = useCallback(
     async (kind: ExportKind) => {
@@ -1418,8 +1448,8 @@ function AppInner() {
   );
 
   const blockDrift = useMemo(
-    () => ({ drifted: driftedTabIds, onRefresh: handleRefreshBoundary }),
-    [driftedTabIds, handleRefreshBoundary],
+    () => ({ drifted: driftedTabIds, onRefresh: handleRefreshBoundary, deepErrors: deep.errorBlockNodes }),
+    [driftedTabIds, handleRefreshBoundary, deep],
   );
 
   const handleSave = useCallback(async (): Promise<boolean> => {
@@ -2164,6 +2194,8 @@ function AppInner() {
               onFocus={focusIssue}
               onClose={() => setValidationOpen(false)}
               onAddConverter={requestAddConverter}
+              deepGroups={deep.groups}
+              onDeepJump={jumpToInnerIssue}
             />
           )}
         </div>

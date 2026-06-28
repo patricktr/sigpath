@@ -10,9 +10,17 @@ import "./DeviceNode.css";
  * every BlockNode, so a block flags itself amber without threading drift through node data —
  * the same context shape ZoneNode uses for its actions.
  */
-export const BlockDriftContext = createContext<{ drifted: Set<string>; onRefresh: (tabId: string) => void }>({
+export const BlockDriftContext = createContext<{
+  /** Referenced tabs whose published boundary drifted (p2-blockdrift) — keyed by refDiagramId. */
+  drifted: Set<string>;
+  onRefresh: (tabId: string) => void;
+  /** This block's own instance id is here when a cable inside its room is under-rated for the
+   *  show format (p2-deepgrade) — keyed by the block-instance id, not refDiagramId. */
+  deepErrors: Set<string>;
+}>({
   drifted: new Set(),
   onRefresh: () => {},
+  deepErrors: new Set(),
 });
 
 /**
@@ -23,14 +31,15 @@ export const BlockDriftContext = createContext<{ drifted: Set<string>; onRefresh
  * Visually it's marked as a reference (dashed accent border, "⧉ tab" hint) rather than a
  * real device. Opening the referenced tab is wired in a later Phase-A slice.
  */
-export function BlockNode({ data }: NodeProps<BlockNodeType>) {
+export function BlockNode({ id, data }: NodeProps<BlockNodeType>) {
   const { model, label, refDiagramId } = data;
   const inputs = inputPorts(model);
   const outputs = outputPorts(model);
   const bidi = bidirectionalPorts(model);
 
-  const { drifted, onRefresh } = useContext(BlockDriftContext);
+  const { drifted, onRefresh, deepErrors } = useContext(BlockDriftContext);
   const isDrifted = drifted.has(refDiagramId);
+  const hasDeepError = deepErrors.has(id);
 
   return (
     <div
@@ -39,6 +48,14 @@ export function BlockNode({ data }: NodeProps<BlockNodeType>) {
     >
       <header className="device-node__header">
         <span className="device-node__name">{deviceTitle(model, label)}</span>
+        {hasDeepError && (
+          <span
+            style={{ color: "#ef4444", marginLeft: 4 }}
+            title="A cable inside this room is under-rated for the show format — see Signal check"
+          >
+            ⚠
+          </span>
+        )}
         {isDrifted ? (
           <button
             type="button"

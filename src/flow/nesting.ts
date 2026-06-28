@@ -215,10 +215,35 @@ const FLATTEN_DEPTH_CAP = 12;
  * Device labels and cable numbers are instance-qualified by the embed path. A diagram with
  * no blocks flattens to itself, so non-nested behavior is unchanged.
  */
-export function flatten(diagrams: EditorDiagram[], rootId: string): { nodes: SigNode[]; edges: CableEdgeType[] } {
+/**
+ * Where a flattened edge really lives (p2-deepgrade) — so a grade issue found on a namespaced
+ * flat edge can be projected back: styled on the active canvas if it's the active diagram's own
+ * edge, or badged on the host block (`blockPath[0]`) and navigated to (`ownerDiagramId` +
+ * `localEdgeId` + `localFocus`) if it lives inside an embedded room.
+ */
+export type EdgeProvenance = {
+  /** The diagram this edge is declared in (the active root, or an embedded room). */
+  ownerDiagramId: string;
+  ownerName: string;
+  /** The edge's real id within `ownerDiagramId` (NOT the namespaced flat id). */
+  localEdgeId: string;
+  /** The edge's real endpoint node ids within `ownerDiagramId`, for select/fitView on jump. */
+  localFocus: string[];
+  /** The block-instance path from the active canvas down to this edge; `[0]` is the active block. */
+  blockPath: string[];
+  /** Human embed path from the active canvas, e.g. "Control Room" or "Stage Rack 2 / PSU" —
+   *  distinguishes which embed of a room a finding came from (N-embed naming). */
+  pathLabel: string;
+};
+
+export function flatten(
+  diagrams: EditorDiagram[],
+  rootId: string,
+): { nodes: SigNode[]; edges: CableEdgeType[]; provenance: Map<string, EdgeProvenance> } {
   const byId = new Map(diagrams.map((d) => [d.id, d]));
   const nodes: SigNode[] = [];
   const edges: CableEdgeType[] = [];
+  const provenance = new Map<string, EdgeProvenance>();
 
   const expand = (id: string, prefix: string, labelPath: string, depth: number, stack: Set<string>) => {
     const d = byId.get(id);
@@ -259,6 +284,14 @@ export function flatten(diagrams: EditorDiagram[], rootId: string): { nodes: Sig
         targetHandle: t.port,
         data: e.data ? { ...e.data, number } : e.data,
       });
+      provenance.set(ns(e.id), {
+        ownerDiagramId: id,
+        ownerName: d.name,
+        localEdgeId: e.id,
+        localFocus: [e.source, e.target],
+        blockPath: prefix ? prefix.split("/") : [],
+        pathLabel: labelPath,
+      });
     }
 
     for (const [blkId, blk] of blocks) {
@@ -269,5 +302,5 @@ export function flatten(diagrams: EditorDiagram[], rootId: string): { nodes: Sig
   };
 
   expand(rootId, "", "", 0, new Set());
-  return { nodes, edges };
+  return { nodes, edges, provenance };
 }

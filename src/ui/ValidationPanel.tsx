@@ -1,6 +1,7 @@
 import "./ValidationPanel.css";
 import { VIDEO_FORMATS } from "../schema";
 import type { ValidationIssue, ValidationResult } from "../validation/validate";
+import type { DeepGradeGroup } from "../validation/deepGrade";
 
 /** Read-only right drawer listing live signal-validation issues. */
 export function ValidationPanel({
@@ -10,6 +11,8 @@ export function ValidationPanel({
   onFocus,
   onClose,
   onAddConverter,
+  deepGroups = [],
+  onDeepJump,
 }: {
   result: ValidationResult;
   /** Current project show format (drives grade demand). */
@@ -20,8 +23,13 @@ export function ValidationPanel({
   onClose: () => void;
   /** One-click fix for a "Converter needed" issue. */
   onAddConverter?: (edgeId: string) => void;
+  /** Grade issues found INSIDE embedded rooms (p2-deepgrade), grouped by room. */
+  deepGroups?: DeepGradeGroup[];
+  /** Jump to an inner-room issue: switch to that tab and select the cable. */
+  onDeepJump?: (roomId: string, issue: ValidationIssue) => void;
 }) {
   const { issues, errorCount, warningCount, needsShowFormat } = result;
+  const deepCount = deepGroups.reduce((n, g) => n + g.issues.length, 0);
   // Show the format control when it's needed (graded gear, unset) or already in use.
   const showFormatRow = !!onSetVideoFormat && (needsShowFormat || !!videoFormat);
 
@@ -64,9 +72,9 @@ export function ValidationPanel({
             )}
           </div>
         )}
-        {issues.length === 0 ? (
+        {issues.length === 0 && deepCount === 0 ? (
           needsShowFormat ? null : <p className="validation-ok">✓ All connections look valid.</p>
-        ) : (
+        ) : issues.length === 0 ? null : (
           <>
             <p className="validation-summary">
               {errorCount > 0 && (
@@ -111,6 +119,32 @@ export function ValidationPanel({
             </ul>
           </>
         )}
+
+        {deepGroups.map((g) => (
+          <div key={g.roomId} style={{ marginTop: 14 }}>
+            <p style={{ margin: "0 0 6px", fontSize: 12, opacity: 0.7 }}>
+              Inside <strong>{g.roomName}</strong>
+            </p>
+            <ul className="validation-list">
+              {g.issues.map((iss) => (
+                <li key={iss.id}>
+                  <button
+                    type="button"
+                    className="validation-item validation-item--error"
+                    onClick={() => onDeepJump?.(g.roomId, iss)}
+                    title={`Open ${g.roomName} and select this cable`}
+                  >
+                    <span className="validation-item__icon">✕</span>
+                    <span className="validation-item__text">
+                      <span className="validation-item__title">{iss.title}</span>
+                      <span className="validation-item__detail">{iss.detail}</span>
+                    </span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))}
       </div>
     </aside>
   );
