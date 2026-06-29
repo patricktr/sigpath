@@ -14,6 +14,10 @@ type Props = {
   referencedBy: number;
   /** Commit a new published port set (rename / hide / reorder) — one undoable snapshot. */
   onChange: (nextPorts: BoundaryPort[]) => void;
+  /** Reset a renamed port back to its auto-derived label (clears the `renamed` flag). */
+  onResetName?: (id: string) => void;
+  /** Switch the editor to the tab being curated. */
+  onOpenTab?: () => void;
   onClose: () => void;
 };
 
@@ -24,7 +28,16 @@ type Props = {
  * here) but drops from the rendered block at the synthesis seam; a port a cable is wired to can't
  * be hidden (it would orphan the run), so its toggle is disabled.
  */
-export function BoundaryCuratePanel({ tabName, ports, wiredPortIds, referencedBy, onChange, onClose }: Props) {
+export function BoundaryCuratePanel({
+  tabName,
+  ports,
+  wiredPortIds,
+  referencedBy,
+  onChange,
+  onResetName,
+  onOpenTab,
+  onClose,
+}: Props) {
   const [dragId, setDragId] = useState<string | null>(null);
   const [overId, setOverId] = useState<string | null>(null);
 
@@ -63,9 +76,16 @@ export function BoundaryCuratePanel({ tabName, ports, wiredPortIds, referencedBy
             <div className="curate__title">Published interface</div>
             <div className="curate__sub">{tabName}</div>
           </div>
-          <button type="button" className="curate__close" onClick={onClose} aria-label="Done">
-            ×
-          </button>
+          <div className="curate__headbtns">
+            {onOpenTab && (
+              <button type="button" className="curate__open" onClick={onOpenTab}>
+                Open tab
+              </button>
+            )}
+            <button type="button" className="curate__close" onClick={onClose} aria-label="Done">
+              ×
+            </button>
+          </div>
         </header>
         <div className="curate__meta">
           {referencedBy > 0
@@ -138,6 +158,17 @@ export function BoundaryCuratePanel({ tabName, ports, wiredPortIds, referencedBy
                   <span className="curate__pmeta">
                     {DIR_LABEL[p.direction]} · {getConnector(p.connector)?.label ?? p.connector}
                   </span>
+                  {p.renamed && onResetName && (
+                    <button
+                      type="button"
+                      className="curate__reset"
+                      onClick={() => onResetName(p.id)}
+                      title="Reset to the auto-generated name"
+                      aria-label="Reset name"
+                    >
+                      ↺
+                    </button>
+                  )}
                   <button
                     type="button"
                     className="curate__eye"

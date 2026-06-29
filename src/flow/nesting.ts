@@ -1,7 +1,7 @@
 import { deviceTitle } from "../schema";
 import type { BoundaryPort } from "../schema";
 import { synthesizeBlockModel } from "../io/serialize";
-import { boundaryHash } from "./boundaryDrift";
+import { autoBoundaryName, boundaryHash } from "./boundaryDrift";
 import { nodesInZone } from "./zoneMembership";
 import type { BlockNodeType, CableEdgeType, EditorDiagram, SigNode, ZoneNodeType } from "./types";
 
@@ -32,7 +32,7 @@ export function deriveBoundary(ed: EditorDiagram): Boundary {
       if (used.has(`${n.id}:${p.id}`)) continue; // wired internally → not part of the face
       ports.push({
         id: `bp-${n.id}-${p.id}`,
-        name: `${deviceTitle(n.data.model, n.data.label)} · ${p.name}`,
+        name: autoBoundaryName(n, p),
         direction: p.direction,
         connector: p.connector,
         accepts: p.accepts,

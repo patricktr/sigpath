@@ -22,7 +22,7 @@ import "@xyflow/react/dist/style.css";
 
 import { DeviceNode } from "./flow/DeviceNode";
 import { BlockNode, BlockDriftContext } from "./flow/BlockNode";
-import { hasBoundaryDrift, planBoundaryRefresh } from "./flow/boundaryDrift";
+import { autoBoundaryName, hasBoundaryDrift, planBoundaryRefresh } from "./flow/boundaryDrift";
 import { deriveBoundary, flatten, wiredBoundaryPortIds } from "./flow/nesting";
 import { nodesInZone } from "./flow/zoneMembership";
 import { CableEdge } from "./flow/CableEdge";
@@ -2346,6 +2346,21 @@ function AppInner() {
           wiredPortIds={curateData.wired}
           referencedBy={curateData.referencedBy}
           onChange={(next) => curateTabBoundary(curateData.room.id, next)}
+          onResetName={(id) => {
+            const port = curateData.ports.find((p) => p.id === id);
+            if (!port) return;
+            const node = curateData.room.nodes.find((n) => n.id === port.internal.instanceId);
+            const live = isPortBearing(node) ? nodePorts(node).find((p) => p.id === port.internal.portId) : undefined;
+            const name = isPortBearing(node) && live ? autoBoundaryName(node, live) : port.name;
+            curateTabBoundary(
+              curateData.room.id,
+              curateData.ports.map((p) => (p.id === id ? { ...p, name, renamed: false } : p)),
+            );
+          }}
+          onOpenTab={() => {
+            switchDiagram(curateData.room.id);
+            setCurateTabId(null);
+          }}
           onClose={() => setCurateTabId(null)}
         />
       )}

@@ -119,3 +119,24 @@ describe("planBoundaryRefresh", () => {
     expect(pgm?.internal.portId).toBe("x"); // re-bound to the new output port
   });
 });
+
+describe("name re-mirror on refresh (p2-zonetab Phase C3)", () => {
+  // The inner PGM port renamed in the room, with the published boundary still on the old label.
+  const innerRenamed = room([dev("SW", [{ ...PORTS[0], name: "Program Bus" }, PORTS[1]])]);
+
+  it("re-mirrors an un-renamed boundary port's label from its inner port", () => {
+    const plan = planBoundaryRefresh({ ...innerRenamed, boundary });
+    const pgm = plan.nextPorts.find((p) => p.id === "bp-SW-pgm");
+    expect(pgm?.name.endsWith("· Program Bus")).toBe(true); // tracks the inner rename
+    expect(plan.changed.map((p) => p.id)).toContain("bp-SW-pgm"); // counted as a re-mirror
+  });
+
+  it("keeps a user-renamed boundary label even when the inner port name changes", () => {
+    const curated = boundary.ports.map((p) =>
+      p.id === "bp-SW-pgm" ? { ...p, name: "Main PGM", renamed: true } : p,
+    );
+    const plan = planBoundaryRefresh({ ...innerRenamed, boundary: { ports: curated, rev: boundaryHash(curated) } });
+    const pgm = plan.nextPorts.find((p) => p.id === "bp-SW-pgm");
+    expect(pgm?.name).toBe("Main PGM"); // user override survives the inner rename
+  });
+});

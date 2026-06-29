@@ -1,3 +1,4 @@
+import { deviceTitle } from "../schema";
 import type { BoundaryPort, Port } from "../schema";
 import type { EditorDiagram, PortBearingNode } from "./types";
 import { isPortBearing } from "./types";
@@ -50,13 +51,23 @@ function mirrorChanged(bp: BoundaryPort, live: Port): boolean {
   );
 }
 
-/** Re-mirror one published port from its (re-matched) inner port — keeps the stable id, name,
- *  and curation (hidden / renamed), so a refresh re-syncs the mirrored shape without undoing
- *  the room's curated public face. */
-function remirror(bp: BoundaryPort, instanceId: string, live: Port): BoundaryPort {
+/**
+ * The auto-derived public label for a boundary port — its inner device's title + the inner port
+ * name (e.g. "Switcher · PGM"). Shared by deriveBoundary (expose-time) and remirror (refresh) so
+ * an un-renamed port's name tracks the room, and a no-op refresh stays byte-identical (no false
+ * drift).
+ */
+export function autoBoundaryName(node: PortBearingNode, port: Port): string {
+  return `${deviceTitle(node.data.model, node.data.label)} · ${port.name}`;
+}
+
+/** Re-mirror one published port from its (re-matched) inner port — keeps the stable id and
+ *  curation (hidden / renamed). `name` is supplied by the caller: the custom label for a renamed
+ *  port, else the re-derived auto-name so an un-renamed port tracks an inner rename. */
+function remirror(bp: BoundaryPort, instanceId: string, live: Port, name: string): BoundaryPort {
   return {
     id: bp.id,
-    name: bp.name,
+    name,
     direction: live.direction,
     connector: live.connector,
     internal: { instanceId, portId: live.id },
@@ -127,9 +138,10 @@ export function planBoundaryRefresh(room: EditorDiagram): BoundaryRefreshPlan {
       }
       didRebind = true;
     }
-    nextPorts.push(remirror(bp, bp.internal.instanceId, live));
+    const name = bp.renamed ? bp.name : autoBoundaryName(dev, live);
+    nextPorts.push(remirror(bp, bp.internal.instanceId, live, name));
     if (didRebind) rebound.push(bp);
-    if (mirrorChanged(bp, live)) changed.push(bp);
+    if (mirrorChanged(bp, live) || name !== bp.name) changed.push(bp);
   }
 
   return { nextPorts, removed, rebound, changed };
