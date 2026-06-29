@@ -29,6 +29,7 @@ export function boundaryHash(ports: BoundaryPort[]): number {
       p.grade ?? "",
       p.internal.instanceId,
       p.internal.portId,
+      p.hidden ?? false, // curation hide changes the embedded face → must register as drift
     ]),
   );
   let h = 0x811c9dc5;
@@ -49,7 +50,9 @@ function mirrorChanged(bp: BoundaryPort, live: Port): boolean {
   );
 }
 
-/** Re-mirror one published port from its (re-matched) inner port — keeps the stable id + name. */
+/** Re-mirror one published port from its (re-matched) inner port — keeps the stable id, name,
+ *  and curation (hidden / renamed), so a refresh re-syncs the mirrored shape without undoing
+ *  the room's curated public face. */
 function remirror(bp: BoundaryPort, instanceId: string, live: Port): BoundaryPort {
   return {
     id: bp.id,
@@ -59,6 +62,8 @@ function remirror(bp: BoundaryPort, instanceId: string, live: Port): BoundaryPor
     internal: { instanceId, portId: live.id },
     ...(live.accepts ? { accepts: live.accepts } : {}),
     ...(live.grade ? { grade: live.grade } : {}),
+    ...(bp.hidden ? { hidden: true } : {}),
+    ...(bp.renamed ? { renamed: true } : {}),
   };
 }
 

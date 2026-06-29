@@ -33,4 +33,12 @@ export type BoundaryPort = {
   grade?: GradeId;
   /** The single internal device port this boundary proxies. */
   internal: PortRef;
+  /** Curation (p2-zonetab Phase C): kept out of the embedded block's face. The port stays in
+   *  the published set — so it can be un-hidden and drift still tracks its inner port — and is
+   *  dropped only at the `synthesizeBlockModel` seam. */
+  hidden?: boolean;
+  /** Curation (p2-zonetab Phase C): `name` is a user override, not the auto-derived
+   *  `Device · Port` label. Lets a refresh keep the custom name and the panel offer
+   *  "reset to auto". */
+  renamed?: boolean;
 };

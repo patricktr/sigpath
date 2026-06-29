@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import { boundaryHash, hasBoundaryDrift, planBoundaryRefresh } from "./boundaryDrift";
 import { deriveBoundary } from "./nesting";
 import type { DeviceNodeType, EditorDiagram, SigNode } from "./types";
-import type { Port } from "../schema";
+import type { BoundaryPort, Port } from "../schema";
 
 function dev(id: string, ports: Port[]): DeviceNodeType {
   return {
@@ -40,6 +40,11 @@ describe("boundaryHash", () => {
     const renamed = boundary.ports.map((p, i) => (i === 0 ? { ...p, name: "Program" } : p));
     expect(boundaryHash(renamed)).not.toBe(boundaryHash(boundary.ports));
   });
+
+  it("changes when a port is hidden (curation alters the embedded face)", () => {
+    const hidden = boundary.ports.map((p, i) => (i === 0 ? { ...p, hidden: true } : p));
+    expect(boundaryHash(hidden)).not.toBe(boundaryHash(boundary.ports));
+  });
 });
 
 describe("hasBoundaryDrift", () => {
@@ -62,6 +67,20 @@ describe("planBoundaryRefresh", () => {
     expect(plan.changed).toEqual([]);
     expect(plan.rebound).toEqual([]);
     expect(boundaryHash(plan.nextPorts)).toBe(boundaryHash(boundary.ports));
+  });
+
+  it("preserves curation — hidden, renamed, and order — across a refresh (p2-zonetab Phase C)", () => {
+    // A curated face: ports reordered (in before pgm), pgm hidden + renamed.
+    const curated: BoundaryPort[] = [
+      { ...boundary.ports[1] }, // bp-SW-in
+      { ...boundary.ports[0], name: "Program", hidden: true, renamed: true }, // bp-SW-pgm
+    ];
+    const plan = planBoundaryRefresh({ ...base, boundary: { ports: curated, rev: boundaryHash(curated) } });
+    expect(plan.nextPorts.map((p) => p.id)).toEqual(["bp-SW-in", "bp-SW-pgm"]); // order kept
+    const pgm = plan.nextPorts.find((p) => p.id === "bp-SW-pgm");
+    expect(pgm?.hidden).toBe(true);
+    expect(pgm?.renamed).toBe(true);
+    expect(pgm?.name).toBe("Program"); // custom name kept
   });
 
   it("prunes ports whose inner device is gone", () => {
