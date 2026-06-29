@@ -10,6 +10,7 @@ export function Inspector({
   nodeId,
   signalPins,
   onSetPin,
+  onEditInterface,
 }: {
   model: DeviceModel | null;
   label?: string;
@@ -19,6 +20,9 @@ export function Inspector({
   signalPins?: Record<string, GradeId>;
   /** Set/clear "this output emits at most X" (propagates downstream in grade validation). */
   onSetPin?: (nodeId: string, portId: string, grade: GradeId | undefined) => void;
+  /** When set, the selected node is a nested-tab block — show an action to curate the
+   *  referenced tab's published interface (p2-zonetab Phase C). */
+  onEditInterface?: () => void;
 }) {
   if (!model) {
     return (
@@ -36,6 +40,12 @@ export function Inspector({
       <div className="inspector__sub">
         {model.manufacturer ?? "—"} · {model.type ?? model.category}
       </div>
+
+      {onEditInterface && (
+        <button type="button" className="inspector__interface" onClick={onEditInterface}>
+          Edit published interface…
+        </button>
+      )}
 
       <div className="inspector__tiles">
         <div className="inspector__tile">

@@ -23,7 +23,7 @@ import "@xyflow/react/dist/style.css";
 import { DeviceNode } from "./flow/DeviceNode";
 import { BlockNode, BlockDriftContext } from "./flow/BlockNode";
 import { hasBoundaryDrift, planBoundaryRefresh } from "./flow/boundaryDrift";
-import { flatten } from "./flow/nesting";
+import { deriveBoundary, flatten, wiredBoundaryPortIds } from "./flow/nesting";
 import { nodesInZone } from "./flow/zoneMembership";
 import { CableEdge } from "./flow/CableEdge";
 import { arrangeLeftToRight } from "./flow/autoLayout";
@@ -37,6 +37,7 @@ import type {
   SigNode,
   ZoneNodeType,
   NoteNodeType,
+  BlockNodeType,
 } from "./flow/types";
 import {
   cableColor,
@@ -107,6 +108,7 @@ import { validate, type ValidationIssue } from "./validation/validate";
 import { deepGrade } from "./validation/deepGrade";
 import { LeftRail } from "./ui/LeftRail";
 import { Inspector } from "./ui/Inspector";
+import { BoundaryCuratePanel } from "./ui/BoundaryCuratePanel";
 import "./App.css";
 
 /** Registered once at module scope so the reference stays stable across renders. */
@@ -158,6 +160,7 @@ function AppInner() {
     buildFromZone,
     insertBuild,
     refreshTabBoundary,
+    curateTabBoundary,
     revisions,
     captureRevision,
     restoreRevision,
@@ -182,6 +185,8 @@ function AppInner() {
   const [addSurface, setAddSurface] = useState<AddSurface>("none");
   // Whether the "Custom builds" library panel is open (p2-savebuild).
   const [buildsOpen, setBuildsOpen] = useState(false);
+  // The tab whose published interface is being curated (p2-zonetab Phase C); null ⇒ panel closed.
+  const [curateTabId, setCurateTabId] = useState<string | null>(null);
   // Device being edited, and the placed node it came from (if any).
   const [editModel, setEditModel] = useState<DeviceModel | null>(null);
   const [editNodeId, setEditNodeId] = useState<string | null>(null);
@@ -866,6 +871,27 @@ function AppInner() {
   );
   const inspectorDevice = selection.devices.length === 1 ? selection.devices[0] : null;
   const selectedNodeId = inspectorDevice?.id ?? null;
+
+  // A single selected nested-tab block (and no device) drives the Inspector's "Edit interface".
+  const inspectorBlock = useMemo(() => {
+    const blocks = nodes.filter((n): n is BlockNodeType => n.selected === true && n.type === "block");
+    return blocks.length === 1 && selection.devices.length === 0 ? blocks[0] : null;
+  }, [nodes, selection.devices]);
+
+  // The tab being curated (panel open): its full published face (derived if it has none yet),
+  // which of its ports are wired in some embed (can't hide those), and how many blocks embed it.
+  const curateData = useMemo(() => {
+    if (!curateTabId) return null;
+    const current = diagrams.map((d) => (d.id === activeId ? { ...d, nodes, edges } : d));
+    const room = current.find((d) => d.id === curateTabId);
+    if (!room) return null;
+    return {
+      room,
+      ports: room.boundary?.ports ?? deriveBoundary(room).ports,
+      wired: wiredBoundaryPortIds(current, curateTabId),
+      referencedBy: blockRefCounts.get(curateTabId) ?? 0,
+    };
+  }, [curateTabId, diagrams, activeId, nodes, edges, blockRefCounts]);
   const selectNode = useCallback(
     (id: string) => setNodes((nds) => nds.map((n) => ({ ...n, selected: n.id === id }))),
     [setNodes],
@@ -2200,11 +2226,12 @@ function AppInner() {
           )}
         </div>
         <Inspector
-          model={inspectorDevice?.data.model ?? null}
-          label={inspectorDevice?.data.label}
+          model={inspectorDevice?.data.model ?? inspectorBlock?.data.model ?? null}
+          label={inspectorDevice?.data.label ?? inspectorBlock?.data.label}
           nodeId={inspectorDevice?.id}
           signalPins={inspectorDevice?.data.signalPins}
           onSetPin={setSignalPin}
+          onEditInterface={inspectorBlock ? () => setCurateTabId(inspectorBlock.data.refDiagramId) : undefined}
         />
       </div>
 
@@ -2222,6 +2249,7 @@ function AppInner() {
         onEmbed={handleEmbedTab}
         onSaveAsBuild={handleSaveTabAsBuild}
         onReorder={reorderDiagrams}
+        onCurate={(id) => setCurateTabId(id)}
       />
 
       <footer className="statusbar">
@@ -2310,6 +2338,16 @@ function AppInner() {
       )}
       {buildsOpen && (
         <BuildsPanel onInsert={handleInsertBuild} onStatus={setStatus} onClose={() => setBuildsOpen(false)} />
+      )}
+      {curateData && (
+        <BoundaryCuratePanel
+          tabName={curateData.room.name}
+          ports={curateData.ports}
+          wiredPortIds={curateData.wired}
+          referencedBy={curateData.referencedBy}
+          onChange={(next) => curateTabBoundary(curateData.room.id, next)}
+          onClose={() => setCurateTabId(null)}
+        />
       )}
       {editModel && (
         <div className="adv-scrim" onMouseDown={cancelEdit}>

@@ -1,6 +1,6 @@
 import { useCallback, useRef, useState } from "react";
 import type { MutableRefObject } from "react";
-import type { CableEdgeType, SigNode, EditorDiagram, ZoneNodeType } from "../flow/types";
+import type { BlockNodeType, CableEdgeType, SigNode, EditorDiagram, ZoneNodeType } from "../flow/types";
 import { deriveBoundary, embedWouldCycle, makeBlockNode, planPromoteZone } from "../flow/nesting";
 import { extractTabAsBuild, extractZoneAsBuild, remapBuildIds } from "../flow/buildExtract";
 import type { BuildMeta } from "../flow/buildExtract";
@@ -8,7 +8,7 @@ import { boundaryHash, planBoundaryRefresh } from "../flow/boundaryDrift";
 import { emptyEditorDiagram, fromDocument, synthesizeBlockModel, toDocument } from "../io/serialize";
 import { pruneRevisions, snapshotHash } from "./revisions";
 import { SIGPATH_SCHEMA_VERSION } from "../schema";
-import type { Build, Revision, RevisionSnapshot, SigpathDocument, SignalProfile, Trunk } from "../schema";
+import type { BoundaryPort, Build, Revision, RevisionSnapshot, SigpathDocument, SignalProfile, Trunk } from "../schema";
 
 type Options = {
   setNodes: (nodes: SigNode[]) => void;
@@ -24,6 +24,40 @@ type Options = {
 type ProjectSnapshot = { diagrams: EditorDiagram[]; activeId: string };
 
 const MAX_HISTORY = 100;
+
+/**
+ * Re-point every block that references `tabId` at a freshly-published `boundary` — in all
+ * diagrams' stored content AND the live canvas nodes — re-synthesizing each block's port model +
+ * rev and clearing its drift flag. Shared by refresh (re-derived ports) and curate (user-set
+ * ports). Returns the next diagrams, plus next live nodes only when some referenced the tab (else
+ * null ⇒ leave the canvas untouched). Pure: no state writes, so callers snapshot + set.
+ */
+function rebindReferencingBlocks(
+  diagrams: EditorDiagram[],
+  liveNodes: SigNode[],
+  tabId: string,
+  name: string,
+  boundary: { ports: BoundaryPort[]; rev: number },
+): { nextDiagrams: EditorDiagram[]; nextLiveNodes: SigNode[] | null } {
+  const refs = (n: SigNode): n is BlockNodeType => n.type === "block" && n.data.refDiagramId === tabId;
+  const rebind = (n: SigNode): SigNode =>
+    refs(n)
+      ? {
+          ...n,
+          data: {
+            ...n.data,
+            model: synthesizeBlockModel(tabId, { name, ports: boundary.ports }),
+            boundaryRev: boundary.rev,
+            drift: false,
+          },
+        }
+      : n;
+  const nextDiagrams = diagrams.map((d) => {
+    const withBoundary = d.id === tabId ? { ...d, boundary } : d;
+    return withBoundary.nodes.some(refs) ? { ...withBoundary, nodes: withBoundary.nodes.map(rebind) } : withBoundary;
+  });
+  return { nextDiagrams, nextLiveNodes: liveNodes.some(refs) ? liveNodes.map(rebind) : null };
+}
 
 /**
  * Owns the open project (name + diagrams + active diagram) AND its undo history.
@@ -351,31 +385,32 @@ export function useProject(initial: EditorDiagram[], opts: Options) {
       const plan = planBoundaryRefresh(room);
       const boundary = { ports: plan.nextPorts, rev: boundaryHash(plan.nextPorts) };
       takeSnapshot();
-      const rebind = (n: SigNode): SigNode =>
-        n.type === "block" && n.data.refDiagramId === tabId
-          ? {
-              ...n,
-              data: {
-                ...n.data,
-                model: synthesizeBlockModel(tabId, { name: room.name, ports: boundary.ports }),
-                boundaryRev: boundary.rev,
-                drift: false,
-              },
-            }
-          : n;
-      setDiagrams(
-        cur.map((d) => {
-          const withBoundary = d.id === tabId ? { ...d, boundary } : d;
-          return withBoundary.nodes.some((n) => n.type === "block" && n.data.refDiagramId === tabId)
-            ? { ...withBoundary, nodes: withBoundary.nodes.map(rebind) }
-            : withBoundary;
-        }),
-      );
-      // Re-bind the blocks on the live canvas too, so the host re-renders refreshed handles.
-      if (nodesRef.current.some((n) => n.type === "block" && n.data.refDiagramId === tabId)) {
-        setNodes(nodesRef.current.map(rebind));
-      }
+      const { nextDiagrams, nextLiveNodes } = rebindReferencingBlocks(cur, nodesRef.current, tabId, room.name, boundary);
+      setDiagrams(nextDiagrams);
+      if (nextLiveNodes) setNodes(nextLiveNodes); // re-render the live canvas's referencing blocks
       return { ok: true, removed: plan.removed.length, remirrored: plan.changed.length + plan.rebound.length };
+    },
+    [synced, takeSnapshot, setDiagrams, setNodes, nodesRef],
+  );
+
+  /**
+   * Apply a curated published boundary to a tab — the panel's rename / hide / reorder, committed
+   * as one undoable snapshot (p2-zonetab Phase C). Re-publishes `nextPorts` (rev = content hash)
+   * and re-binds every block referencing the tab, on the canvas and in other diagrams, exactly
+   * like refresh — so embeds reflect the curated face immediately. Hidden ports stay in the set;
+   * synthesizeBlockModel drops them from the rendered block.
+   */
+  const curateTabBoundary = useCallback(
+    (tabId: string, nextPorts: BoundaryPort[]): { ok: boolean; error?: string } => {
+      const cur = synced();
+      const room = cur.find((d) => d.id === tabId);
+      if (!room) return { ok: false, error: "That tab no longer exists." };
+      const boundary = { ports: nextPorts, rev: boundaryHash(nextPorts) };
+      takeSnapshot();
+      const { nextDiagrams, nextLiveNodes } = rebindReferencingBlocks(cur, nodesRef.current, tabId, room.name, boundary);
+      setDiagrams(nextDiagrams);
+      if (nextLiveNodes) setNodes(nextLiveNodes);
+      return { ok: true };
     },
     [synced, takeSnapshot, setDiagrams, setNodes, nodesRef],
   );
@@ -509,6 +544,7 @@ export function useProject(initial: EditorDiagram[], opts: Options) {
     buildFromZone,
     insertBuild,
     refreshTabBoundary,
+    curateTabBoundary,
     revisions,
     captureRevision,
     restoreRevision,

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import "./DiagramTabs.css";
 
 type TabInfo = { id: string; name: string; referencedBy?: number };
@@ -16,6 +16,8 @@ type Props = {
   onSaveAsBuild: (id: string) => void;
   /** Move `draggedId` to sit at `targetId`'s position (drag-to-reorder). */
   onReorder: (draggedId: string, targetId: string) => void;
+  /** Curate this tab's published boundary ports — opens the interface panel (p2-zonetab Phase C). */
+  onCurate?: (id: string) => void;
 };
 
 /**
@@ -33,6 +35,7 @@ export function DiagramTabs({
   onEmbed,
   onSaveAsBuild,
   onReorder,
+  onCurate,
 }: Props) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [draft, setDraft] = useState("");
@@ -40,6 +43,17 @@ export function DiagramTabs({
   // (for the drop-line indicator).
   const [dragId, setDragId] = useState<string | null>(null);
   const [overId, setOverId] = useState<string | null>(null);
+  // Right-click context menu (currently: curate the tab's published interface).
+  const [menu, setMenu] = useState<{ id: string; x: number; y: number } | null>(null);
+
+  useEffect(() => {
+    if (!menu) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setMenu(null);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [menu]);
 
   function startEdit(tab: TabInfo) {
     setEditingId(tab.id);
@@ -69,6 +83,14 @@ export function DiagramTabs({
           draggable={editingId !== d.id}
           onClick={() => onSwitch(d.id)}
           onDoubleClick={() => startEdit(d)}
+          onContextMenu={
+            onCurate
+              ? (e) => {
+                  e.preventDefault();
+                  setMenu({ id: d.id, x: e.clientX, y: e.clientY });
+                }
+              : undefined
+          }
           onDragStart={(e) => {
             setDragId(d.id);
             e.dataTransfer.effectAllowed = "move";
@@ -162,6 +184,32 @@ export function DiagramTabs({
       <button type="button" className="tab-add" onClick={onAdd} aria-label="Add diagram" title="Add diagram">
         +
       </button>
+
+      {menu && (
+        <>
+          <div
+            className="tab-menu__scrim"
+            onClick={() => setMenu(null)}
+            onContextMenu={(e) => {
+              e.preventDefault();
+              setMenu(null);
+            }}
+          />
+          <div className="tab-menu" style={{ left: menu.x, top: menu.y }} role="menu">
+            <button
+              type="button"
+              role="menuitem"
+              className="tab-menu__item"
+              onClick={() => {
+                onCurate?.(menu.id);
+                setMenu(null);
+              }}
+            >
+              Edit published interface…
+            </button>
+          </div>
+        </>
+      )}
     </div>
   );
 }

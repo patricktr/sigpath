@@ -45,6 +45,27 @@ export function deriveBoundary(ed: EditorDiagram): Boundary {
 }
 
 /**
+ * Boundary-port ids of `tabId` that have at least one host cable attached, across every diagram
+ * that embeds it (a block node referencing `tabId`). The block's handle ids ARE its boundary-port
+ * ids, so a wired endpoint names the port directly. Drives the curate panel's "can't hide a wired
+ * port" rule — hiding it would drop the handle at the synthesis seam and orphan the cable.
+ */
+export function wiredBoundaryPortIds(diagrams: EditorDiagram[], tabId: string): Set<string> {
+  const wired = new Set<string>();
+  for (const d of diagrams) {
+    const blockIds = new Set(
+      d.nodes.filter((n) => n.type === "block" && n.data.refDiagramId === tabId).map((n) => n.id),
+    );
+    if (blockIds.size === 0) continue;
+    for (const e of d.edges) {
+      if (blockIds.has(e.source) && e.sourceHandle) wired.add(e.sourceHandle);
+      if (blockIds.has(e.target) && e.targetHandle) wired.add(e.targetHandle);
+    }
+  }
+  return wired;
+}
+
+/**
  * Would embedding `refId` into `hostId` create an embed cycle? True if `refId` is the host
  * itself or already reaches the host through existing blocks (A → B → A). DFS over the
  * block-reference graph held in each diagram's nodes.

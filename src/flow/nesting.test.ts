@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { planPromoteZone } from "./nesting";
-import type { CableEdgeType, DeviceNodeType, SigNode, ZoneNodeType } from "./types";
+import { planPromoteZone, wiredBoundaryPortIds } from "./nesting";
+import type { BlockNodeType, CableEdgeType, DeviceNodeType, EditorDiagram, SigNode, ZoneNodeType } from "./types";
 import type { Port } from "../schema";
 
 function dev(id: string, position: { x: number; y: number }, ports: Port[]): DeviceNodeType {
@@ -75,5 +75,39 @@ describe("planPromoteZone — boundary parity with embed", () => {
 
     expect(plan.boundary.ports.map((p) => p.id)).toEqual(["bp-C-co", "bp-C-ci"]);
     expect(plan.boundary.ports.every((p) => p.internal.instanceId === "C")).toBe(true);
+  });
+});
+
+describe("wiredBoundaryPortIds", () => {
+  const block = (id: string, ref: string): BlockNodeType => ({
+    id,
+    type: "block",
+    position: { x: 0, y: 0 },
+    data: {
+      refDiagramId: ref,
+      model: { id: `block:${ref}`, model: "ref", category: "other", source: "builtin", ports: [] },
+      boundaryRev: 1,
+    },
+  });
+
+  it("collects the boundary-port ids a host cable touches, ignoring unrelated tabs", () => {
+    const D = dev("D", { x: 400, y: 0 }, [
+      { id: "din", name: "In", direction: "input", connector: "sdi" },
+      { id: "dout", name: "Out", direction: "output", connector: "sdi" },
+    ]);
+    const host: EditorDiagram = {
+      id: "host",
+      name: "Host",
+      nodes: [block("blk", "tab-1"), block("other", "tab-2"), D],
+      edges: [
+        edge("w1", "blk", "bp-A-out", "D", "din"), // block is source → bp-A-out wired
+        edge("w2", "D", "dout", "blk", "bp-B-in"), // block is target → bp-B-in wired
+        edge("w3", "other", "bp-X", "D", "din"), // references tab-2 → must not leak into tab-1
+      ],
+    };
+
+    const wired = wiredBoundaryPortIds([host], "tab-1");
+    expect([...wired].sort()).toEqual(["bp-A-out", "bp-B-in"]);
+    expect(wired.has("bp-X")).toBe(false); // tab-2's wiring stays out of tab-1's set
   });
 });

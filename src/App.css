@@ -385,6 +385,19 @@
   color: var(--text-muted);
   margin-top: -8px;
 }
+.inspector__interface {
+  width: 100%;
+  padding: 6px 10px;
+  border: 1px solid var(--btn-border);
+  background: var(--btn-bg);
+  color: var(--btn-text);
+  border-radius: var(--radius);
+  font-size: 12px;
+  cursor: pointer;
+}
+.inspector__interface:hover {
+  border-color: var(--accent);
+}
 .inspector__tiles {
   display: flex;
   gap: 8px;
