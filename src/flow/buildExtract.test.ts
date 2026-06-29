@@ -110,10 +110,10 @@ describe("extractZoneAsBuild", () => {
   const out = devNode("C", { x: 600, y: 600 }); // center (684, 648) — outside
   const zone = zoneNode("z", { x: 0, y: 0 }, { w: 400, h: 400 });
 
-  it("extracts only zone members, moving internal cables and publishing crossing ports", () => {
+  it("extracts only zone members, moving internal cables and publishing the full interface", () => {
     const nodes = [zone, inA, inB, out];
     const edges = [
-      edge("internal", "A", "out", "B", "in"), // both inside → moves into the build
+      edge("internal", "A", "out", "B", "in"), // both inside → moves into the build (wires A.out, B.in)
       edge("crossing", "C", "out", "A", "in"), // enters the zone → boundary on A.in
     ];
     const build = asBuild(extractZoneAsBuild(zone, nodes, edges, [], META));
@@ -122,8 +122,11 @@ describe("extractZoneAsBuild", () => {
     expect(root.id).toBe(build.rootDiagramId);
     expect(root.devices.map((d) => d.id).sort()).toEqual(["A", "B"]); // C excluded
     expect(root.connections).toHaveLength(1); // only the internal run moved
-    expect(root.boundary?.ports).toHaveLength(1);
-    expect(root.boundary?.ports[0].internal).toEqual({ instanceId: "A", portId: "in" });
+    // Full interface (parity with embed): the crossing port (A.in) AND the dangling port
+    // (B.out) are published — A.out and B.in are wired internally so they stay hidden.
+    expect(root.boundary?.ports).toHaveLength(2);
+    const refs = root.boundary?.ports.map((p) => `${p.internal.instanceId}:${p.internal.portId}`).sort();
+    expect(refs).toEqual(["A:in", "B:out"]);
   });
 
   it("refuses an empty zone", () => {

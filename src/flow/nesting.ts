@@ -117,7 +117,9 @@ export type PromotePlan = {
  * they move into a new sub-diagram (positions rebased to the zone origin). A cable with
  * both ends inside is internal and moves too; a cable crossing the zone edge auto-publishes
  * a boundary port for its inside endpoint and is re-pointed onto the new block — so the run
- * stays a single cable, now entering/leaving the room through the boundary.
+ * stays a single cable, now entering/leaving the room through the boundary. The published
+ * face is the room's FULL interface: un-wired member device ports are exposed too (parity
+ * with embedTabAsBlock), so an unwired room becomes a wireable block; curation trims later.
  */
 export function planPromoteZone(
   zone: ZoneNodeType,
@@ -183,6 +185,24 @@ export function planPromoteZone(
       hostEdgesOut.push({ ...e, target: ids.blockId, targetHandle: bp.id });
     } else {
       hostEdgesOut.push(e); // wholly outside → untouched
+    }
+  }
+
+  // Parity with embedTabAsBlock/deriveBoundary: the block carries the room's FULL interface,
+  // not just the cables that happened to cross the zone edge. Every member device port that
+  // no internal run consumes is published too — so an unwired room promotes to a wireable
+  // block instead of an unwireable one. Crossing ports were already minted above; boundaryFor
+  // dedups by inner-port identity. The curate panel (Phase C) hides the extras later.
+  const wiredInternally = new Set<string>();
+  for (const e of subEdges) {
+    if (e.sourceHandle) wiredInternally.add(`${e.source}:${e.sourceHandle}`);
+    if (e.targetHandle) wiredInternally.add(`${e.target}:${e.targetHandle}`);
+  }
+  for (const m of members) {
+    if (m.type !== "device") continue; // mirror deriveBoundary: only device ports form the face
+    for (const p of m.data.model.ports) {
+      if (wiredInternally.has(`${m.id}:${p.id}`)) continue; // internal run → not on the face
+      boundaryFor(m.id, p.id); // dangling (or already-published crossing) port → public face
     }
   }
 
