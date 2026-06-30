@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { computeHops, cablePath } from "./cableHops";
+import { computeHops, cablePath, smoothStepPolyline } from "./cableHops";
 import { orthogonalPathD } from "./obstacleRoute";
 import type { Pt } from "./obstacleRoute";
 
@@ -57,6 +57,37 @@ describe("computeHops", () => {
       ]),
     );
     expect(hops.size).toBe(0);
+  });
+});
+
+describe("smoothStepPolyline", () => {
+  it("reconstructs a midpoint Z for horizontal ports at different heights", () => {
+    expect(smoothStepPolyline(0, 0, true, 100, 40, true)).toEqual([
+      { x: 0, y: 0 },
+      { x: 50, y: 0 },
+      { x: 50, y: 40 },
+      { x: 100, y: 40 },
+    ]);
+  });
+
+  it("is a straight line when horizontal ports are level", () => {
+    expect(smoothStepPolyline(0, 10, true, 100, 10, true)).toEqual([
+      { x: 0, y: 10 },
+      { x: 100, y: 10 },
+    ]);
+  });
+
+  it("lets two no-waypoint runs hop where their reconstructed paths cross", () => {
+    const a = smoothStepPolyline(0, 50, true, 200, 50, true); // straight horizontal at y=50
+    const b = smoothStepPolyline(100, 0, false, 100, 100, false); // straight vertical at x=100
+    const hops = computeHops(
+      new Map([
+        ["a", a],
+        ["b", b],
+      ]),
+    );
+    expect(hops.get("a")).toEqual([{ x: 100, y: 50 }]); // the horizontal run bumps over the vertical
+    expect(hops.get("b")).toBeUndefined();
   });
 });
 

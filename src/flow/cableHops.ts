@@ -75,6 +75,38 @@ export function computeHops(polylines: Map<string, Pt[]>): Map<string, Hop[]> {
   return hops;
 }
 
+/**
+ * Reconstruct the orthogonal polyline of a cable that carries NO router waypoints — the run
+ * React Flow would draw as a smooth-step path. Shared by detection (App) and drawing (CableEdge)
+ * so a hop lands on the same geometry both compute. `*Horiz` is whether that port exits
+ * horizontally (a left/right jack) vs vertically (a top/bottom bidi jack):
+ *  - both horizontal → a Z bending at the midpoint x (or a straight line when level);
+ *  - both vertical   → a Z bending at the midpoint y;
+ *  - mixed           → a single L-bend along each port's exit axis.
+ */
+export function smoothStepPolyline(
+  sx: number,
+  sy: number,
+  sourceHoriz: boolean,
+  tx: number,
+  ty: number,
+  targetHoriz: boolean,
+): Pt[] {
+  if (sourceHoriz && targetHoriz) {
+    if (Math.abs(sy - ty) <= 0.5) return [{ x: sx, y: sy }, { x: tx, y: ty }];
+    const cx = (sx + tx) / 2;
+    return [{ x: sx, y: sy }, { x: cx, y: sy }, { x: cx, y: ty }, { x: tx, y: ty }];
+  }
+  if (!sourceHoriz && !targetHoriz) {
+    if (Math.abs(sx - tx) <= 0.5) return [{ x: sx, y: sy }, { x: tx, y: ty }];
+    const cy = (sy + ty) / 2;
+    return [{ x: sx, y: sy }, { x: sx, y: cy }, { x: tx, y: cy }, { x: tx, y: ty }];
+  }
+  return sourceHoriz
+    ? [{ x: sx, y: sy }, { x: tx, y: sy }, { x: tx, y: ty }]
+    : [{ x: sx, y: sy }, { x: sx, y: ty }, { x: tx, y: ty }];
+}
+
 // --- Render: the cable path string, with hop bumps spliced in --------------------------------
 
 /** Radius of a hop bump — the little semicircle a horizontal wire arcs over a crossing with. */

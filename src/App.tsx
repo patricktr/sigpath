@@ -32,7 +32,7 @@ import type { BulkState, BulkPortRef, BulkPatchActions } from "./flow/bulkPatch"
 import { isPortBearing, nodePorts } from "./flow/types";
 import { computeNodeDimming, edgeSignalGroups, matchesActive, signalLayers, FILTER_FADE_OPACITY } from "./flow/signalFilter";
 import { SignalFilterContext } from "./flow/signalFilterContext";
-import { computeHops } from "./flow/cableHops";
+import { computeHops, smoothStepPolyline } from "./flow/cableHops";
 import type { Hop } from "./flow/cableHops";
 import type {
   DeviceNodeType,
@@ -694,21 +694,27 @@ function AppInner() {
       return { ...e, style, animated, data };
     });
 
-    // Final orthogonal polyline per routed edge (ports stitched + stub-snapped, mirroring
-    // CableEdge) — the geometry the crossing-hop layer detects over. Built unconditionally
-    // (cheap); the downstream hop pass gates the O(n²) detection on the toggle. Smooth-step
-    // (no-waypoint) runs are omitted — no orthogonal polyline, so they don't hop.
+    // Final orthogonal polyline per edge — the geometry the crossing-hop layer detects over.
+    // A routed edge stitches its ports onto the waypoints (stub-snapped, mirroring CableEdge);
+    // a no-waypoint edge reconstructs the smooth-step run, so straight cables cross-detect too.
+    // Built unconditionally (cheap); the downstream hop pass gates the O(n²) detection.
     const polylines = new Map<string, Pt[]>();
     for (const e of edges) {
-      const wp = trunkOverride.get(e.id) ?? waypoints.get(e.id);
       const en = ends.get(e.id);
-      if (!wp || !wp.length || !en) continue;
-      const pts: Pt[] = [{ x: en.sx, y: en.sy }, ...wp.map((p) => ({ ...p })), { x: en.tx, y: en.ty }];
-      if (en.sourceSide === "L" || en.sourceSide === "R") pts[1].y = en.sy;
-      else pts[1].x = en.sx;
-      if (en.targetSide === "L" || en.targetSide === "R") pts[pts.length - 2].y = en.ty;
-      else pts[pts.length - 2].x = en.tx;
-      polylines.set(e.id, pts);
+      if (!en) continue;
+      const sHoriz = en.sourceSide === "L" || en.sourceSide === "R";
+      const tHoriz = en.targetSide === "L" || en.targetSide === "R";
+      const wp = trunkOverride.get(e.id) ?? waypoints.get(e.id);
+      if (wp && wp.length) {
+        const pts: Pt[] = [{ x: en.sx, y: en.sy }, ...wp.map((p) => ({ ...p })), { x: en.tx, y: en.ty }];
+        if (sHoriz) pts[1].y = en.sy;
+        else pts[1].x = en.sx;
+        if (tHoriz) pts[pts.length - 2].y = en.ty;
+        else pts[pts.length - 2].x = en.tx;
+        polylines.set(e.id, pts);
+      } else {
+        polylines.set(e.id, smoothStepPolyline(en.sx, en.sy, sHoriz, en.tx, en.ty, tHoriz));
+      }
     }
 
     return { edges: styled, candidates, trunkBadges, polylines };

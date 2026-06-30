@@ -7,7 +7,7 @@ import {
 } from "@xyflow/react";
 import type { CableEdgeType } from "./types";
 import type { Pt } from "./obstacleRoute";
-import { cablePath } from "./cableHops";
+import { cablePath, smoothStepPolyline } from "./cableHops";
 import "./CableEdge.css";
 
 /** Corner rounding for the orthogonal cable path (matches the smooth-step feel). */
@@ -40,6 +40,7 @@ export function CableEdge({
   let path: string;
 
   const waypoints = data?.waypoints;
+  const hops = data?.hops ?? [];
   if (waypoints && waypoints.length) {
     // Stitch the exact (measured) ports onto the routed interior, then snap the first/last
     // bend to the port's exit axis so the stub is exactly perpendicular: Y for a left/right
@@ -55,9 +56,17 @@ export function CableEdge({
     else pts[1].x = sourceX;
     if (targetPosition === Position.Left || targetPosition === Position.Right) pts[pts.length - 2].y = targetY;
     else pts[pts.length - 2].x = targetX;
-    path = cablePath(pts, BEND_RADIUS, data?.hops ?? []);
+    path = cablePath(pts, BEND_RADIUS, hops);
+  } else if (hops.length) {
+    // A smooth-step run that crosses another cable — reconstruct its polyline (the same one the
+    // hop layer detected over) so the bump can ride it. Hopless straight runs stay on React
+    // Flow's smooth-step below, so they're visually unchanged.
+    const sHoriz = sourcePosition === Position.Left || sourcePosition === Position.Right;
+    const tHoriz = targetPosition === Position.Left || targetPosition === Position.Right;
+    const pts = smoothStepPolyline(sourceX, sourceY, sHoriz, targetX, targetY, tHoriz);
+    path = cablePath(pts, BEND_RADIUS, hops);
   } else {
-    // A clean straight run (no waypoints) — React Flow's default smooth-step path.
+    // A clean straight run (no waypoints, no crossings) — React Flow's default smooth-step path.
     const [p] = getSmoothStepPath({
       sourceX,
       sourceY,
