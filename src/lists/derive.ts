@@ -80,6 +80,31 @@ export function deriveLists(nodes: SigNode[], edges: CableEdgeType[]): DerivedLi
     .map(([id, count]) => ({ id, label: cableLabel(id), color: cableColor(id), count }))
     .sort((a, b) => a.label.localeCompare(b.label));
 
+  // Power cords (p3-psupacklist) — an AC mains inlet needs its matching cord, whether or not power
+  // is drawn (signal diagrams usually omit power). Device-driven, like the PSU bricks: one cord per
+  // device per cord-type whose inlet(s) are all UNWIRED — a wired mains run already counts as a
+  // cable above, and redundant same-type inlets don't double-pack. Each AC inlet family maps to the
+  // cord it takes (C14→C13, figure-8 C8→C7, cloverleaf C6→C5). C19/C20 + powerCON aren't here yet.
+  const POWER_CORD: Record<string, string> = {
+    iec: "IEC C13 power cord",
+    "iec-c7": "IEC C7 figure-8 power cord",
+    "iec-c5": "IEC C5 cloverleaf power cord",
+  };
+  const wiredInputs = new Set(edges.map((e) => `${e.target}:${e.targetHandle}`));
+  const cordCounts = new Map<string, number>();
+  for (const n of deviceNodes) {
+    for (const conn of Object.keys(POWER_CORD)) {
+      const ins = n.data.model.ports.filter((p) => p.direction === "input" && p.connector === conn);
+      if (ins.length && !ins.some((p) => wiredInputs.has(`${n.id}:${p.id}`))) {
+        cordCounts.set(conn, (cordCounts.get(conn) ?? 0) + 1);
+      }
+    }
+  }
+  for (const [conn, count] of cordCounts) {
+    cables.push({ id: `cord-${conn}`, label: POWER_CORD[conn], color: cableColor(conn), count });
+  }
+  if (cordCounts.size > 0) cables.sort((a, b) => a.label.localeCompare(b.label));
+
   // Cables & adapters — transition cables (passive) and converters needed (active).
   const adapterCounts = new Map<
     string,
