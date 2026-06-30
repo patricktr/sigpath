@@ -2,6 +2,7 @@ import { createContext, useContext } from "react";
 import { Handle, Position, type NodeProps } from "@xyflow/react";
 import { cableColor, inputPorts, outputPorts, bidirectionalPorts, deviceTitle } from "../schema";
 import type { BlockNodeType } from "./types";
+import { SignalFilterContext, portFaded } from "./signalFilterContext";
 import "./DeviceNode.css";
 
 /**
@@ -41,6 +42,9 @@ export function BlockNode({ id, data }: NodeProps<BlockNodeType>) {
   const isDrifted = drifted.has(refDiagramId);
   const hasDeepError = deepErrors.has(id);
 
+  const sig = useContext(SignalFilterContext);
+  const portCls = (base: string, portId: string) => (portFaded(sig, id, portId) ? base + " port--dim" : base);
+
   return (
     <div
       className="device-node device-node--block"
@@ -79,7 +83,7 @@ export function BlockNode({ id, data }: NodeProps<BlockNodeType>) {
         <div className="device-node__body">
           <ul className="device-node__col device-node__col--in">
             {inputs.map((port) => (
-              <li className="port port--in" key={port.id}>
+              <li className={portCls("port port--in", port.id)} key={port.id}>
                 <Handle
                   id={port.id}
                   type="target"
@@ -94,7 +98,7 @@ export function BlockNode({ id, data }: NodeProps<BlockNodeType>) {
 
           <ul className="device-node__col device-node__col--out">
             {outputs.map((port) => (
-              <li className="port port--out" key={port.id}>
+              <li className={portCls("port port--out", port.id)} key={port.id}>
                 <span className="port__label">{port.name}</span>
                 <Handle
                   id={port.id}
@@ -112,7 +116,7 @@ export function BlockNode({ id, data }: NodeProps<BlockNodeType>) {
       {bidi.length > 0 && (
         <div className="device-node__io">
           {bidi.map((port) => (
-            <div className="port port--io" key={port.id}>
+            <div className={portCls("port port--io", port.id)} key={port.id}>
               <span className="port__label">{port.name}</span>
               <span className="port__io-anchor">
                 {/* One jack, both ways: overlapping target + source handles. */}

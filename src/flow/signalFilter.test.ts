@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { signalLayers, edgeSignalGroups, matchesActive } from "./signalFilter";
+import { signalLayers, edgeSignalGroups, matchesActive, computeNodeDimming } from "./signalFilter";
 import type { SignalKind } from "../schema";
 import type { CableEdgeType, DeviceNodeType, SigNode } from "./types";
 import type { Port } from "../schema";
@@ -60,5 +60,36 @@ describe("matchesActive", () => {
   it("matches when any of the item's groups is active", () => {
     expect(matchesActive(set("av", "video"), set("video"))).toBe(true); // adapter cable, video active
     expect(matchesActive(set("audio"), set("video", "network"))).toBe(false);
+  });
+});
+
+describe("computeNodeDimming", () => {
+  const A = dev("A", [
+    { id: "v", name: "SDI", direction: "output", connector: "sdi" }, // video
+    { id: "a", name: "XLR", direction: "output", connector: "xlr3" }, // audio
+    { id: "n", name: "Net", direction: "output", connector: "rj45" }, // network, left unwired
+  ]);
+  const B = dev("B", [
+    { id: "v", name: "SDI", direction: "input", connector: "sdi" },
+    { id: "a", name: "XLR", direction: "input", connector: "xlr3" },
+  ]);
+  const nodes: SigNode[] = [A, B];
+  const edges = [edge("e1", "A", "v", "B", "v")]; // one video cable
+
+  it("flow mode: active only if a matching cable touches it; only carried ports stay lit", () => {
+    const video = computeNodeDimming(nodes, edges, new Set(["video"]), false);
+    expect([...video.activeNodeIds].sort()).toEqual(["A", "B"]);
+    expect([...(video.litPorts.get("A") ?? [])]).toEqual(["v"]); // a, n unlit — no cable carries them
+    const audio = computeNodeDimming(nodes, edges, new Set(["audio"]), false);
+    expect(audio.activeNodeIds.size).toBe(0); // no audio cable → audio layer lights nothing
+  });
+
+  it("capability mode: active if it has a matching port, lit wired-or-not", () => {
+    const audio = computeNodeDimming(nodes, edges, new Set(["audio"]), true);
+    expect([...audio.activeNodeIds].sort()).toEqual(["A", "B"]); // both have an XLR
+    expect([...(audio.litPorts.get("A") ?? [])]).toEqual(["a"]);
+    const net = computeNodeDimming(nodes, edges, new Set(["network"]), true);
+    expect([...net.activeNodeIds]).toEqual(["A"]); // only A has rj45
+    expect([...(net.litPorts.get("A") ?? [])]).toEqual(["n"]); // unwired, but lit for patching
   });
 });

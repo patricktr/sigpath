@@ -30,7 +30,8 @@ import { arrangeLeftToRight } from "./flow/autoLayout";
 import { bulkClick, EMPTY_BULK, sourceOrdinal, bulkStatus, BulkPatchContext } from "./flow/bulkPatch";
 import type { BulkState, BulkPortRef, BulkPatchActions } from "./flow/bulkPatch";
 import { isPortBearing, nodePorts } from "./flow/types";
-import { edgeSignalGroups, matchesActive, signalLayers, FILTER_FADE_OPACITY } from "./flow/signalFilter";
+import { computeNodeDimming, edgeSignalGroups, matchesActive, signalLayers, FILTER_FADE_OPACITY } from "./flow/signalFilter";
+import { SignalFilterContext } from "./flow/signalFilterContext";
 import type {
   DeviceNodeType,
   CableEdgeType,
@@ -685,6 +686,36 @@ function AppInner() {
     }
     return out;
   }, [rendered.edges, activeSignals, hideNonMatching, nodes, validation]);
+
+  // Signal-type view filter (p2-typefilter, slice 3): per-node dimming. computeNodeDimming decides
+  // which nodes stay active and which ports stay lit (flow vs capability mode — `includeUnwiredGear`).
+  // displayNodes fades inactive devices/blocks, or hides them — but never one a still-shown edge
+  // (incl. an exempt error) needs, so no edge dangles. Zones/notes aren't signal-bearing. The
+  // context lets each kept-active node fade its own non-lit ports.
+  const nodeDim = useMemo(
+    () => computeNodeDimming(nodes, edges, activeSignals, includeUnwiredGear),
+    [nodes, edges, activeSignals, includeUnwiredGear],
+  );
+  const displayNodes = useMemo(() => {
+    if (activeSignals.size === 0) return nodes;
+    const keep = new Set<string>();
+    for (const e of displayEdges) {
+      keep.add(e.source);
+      keep.add(e.target);
+    }
+    const out: SigNode[] = [];
+    for (const n of nodes) {
+      if (n.type !== "device" && n.type !== "block") out.push(n); // structural — never dim
+      else if (nodeDim.activeNodeIds.has(n.id)) out.push(n);
+      else if (hideNonMatching && !keep.has(n.id)) continue; // hide entirely
+      else out.push({ ...n, style: { ...n.style, opacity: FILTER_FADE_OPACITY } });
+    }
+    return out;
+  }, [nodes, displayEdges, nodeDim, activeSignals, hideNonMatching]);
+  const signalFilterValue = useMemo(
+    () => ({ filtering: activeSignals.size > 0, litPorts: nodeDim.litPorts, activeNodeIds: nodeDim.activeNodeIds }),
+    [activeSignals, nodeDim],
+  );
 
   // Trunk actions (p2-trunk): accept an offered bundle (created collapsed), toggle collapse/expand,
   // or dismiss an offer for this session. All persisted edits go through setActiveTrunks (undoable).
@@ -2147,8 +2178,9 @@ function AppInner() {
             <NoteActionsContext.Provider value={noteActions}>
              <BulkPatchContext.Provider value={bulkPatchValue}>
               <BlockDriftContext.Provider value={blockDrift}>
+              <SignalFilterContext.Provider value={signalFilterValue}>
               <ReactFlow
-                nodes={nodes}
+                nodes={displayNodes}
                 edges={displayEdges}
                 nodeTypes={nodeTypes}
                 edgeTypes={edgeTypes}
@@ -2228,6 +2260,7 @@ function AppInner() {
                 </ViewportPortal>
                 <EdgeMarqueeSelect onMarqueeEnd={selectEdgesInMarquee} />
               </ReactFlow>
+              </SignalFilterContext.Provider>
               </BlockDriftContext.Provider>
              </BulkPatchContext.Provider>
             </NoteActionsContext.Provider>

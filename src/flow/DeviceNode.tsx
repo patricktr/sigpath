@@ -3,6 +3,7 @@ import { Handle, Position, type NodeProps } from "@xyflow/react";
 import { cableColor, inputPorts, outputPorts, bidirectionalPorts, deviceTitle } from "../schema";
 import type { DeviceNodeType } from "./types";
 import { BulkPatchContext } from "./bulkPatch";
+import { SignalFilterContext, portFaded } from "./signalFilterContext";
 import "./DeviceNode.css";
 
 /**
@@ -20,6 +21,11 @@ export function DeviceNode({ id, data }: NodeProps<DeviceNodeType>) {
   const outputs = outputPorts(model);
   const bidi = bidirectionalPorts(model);
   const bulk = useContext(BulkPatchContext);
+  const sig = useContext(SignalFilterContext);
+  // Row classes: bulk-patch target + signal-filter fade for a port outside the active layer
+  // (only on a kept-active node — an inactive node is faded whole by displayNodes).
+  const portCls = (base: string, portId: string) =>
+    [base, bulk.active && "port--bulk", portFaded(sig, id, portId) && "port--dim"].filter(Boolean).join(" ");
 
   // Event handlers for a port while bulk-patching ({} when off, so normal
   // drag-to-connect is untouched). onClick picks/pairs the port; stopping click +
@@ -49,11 +55,7 @@ export function DeviceNode({ id, data }: NodeProps<DeviceNodeType>) {
             {inputs.map((port) => {
               const ord = ordinal(port.id);
               return (
-                <li
-                  className={bulk.active ? "port port--in port--bulk" : "port port--in"}
-                  key={port.id}
-                  {...bulkPort(port.id)}
-                >
+                <li className={portCls("port port--in", port.id)} key={port.id} {...bulkPort(port.id)}>
                   <Handle
                     id={port.id}
                     type="target"
@@ -72,11 +74,7 @@ export function DeviceNode({ id, data }: NodeProps<DeviceNodeType>) {
             {outputs.map((port) => {
               const ord = ordinal(port.id);
               return (
-                <li
-                  className={bulk.active ? "port port--out port--bulk" : "port port--out"}
-                  key={port.id}
-                  {...bulkPort(port.id)}
-                >
+                <li className={portCls("port port--out", port.id)} key={port.id} {...bulkPort(port.id)}>
                   <span className="port__label">{port.name}</span>
                   {ord != null && <span className="port__ordinal port__ordinal--out">{ord}</span>}
                   <Handle
@@ -98,11 +96,7 @@ export function DeviceNode({ id, data }: NodeProps<DeviceNodeType>) {
           {bidi.map((port) => {
             const ord = ordinal(port.id);
             return (
-              <div
-                className={bulk.active ? "port port--io port--bulk" : "port port--io"}
-                key={port.id}
-                {...bulkPort(port.id)}
-              >
+              <div className={portCls("port port--io", port.id)} key={port.id} {...bulkPort(port.id)}>
                 <span className="port__label">{port.name}</span>
                 {ord != null && <span className="port__ordinal port__ordinal--io">{ord}</span>}
                 <span className="port__io-anchor">

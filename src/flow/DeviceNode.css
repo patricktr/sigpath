@@ -190,3 +190,10 @@
   top: 0;
   margin: 0;
 }
+
+/* Signal-type view filter (p2-typefilter, slice 3): a port outside the active layer, on an
+   otherwise-shown device, fades back. Whole-node fade/hide is applied at the React Flow node
+   level by App's displayNodes layer, so this only dims individual ports on a kept-active node. */
+.port--dim {
+  opacity: 0.3;
+}

@@ -26,6 +26,46 @@ export function matchesActive(groups: Set<SignalKind>, active: Set<SignalKind>):
 }
 
 /**
+ * Per-node dimming for the active filter. Returns the ports that stay LIT and the nodes that stay
+ * ACTIVE — a node is active ⟺ it has ≥1 lit port, which unifies both modes:
+ *  - flow (default): a port is lit if it carries an active cable → a device shows iff a matching
+ *    cable touches it, and its unused/other ports fade (the cable-driven "signal flow" view);
+ *  - capability (`includeUnwired`): a port is lit if its own type is active, wired or not → a
+ *    device shows if it has any matching port, with its empty matching jacks left lit to patch.
+ * Empty `active` ⇒ no filter (empty result; callers treat everything as shown).
+ */
+export function computeNodeDimming(
+  nodes: SigNode[],
+  edges: CableEdgeType[],
+  active: Set<SignalKind>,
+  includeUnwired: boolean,
+): { litPorts: Map<string, Set<string>>; activeNodeIds: Set<string> } {
+  const litPorts = new Map<string, Set<string>>();
+  const add = (nodeId: string, portId: string | null | undefined) => {
+    if (!portId) return;
+    let s = litPorts.get(nodeId);
+    if (!s) {
+      s = new Set();
+      litPorts.set(nodeId, s);
+    }
+    s.add(portId);
+  };
+  if (active.size > 0) {
+    if (includeUnwired) {
+      for (const n of nodes) for (const p of nodePorts(n)) if (active.has(groupForConnector(p.connector))) add(n.id, p.id);
+    } else {
+      const byId = new Map(nodes.map((n) => [n.id, n]));
+      for (const e of edges) {
+        if (!matchesActive(edgeSignalGroups(e, byId), active)) continue;
+        add(e.source, e.sourceHandle);
+        add(e.target, e.targetHandle);
+      }
+    }
+  }
+  return { litPorts, activeNodeIds: new Set(litPorts.keys()) };
+}
+
+/**
  * The signal layer(s) a cable belongs to — the group of each endpoint's port. Usually one;
  * two when an adapter cable crosses groups (e.g. HDMI→XLR), so it shows in both layers.
  */
