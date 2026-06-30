@@ -30,6 +30,7 @@ import { arrangeLeftToRight } from "./flow/autoLayout";
 import { bulkClick, EMPTY_BULK, sourceOrdinal, bulkStatus, BulkPatchContext } from "./flow/bulkPatch";
 import type { BulkState, BulkPortRef, BulkPatchActions } from "./flow/bulkPatch";
 import { isPortBearing, nodePorts } from "./flow/types";
+import { signalLayers } from "./flow/signalFilter";
 import type {
   DeviceNodeType,
   CableEdgeType,
@@ -59,6 +60,7 @@ import type { Pt } from "./flow/obstacleRoute";
 import { EdgeMarqueeSelect } from "./flow/EdgeMarqueeSelect";
 import { rectHitsRun } from "./flow/marqueeHit";
 import type { DeviceModel } from "./schema";
+import type { SignalKind } from "./schema";
 import { useProject } from "./project/useProject";
 import { parseDocument } from "./io/serialize";
 import {
@@ -109,6 +111,7 @@ import { deepGrade } from "./validation/deepGrade";
 import { LeftRail } from "./ui/LeftRail";
 import { Inspector } from "./ui/Inspector";
 import { BoundaryCuratePanel } from "./ui/BoundaryCuratePanel";
+import { SignalFilter } from "./ui/SignalFilter";
 import "./App.css";
 
 /** Registered once at module scope so the reference stays stable across renders. */
@@ -187,6 +190,11 @@ function AppInner() {
   const [buildsOpen, setBuildsOpen] = useState(false);
   // The tab whose published interface is being curated (p2-zonetab Phase C); null ⇒ panel closed.
   const [curateTabId, setCurateTabId] = useState<string | null>(null);
+  // Signal-type view filter (p2-typefilter). EMPTY active set = no filter (everything shown).
+  // `includeUnwiredGear` = capability mode; `hideNonMatching` = hide vs fade. Ephemeral (not saved).
+  const [activeSignals, setActiveSignals] = useState<Set<SignalKind>>(() => new Set());
+  const [includeUnwiredGear, setIncludeUnwiredGear] = useState(false);
+  const [hideNonMatching, setHideNonMatching] = useState(false);
   // Device being edited, and the placed node it came from (if any).
   const [editModel, setEditModel] = useState<DeviceModel | null>(null);
   const [editNodeId, setEditNodeId] = useState<string | null>(null);
@@ -805,19 +813,25 @@ function AppInner() {
 
   const noteActions = useMemo(() => ({ setText: setNoteText }), [setNoteText]);
 
-  // Cable legend, transition-aware: straight runs by type + named passive adapter
-  // cables (HDMI→Mini-HDMI, ¼"→3.5mm). Mirrors the Lists-panel "Cables & adapters"
-  // data so the rail and the lists always agree. Converters/PSUs aren't cables.
-  const usedCableTypes = useMemo(() => {
-    const items = [
-      ...lists.cables.map((c) => ({ id: c.id, label: c.label, color: c.color, count: c.count })),
-      ...lists.adapters
-        .filter((a) => a.kind !== "converter")
-        .map((a) => ({ id: a.key, label: a.label, color: a.color, count: a.count })),
-    ];
-    items.sort((a, b) => a.label.localeCompare(b.label));
-    return items;
-  }, [lists]);
+  // Signal layers present in the diagram — drives the rail's signal-type view filter
+  // (p2-typefilter). The finer cable-type / adapter breakdown lives in the Lists/BOM panel.
+  const signals = useMemo(() => signalLayers(nodes, edges), [nodes, edges]);
+  const toggleSignal = useCallback(
+    (k: SignalKind) =>
+      setActiveSignals((prev) => {
+        const next = new Set(prev);
+        if (next.has(k)) next.delete(k);
+        else next.add(k);
+        return next;
+      }),
+    [],
+  );
+  // Solo: show only this layer — or clear if it's already the lone active one.
+  const soloSignal = useCallback(
+    (k: SignalKind) => setActiveSignals((prev) => (prev.size === 1 && prev.has(k) ? new Set() : new Set([k]))),
+    [],
+  );
+  const clearSignals = useCallback(() => setActiveSignals(new Set<SignalKind>()), []);
 
   // Current selection drives the contextual action bar shown under the toolbar.
   const selection = useMemo(() => {
@@ -2096,7 +2110,19 @@ function AppInner() {
 
       <div className="workspace">
         <LeftRail
-          cables={usedCableTypes}
+          filter={
+            <SignalFilter
+              layers={signals}
+              active={activeSignals}
+              onToggle={toggleSignal}
+              onSolo={soloSignal}
+              onClear={clearSignals}
+              includeUnwired={includeUnwiredGear}
+              onIncludeUnwiredChange={setIncludeUnwiredGear}
+              hideNonMatching={hideNonMatching}
+              onHideNonMatchingChange={setHideNonMatching}
+            />
+          }
           devices={railDevices}
           selectedId={selectedNodeId}
           onSelect={selectNode}

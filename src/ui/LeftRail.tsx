@@ -1,38 +1,24 @@
-import type { LegendItem } from "./Legend";
+import type { ReactNode } from "react";
 
 export type RailDevice = { id: string; title: string; tag: string };
 
-/** Left rail: the cable/connector legend for the diagram + a selectable list of
+/** Left rail: the signal-layer view filter for the diagram + a selectable list of
  *  the devices on the canvas. */
 export function LeftRail({
-  cables,
+  filter,
   devices,
   selectedId,
   onSelect,
 }: {
-  cables: LegendItem[];
+  /** The signal-layer filter control (p2-typefilter), composed by App. */
+  filter: ReactNode;
   devices: RailDevice[];
   selectedId: string | null;
   onSelect: (id: string) => void;
 }) {
   return (
     <aside className="rail">
-      <div className="rail__section">
-        <div className="rail__label">Cables</div>
-        {cables.length === 0 ? (
-          <div className="rail__empty">No cables yet</div>
-        ) : (
-          <ul className="rail__list">
-            {cables.map((c) => (
-              <li className="rail__row" key={c.id}>
-                <span className="rail__swatch" style={{ background: c.color }} />
-                <span className="rail__name">{c.label}</span>
-                <span className="rail__count">{c.count}</span>
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
+      {filter}
 
       <div className="rail__divider" />
 
