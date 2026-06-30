@@ -32,6 +32,8 @@ import type { BulkState, BulkPortRef, BulkPatchActions } from "./flow/bulkPatch"
 import { isPortBearing, nodePorts } from "./flow/types";
 import { computeNodeDimming, edgeSignalGroups, matchesActive, signalLayers, FILTER_FADE_OPACITY } from "./flow/signalFilter";
 import { SignalFilterContext } from "./flow/signalFilterContext";
+import { computeHops } from "./flow/cableHops";
+import type { Hop } from "./flow/cableHops";
 import type {
   DeviceNodeType,
   CableEdgeType,
@@ -118,6 +120,9 @@ import "./App.css";
 /** Registered once at module scope so the reference stays stable across renders. */
 const nodeTypes = { device: DeviceNode, zone: ZoneNode, note: NoteNode, block: BlockNode };
 const edgeTypes = { cable: CableEdge };
+
+/** Stable empty hop map for when crossing hops are toggled off (keeps the memo identity steady). */
+const EMPTY_HOPS: Map<string, Hop[]> = new Map();
 
 /** Grid size (px) for snap-to-grid and the background dots. */
 const GRID = 24;
@@ -228,6 +233,28 @@ function AppInner() {
   const [closePrompt, setClosePrompt] = useState(false);
   const [validationOpen, setValidationOpen] = useState(false);
   const [snap, setSnap] = useState(true);
+  // Crossing hops (p2-hops): draw a bump where cables cross without connecting. A view
+  // preference, persisted like the theme; default on (the standard schematic convention).
+  const [hopsEnabled, setHopsEnabled] = useState(() => {
+    try {
+      return localStorage.getItem("sigpath.hops") !== "off";
+    } catch {
+      return true;
+    }
+  });
+  const toggleHops = useCallback(
+    () =>
+      setHopsEnabled((v) => {
+        const next = !v;
+        try {
+          localStorage.setItem("sigpath.hops", next ? "on" : "off");
+        } catch {
+          /* private mode / no storage — fine, just don't persist */
+        }
+        return next;
+      }),
+    [],
+  );
   const [themeMode, setThemeMode] = useState<"system" | "light" | "dark">(() => {
     try {
       const v = localStorage.getItem("sigpath.theme");
@@ -667,25 +694,55 @@ function AppInner() {
       return { ...e, style, animated, data };
     });
 
-    return { edges: styled, candidates, trunkBadges };
+    // Final orthogonal polyline per routed edge (ports stitched + stub-snapped, mirroring
+    // CableEdge) — the geometry the crossing-hop layer detects over. Built unconditionally
+    // (cheap); the downstream hop pass gates the O(n²) detection on the toggle. Smooth-step
+    // (no-waypoint) runs are omitted — no orthogonal polyline, so they don't hop.
+    const polylines = new Map<string, Pt[]>();
+    for (const e of edges) {
+      const wp = trunkOverride.get(e.id) ?? waypoints.get(e.id);
+      const en = ends.get(e.id);
+      if (!wp || !wp.length || !en) continue;
+      const pts: Pt[] = [{ x: en.sx, y: en.sy }, ...wp.map((p) => ({ ...p })), { x: en.tx, y: en.ty }];
+      if (en.sourceSide === "L" || en.sourceSide === "R") pts[1].y = en.sy;
+      else pts[1].x = en.sx;
+      if (en.targetSide === "L" || en.targetSide === "R") pts[pts.length - 2].y = en.ty;
+      else pts[pts.length - 2].x = en.tx;
+      polylines.set(e.id, pts);
+    }
+
+    return { edges: styled, candidates, trunkBadges, polylines };
   }, [edges, validation, nodes, activeTrunks, dismissedTrunks]);
+
+  // Crossing hops (p2-hops): bump points per edge, gated on the toggle. Separate from `rendered`
+  // so flipping hops never re-runs the router — it only re-detects over the existing geometry.
+  const hopsByEdge = useMemo(
+    () => (hopsEnabled ? computeHops(rendered.polylines) : EMPTY_HOPS),
+    [hopsEnabled, rendered.polylines],
+  );
 
   // Signal-type view filter (p2-typefilter, slice 2): fade or hide cables outside the active
   // layer(s). A cheap post-pass over the already-routed/styled edges, so toggling the filter
   // never re-runs the router. Error edges are exempt — a view filter must not hide a problem.
   const displayEdges = useMemo(() => {
-    if (activeSignals.size === 0) return rendered.edges;
+    // Attach crossing hops (p2-hops) to each edge, then apply the signal-type filter on top.
+    const withHop = (e: CableEdgeType) => {
+      const hops = hopsByEdge.get(e.id);
+      return hops && hops.length ? { ...e, data: { ...(e.data ?? { cableTypeId: "" }), hops } } : e;
+    };
+    if (activeSignals.size === 0) return rendered.edges.map(withHop);
     const byId = new Map(nodes.map((n) => [n.id, n]));
     const { errorEdges } = validation;
     const out: CableEdgeType[] = [];
     for (const e of rendered.edges) {
+      const edge = withHop(e);
       const shown = errorEdges.has(e.id) || matchesActive(edgeSignalGroups(e, byId), activeSignals);
-      if (shown) out.push(e);
-      else if (!hideNonMatching) out.push({ ...e, style: { ...e.style, opacity: FILTER_FADE_OPACITY } });
+      if (shown) out.push(edge);
+      else if (!hideNonMatching) out.push({ ...edge, style: { ...edge.style, opacity: FILTER_FADE_OPACITY } });
       // else: hide entirely (omit from the rendered set)
     }
     return out;
-  }, [rendered.edges, activeSignals, hideNonMatching, nodes, validation]);
+  }, [rendered.edges, hopsByEdge, activeSignals, hideNonMatching, nodes, validation]);
 
   // Signal-type view filter (p2-typefilter, slice 3): per-node dimming. computeNodeDimming decides
   // which nodes stay active and which ports stay lit (flow vs capability mode — `includeUnwiredGear`).
@@ -2395,6 +2452,14 @@ function AppInner() {
           onClick={() => setSnap((v) => !v)}
         >
           Snap {snap ? "On" : "Off"}
+        </button>
+        <button
+          type="button"
+          className={hopsEnabled ? "statusbar__snap is-on" : "statusbar__snap"}
+          onClick={toggleHops}
+          title="Draw a hop where two cables cross without connecting (schematic convention)"
+        >
+          Hops {hopsEnabled ? "On" : "Off"}
         </button>
         <span className="statusbar__item">Grid {GRID}px</span>
         <span className="statusbar__msg" title={status}>

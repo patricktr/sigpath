@@ -1,6 +1,7 @@
 import type { Node, Edge } from "@xyflow/react";
 import type { DeviceModel, CableTypeId, GradeId, BoundaryPort, Port, Trunk } from "../schema";
 import type { Pt } from "./obstacleRoute";
+import type { Hop } from "./cableHops";
 
 /**
  * React Flow binding types. The domain model lives in `src/schema`; these types
@@ -97,6 +98,9 @@ export type CableEdgeData = {
    *  obstacle-avoiding detour around device boxes. When set, CableEdge draws this
    *  orthogonal path instead of the default smooth-step jog (and ignores `parallel`). */
   waypoints?: Pt[];
+  /** Derived at render time (not persisted): points on this cable's horizontal runs where it
+   *  bumps over a crossing cable (p2-hops) — the "passes over" schematic convention. */
+  hops?: Hop[];
 };
 
 export type CableEdgeType = Edge<CableEdgeData>;

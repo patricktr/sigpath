@@ -7,7 +7,7 @@ import {
 } from "@xyflow/react";
 import type { CableEdgeType } from "./types";
 import type { Pt } from "./obstacleRoute";
-import { orthogonalPathD } from "./obstacleRoute";
+import { cablePath } from "./cableHops";
 import "./CableEdge.css";
 
 /** Corner rounding for the orthogonal cable path (matches the smooth-step feel). */
@@ -55,7 +55,7 @@ export function CableEdge({
     else pts[1].x = sourceX;
     if (targetPosition === Position.Left || targetPosition === Position.Right) pts[pts.length - 2].y = targetY;
     else pts[pts.length - 2].x = targetX;
-    path = orthogonalPathD(pts, BEND_RADIUS);
+    path = cablePath(pts, BEND_RADIUS, data?.hops ?? []);
   } else {
     // A clean straight run (no waypoints) — React Flow's default smooth-step path.
     const [p] = getSmoothStepPath({

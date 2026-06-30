@@ -74,3 +74,60 @@ export function computeHops(polylines: Map<string, Pt[]>): Map<string, Hop[]> {
   }
   return hops;
 }
+
+// --- Render: the cable path string, with hop bumps spliced in --------------------------------
+
+/** Radius of a hop bump — the little semicircle a horizontal wire arcs over a crossing with. */
+const HOP_RADIUS = 6;
+
+const manhattan = (a: Pt, b: Pt) => Math.abs(a.x - b.x) + Math.abs(a.y - b.y);
+
+/** A point `r` from `corner` toward `toward` (segments are axis-aligned). */
+function towards(corner: Pt, toward: Pt, r: number): Pt {
+  const dx = toward.x - corner.x;
+  const dy = toward.y - corner.y;
+  const len = Math.abs(dx) + Math.abs(dy) || 1;
+  return { x: corner.x + (dx / len) * r, y: corner.y + (dy / len) * r };
+}
+
+/** The straight run `start`→`end`, bumping UP over each hop on it (only a horizontal run carries
+ *  hops). Hops within `HOP_RADIUS` of either end are skipped so a bump never collides a corner. */
+function runWithHops(start: Pt, end: Pt, hops: Hop[]): string {
+  if (Math.abs(start.y - end.y) > 0.5 || hops.length === 0) return ` L ${end.x},${end.y}`;
+  const y = start.y;
+  const lo = Math.min(start.x, end.x);
+  const hi = Math.max(start.x, end.x);
+  const dir = end.x >= start.x ? 1 : -1;
+  const onRun = hops
+    .filter((h) => Math.abs(h.y - y) <= 1.5 && h.x - lo > HOP_RADIUS && hi - h.x > HOP_RADIUS)
+    .sort((a, b) => (a.x - b.x) * dir);
+  if (onRun.length === 0) return ` L ${end.x},${end.y}`;
+  let d = "";
+  for (const h of onRun) {
+    // Sweep 1 when travelling +x, 0 when −x, so the arc always bulges to smaller y (up/over).
+    d += ` L ${h.x - HOP_RADIUS * dir},${y} A ${HOP_RADIUS} ${HOP_RADIUS} 0 0 ${dir > 0 ? 1 : 0} ${h.x + HOP_RADIUS * dir},${y}`;
+  }
+  return d + ` L ${end.x},${y}`;
+}
+
+/**
+ * Rounded-corner SVG path through an orthogonal polyline, with hop bumps (p2-hops) spliced into
+ * the horizontal runs. Same corner geometry as `orthogonalPathD`, so a cable with no hops draws
+ * identically — the bumps are the only addition.
+ */
+export function cablePath(points: Pt[], radius: number, hops: Hop[] = []): string {
+  if (points.length < 2) return "";
+  let d = `M ${points[0].x},${points[0].y}`;
+  let cursor = points[0];
+  for (let i = 1; i < points.length - 1; i++) {
+    const p0 = points[i - 1];
+    const p = points[i];
+    const p1 = points[i + 1];
+    const r = Math.min(radius, manhattan(p0, p) / 2, manhattan(p, p1) / 2);
+    d += runWithHops(cursor, towards(p, p0, r), hops); // straight run up to the corner entry
+    const b = towards(p, p1, r);
+    d += ` Q ${p.x},${p.y} ${b.x},${b.y}`; // rounded corner
+    cursor = b;
+  }
+  return d + runWithHops(cursor, points[points.length - 1], hops);
+}

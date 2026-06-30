@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { computeHops } from "./cableHops";
+import { computeHops, cablePath } from "./cableHops";
+import { orthogonalPathD } from "./obstacleRoute";
 import type { Pt } from "./obstacleRoute";
 
 const line = (...pts: [number, number][]): Pt[] => pts.map(([x, y]) => ({ x, y }));
@@ -56,5 +57,24 @@ describe("computeHops", () => {
       ]),
     );
     expect(hops.size).toBe(0);
+  });
+});
+
+describe("cablePath", () => {
+  it("draws identically to orthogonalPathD when there are no hops", () => {
+    const pts = line([0, 0], [10, 0], [10, 10]);
+    expect(cablePath(pts, 8, [])).toBe(orthogonalPathD(pts, 8));
+  });
+
+  it("splices an arc bump into the horizontal run at a hop", () => {
+    const pts = line([0, 10], [40, 10]); // a horizontal run
+    const d = cablePath(pts, 8, [{ x: 20, y: 10 }]);
+    expect(d).toContain("A 6 6 0 0 1"); // a hop arc (sweep 1 = travelling +x, bulging up)
+    expect(d).toContain("L 14,10"); // line up to HOP_RADIUS before the crossing (20-6)
+  });
+
+  it("skips a hop too close to a run end (would collide a corner)", () => {
+    const pts = line([0, 10], [40, 10]);
+    expect(cablePath(pts, 8, [{ x: 3, y: 10 }])).not.toContain("A "); // 3px in — within HOP_RADIUS
   });
 });
