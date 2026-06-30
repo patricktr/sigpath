@@ -1,4 +1,4 @@
-import { cableColor, cableLabel, checkPortCompatibility, deviceTitle } from "../schema";
+import { cableColor, cableLabel, checkPortCompatibility, deviceTitle, DC_POWER } from "../schema";
 import { isPortBearing } from "../flow/types";
 import type { CableEdgeType, DeviceNodeType, SigNode } from "../flow/types";
 
@@ -87,22 +87,35 @@ export function deriveLists(nodes: SigNode[], edges: CableEdgeType[]): DerivedLi
   >();
   for (const { out, inp, compat } of links) {
     const kind = compat?.kind;
-    if (!out || !inp || (kind !== "adapter" && kind !== "converter" && kind !== "psu")) continue;
-    // PSUs (AC↔DC) are the device's own supply, not a stock cable — group them all
-    // under one "device PSU" line rather than a (misleading) connector-pair name.
-    const key = kind === "psu" ? "psu" : `${out.connector}>${inp.connector}`;
+    if (!out || !inp || (kind !== "adapter" && kind !== "converter")) continue;
+    const key = `${out.connector}>${inp.connector}`;
     const cur = adapterCounts.get(key);
     if (cur) cur.count += 1;
     else
       adapterCounts.set(key, {
-        label:
-          kind === "psu"
-            ? "Power · device PSU"
-            : `${cableLabel(out.connector)} → ${cableLabel(inp.connector)}`,
+        label: `${cableLabel(out.connector)} → ${cableLabel(inp.connector)}`,
         color: cableColor(out.connector),
         count: 1,
         kind,
       });
+  }
+
+  // PSUs / wall-warts (p3-psupacklist) — device-driven: a device with an external-DC INPUT port
+  // ships with its own power brick, so it lists whether or not a power source is wired. One line
+  // per powered device model ("PSU — <name>"), counted by instance like the device pack list.
+  // Replaces the old lumped connection-driven line; the connection-level `psu` kind stays for
+  // validation. IEC inlets never qualify (internal mains supply, not a brick).
+  const psuCounts = new Map<string, { name: string; count: number }>();
+  for (const n of deviceNodes) {
+    const model = n.data.model;
+    if (!model.ports.some((p) => p.direction === "input" && DC_POWER.has(p.connector))) continue;
+    const name = model.manufacturer ? `${model.manufacturer} ${model.model}` : model.model;
+    const cur = psuCounts.get(model.id);
+    if (cur) cur.count += 1;
+    else psuCounts.set(model.id, { name, count: 1 });
+  }
+  for (const [id, v] of psuCounts) {
+    adapterCounts.set(`psu-${id}`, { label: `PSU — ${v.name}`, color: cableColor("dc-barrel"), count: v.count, kind: "psu" });
   }
   const order = { adapter: 0, converter: 1, psu: 2 } as const;
   const adapters: AdapterRow[] = [...adapterCounts.entries()]

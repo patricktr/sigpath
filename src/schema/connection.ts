@@ -68,8 +68,9 @@ const domain = (g: string) => DOMAIN[g] ?? g;
  *           family (active converter).
  *  - error: different group — physically/electrically incompatible.
  */
-/** DC-side power connectors — an AC↔DC transition is a device PSU, not a stock cable. */
-const DC_POWER = new Set<string>(["dc-barrel", "xlr4-dc", "euroblock-dc"]);
+/** DC-side power connectors — an AC↔DC transition is a device PSU, not a stock cable. A device
+ *  with one as an INPUT ships with its own external brick (drives the pack list's PSU lines). */
+export const DC_POWER = new Set<string>(["dc-barrel", "xlr4-dc", "euroblock-dc"]);
 
 /**
  * Beyond same-`family`, sets of connectors that are all mutually bridgeable by a single
