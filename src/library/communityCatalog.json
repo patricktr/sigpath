@@ -1074,11 +1074,18 @@
         "name": "HDMI",
         "direction": "output",
         "connector": "hdmi"
+      },
+      {
+        "id": "power",
+        "name": "Power",
+        "direction": "input",
+        "connector": "iec-c7",
+        "note": "Figure-8 (IEC C7/C8) detachable AC cord into the built-in power supply — no wall-wart"
       }
     ],
     "source": "community",
     "rev": 1,
-    "contentHash": "8f9f407c"
+    "contentHash": "14b05850"
   },
   {
     "id": "atlona/at-hd4-v41",
@@ -9647,14 +9654,14 @@
         "id": "dc-in",
         "name": "DC In",
         "direction": "input",
-        "connector": "euroblock",
+        "connector": "euroblock-dc",
         "note": "3-pin pluggable terminal block; accepts 12–24 VDC (9.6–32 V DC range); no signal/relay contact on EEC variant"
       }
     ],
     "sourceUrl": "https://www.icomtechinc.com/ethernet-switches/industrial-din-rail-ethernet-switches/unmanaged-switches/10-n-100-unmanaged-switches/943376201-by-hirschmann.php",
     "source": "community",
     "rev": 1,
-    "contentHash": "9d641765"
+    "contentHash": "37fec3dd"
   },
   {
     "id": "hpe-aruba/2930f-48g-poe-4sfp-switch-jl262a",
@@ -10908,14 +10915,14 @@
         "id": "ac-in",
         "name": "AC In",
         "direction": "input",
-        "connector": "nema-5-15",
-        "note": "Captive cord (US)"
+        "connector": "iec-c7",
+        "note": "Detachable figure-8 (IEC C7/C8) cord into the panel's internal supply — standard on LG OLED C-series"
       }
     ],
     "sourceUrl": "https://www.flatpanelshd.com/review.php?subaction=showfull&id=1686299145",
     "source": "community",
     "rev": 1,
-    "contentHash": "128fac1e"
+    "contentHash": "cfd9fd12"
   },
   {
     "id": "lightware/ubex-pro20-hdmi-r100",
