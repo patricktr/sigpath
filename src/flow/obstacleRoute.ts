@@ -382,7 +382,7 @@ const overlap1d = (aLo: number, aHi: number, bLo: number, bHi: number) =>
 
 /** A proper orthogonal crossing of two axis-aligned segments (strict interior of both)?
  *  Parallel/collinear runs never count — those are the merges the spread itself removes. Also the
- *  primitive behind the crossing-hop layer (p2-hops), which is why it's exported. */
+ *  primitive behind the crossing-hop layer (p2-crossinghops), which is why it's exported. */
 export function segmentsCross(a1: Pt, a2: Pt, b1: Pt, b2: Pt): boolean {
   const aH = Math.abs(a1.y - a2.y) <= 0.5;
   const bH = Math.abs(b1.y - b2.y) <= 0.5;

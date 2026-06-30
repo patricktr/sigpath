@@ -99,7 +99,7 @@ export type CableEdgeData = {
    *  orthogonal path instead of the default smooth-step jog (and ignores `parallel`). */
   waypoints?: Pt[];
   /** Derived at render time (not persisted): points on this cable's horizontal runs where it
-   *  bumps over a crossing cable (p2-hops) — the "passes over" schematic convention. */
+   *  bumps over a crossing cable (p2-crossinghops) — the "passes over" schematic convention. */
   hops?: Hop[];
 };
 

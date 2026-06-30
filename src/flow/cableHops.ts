@@ -2,7 +2,7 @@ import { segmentsCross } from "./obstacleRoute";
 import type { Pt } from "./obstacleRoute";
 
 /**
- * Crossing hops / bumps (p2-hops). Where two cables cross WITHOUT connecting, the schematic
+ * Crossing hops / bumps (p2-crossinghops). Where two cables cross WITHOUT connecting, the schematic
  * convention is to draw a small arc on one so it reads as "passes over", not a junction. Cable
  * paths are orthogonal polylines, so every true crossing is exactly one horizontal × one vertical
  * segment — the HORIZONTAL wire always gets the hop (a deterministic, tie-free rule). These pure
@@ -143,7 +143,7 @@ function runWithHops(start: Pt, end: Pt, hops: Hop[]): string {
 }
 
 /**
- * Rounded-corner SVG path through an orthogonal polyline, with hop bumps (p2-hops) spliced into
+ * Rounded-corner SVG path through an orthogonal polyline, with hop bumps (p2-crossinghops) spliced into
  * the horizontal runs. Same corner geometry as `orthogonalPathD`, so a cable with no hops draws
  * identically — the bumps are the only addition.
  */

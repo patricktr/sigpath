@@ -233,7 +233,7 @@ function AppInner() {
   const [closePrompt, setClosePrompt] = useState(false);
   const [validationOpen, setValidationOpen] = useState(false);
   const [snap, setSnap] = useState(true);
-  // Crossing hops (p2-hops): draw a bump where cables cross without connecting. A view
+  // Crossing hops (p2-crossinghops): draw a bump where cables cross without connecting. A view
   // preference, persisted like the theme; default on (the standard schematic convention).
   const [hopsEnabled, setHopsEnabled] = useState(() => {
     try {
@@ -720,7 +720,7 @@ function AppInner() {
     return { edges: styled, candidates, trunkBadges, polylines };
   }, [edges, validation, nodes, activeTrunks, dismissedTrunks]);
 
-  // Crossing hops (p2-hops): bump points per edge, gated on the toggle. Separate from `rendered`
+  // Crossing hops (p2-crossinghops): bump points per edge, gated on the toggle. Separate from `rendered`
   // so flipping hops never re-runs the router — it only re-detects over the existing geometry.
   const hopsByEdge = useMemo(
     () => (hopsEnabled ? computeHops(rendered.polylines) : EMPTY_HOPS),
@@ -731,7 +731,7 @@ function AppInner() {
   // layer(s). A cheap post-pass over the already-routed/styled edges, so toggling the filter
   // never re-runs the router. Error edges are exempt — a view filter must not hide a problem.
   const displayEdges = useMemo(() => {
-    // Attach crossing hops (p2-hops) to each edge, then apply the signal-type filter on top.
+    // Attach crossing hops (p2-crossinghops) to each edge, then apply the signal-type filter on top.
     const withHop = (e: CableEdgeType) => {
       const hops = hopsByEdge.get(e.id);
       return hops && hops.length ? { ...e, data: { ...(e.data ?? { cableTypeId: "" }), hops } } : e;
