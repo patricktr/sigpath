@@ -13,6 +13,18 @@ import type { CableEdgeType, SigNode } from "./types";
 
 export type SignalLayer = { kind: SignalKind; label: string; color: string; count: number };
 
+/** Opacity for a faded (non-matching) item under an active filter — shared by cables and, in a
+ *  later slice, devices/ports, so the whole de-emphasized layer reads at one consistent level. */
+export const FILTER_FADE_OPACITY = 0.3;
+
+/** Does an item carrying these signal `groups` match the active filter? Empty `active` ⇒ no
+ *  filter, so everything matches; otherwise true iff any of its groups is currently active. */
+export function matchesActive(groups: Set<SignalKind>, active: Set<SignalKind>): boolean {
+  if (active.size === 0) return true;
+  for (const g of groups) if (active.has(g)) return true;
+  return false;
+}
+
 /**
  * The signal layer(s) a cable belongs to — the group of each endpoint's port. Usually one;
  * two when an adapter cable crosses groups (e.g. HDMI→XLR), so it shows in both layers.

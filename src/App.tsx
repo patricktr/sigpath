@@ -30,7 +30,7 @@ import { arrangeLeftToRight } from "./flow/autoLayout";
 import { bulkClick, EMPTY_BULK, sourceOrdinal, bulkStatus, BulkPatchContext } from "./flow/bulkPatch";
 import type { BulkState, BulkPortRef, BulkPatchActions } from "./flow/bulkPatch";
 import { isPortBearing, nodePorts } from "./flow/types";
-import { signalLayers } from "./flow/signalFilter";
+import { edgeSignalGroups, matchesActive, signalLayers, FILTER_FADE_OPACITY } from "./flow/signalFilter";
 import type {
   DeviceNodeType,
   CableEdgeType,
@@ -669,7 +669,22 @@ function AppInner() {
     return { edges: styled, candidates, trunkBadges };
   }, [edges, validation, nodes, activeTrunks, dismissedTrunks]);
 
-  const displayEdges = rendered.edges;
+  // Signal-type view filter (p2-typefilter, slice 2): fade or hide cables outside the active
+  // layer(s). A cheap post-pass over the already-routed/styled edges, so toggling the filter
+  // never re-runs the router. Error edges are exempt — a view filter must not hide a problem.
+  const displayEdges = useMemo(() => {
+    if (activeSignals.size === 0) return rendered.edges;
+    const byId = new Map(nodes.map((n) => [n.id, n]));
+    const { errorEdges } = validation;
+    const out: CableEdgeType[] = [];
+    for (const e of rendered.edges) {
+      const shown = errorEdges.has(e.id) || matchesActive(edgeSignalGroups(e, byId), activeSignals);
+      if (shown) out.push(e);
+      else if (!hideNonMatching) out.push({ ...e, style: { ...e.style, opacity: FILTER_FADE_OPACITY } });
+      // else: hide entirely (omit from the rendered set)
+    }
+    return out;
+  }, [rendered.edges, activeSignals, hideNonMatching, nodes, validation]);
 
   // Trunk actions (p2-trunk): accept an offered bundle (created collapsed), toggle collapse/expand,
   // or dismiss an offer for this session. All persisted edits go through setActiveTrunks (undoable).

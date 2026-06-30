@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { signalLayers, edgeSignalGroups } from "./signalFilter";
+import { signalLayers, edgeSignalGroups, matchesActive } from "./signalFilter";
+import type { SignalKind } from "../schema";
 import type { CableEdgeType, DeviceNodeType, SigNode } from "./types";
 import type { Port } from "../schema";
 
@@ -48,5 +49,16 @@ describe("edgeSignalGroups", () => {
     ]);
     const groups = edgeSignalGroups(edge("e", "A", "v", "B", "av"), byId);
     expect([...groups].sort()).toEqual(["av", "video"]);
+  });
+});
+
+describe("matchesActive", () => {
+  const set = (...k: SignalKind[]) => new Set<SignalKind>(k);
+  it("matches everything when no filter is active (empty set)", () => {
+    expect(matchesActive(set("video"), set())).toBe(true);
+  });
+  it("matches when any of the item's groups is active", () => {
+    expect(matchesActive(set("av", "video"), set("video"))).toBe(true); // adapter cable, video active
+    expect(matchesActive(set("audio"), set("video", "network"))).toBe(false);
   });
 });
