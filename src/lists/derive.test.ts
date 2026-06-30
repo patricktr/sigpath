@@ -133,3 +133,52 @@ describe("deriveLists — IEC C13 power cords (p3-psupacklist)", () => {
     expect(cords).toEqual(["cord-iec", "cord-iec-c5", "cord-iec-c7"]);
   });
 });
+
+const SRC: DeviceModel = {
+  id: "src",
+  model: "Src",
+  category: "source",
+  source: "builtin",
+  ports: [
+    { id: "o1", name: "O1", direction: "output", connector: "sdi" },
+    { id: "o2", name: "O2", direction: "output", connector: "sdi" },
+  ],
+};
+const DST: DeviceModel = {
+  id: "dst",
+  model: "Dst",
+  category: "display",
+  source: "builtin",
+  ports: [
+    { id: "i1", name: "I1", direction: "input", connector: "sdi" },
+    { id: "i2", name: "I2", direction: "input", connector: "sdi" },
+  ],
+};
+const sdiRun = (id: string, sh: string, th: string, len?: number): CableEdgeType => ({
+  id,
+  source: "s",
+  sourceHandle: sh,
+  target: "d",
+  targetHandle: th,
+  data: { cableTypeId: "sdi", lengthMeters: len },
+});
+
+describe("deriveLists — cable length totals (p3-cableids)", () => {
+  it("sums recorded run lengths per cable type", () => {
+    const cables = deriveLists(
+      [device("s", SRC), device("d", DST)],
+      [sdiRun("a", "o1", "i1", 5), sdiRun("b", "o2", "i2", 3)],
+    ).cables;
+    const sdi = cables.find((c) => c.id === "sdi");
+    expect(sdi?.count).toBe(2);
+    expect(sdi?.lengthMeters).toBe(8);
+  });
+
+  it("leaves length absent when no run of a type has one set", () => {
+    const cables = deriveLists(
+      [device("s", SRC), device("d", DST)],
+      [sdiRun("a", "o1", "i1"), sdiRun("b", "o2", "i2")],
+    ).cables;
+    expect(cables.find((c) => c.id === "sdi")?.lengthMeters).toBeUndefined();
+  });
+});

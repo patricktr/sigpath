@@ -82,6 +82,19 @@
 .packlist__name {
   color: #1e293b;
 }
+.packlist__len {
+  margin-left: auto;
+  color: #94a3b8;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.packlist__total {
+  margin-top: 6px;
+  text-align: right;
+  color: #64748b;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
 
 .patchlist {
   width: 100%;
@@ -149,6 +162,10 @@
 [data-theme="dark"] .packlist__name,
 [data-theme="dark"] .patchlist td {
   color: #e2e8f0;
+}
+[data-theme="dark"] .packlist__len,
+[data-theme="dark"] .packlist__total {
+  color: #94a3b8;
 }
 [data-theme="dark"] .patchlist th {
   border-bottom-color: #25304a;

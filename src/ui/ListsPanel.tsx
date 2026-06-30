@@ -13,6 +13,7 @@ export function ListsPanel({
   onRenumber?: () => void;
 }) {
   const { devices, cables, adapters, patches } = lists;
+  const cableLength = Math.round(cables.reduce((sum, c) => sum + (c.lengthMeters ?? 0), 0) * 10) / 10;
 
   return (
     <aside className="lists-panel">
@@ -45,15 +46,19 @@ export function ListsPanel({
           {cables.length === 0 ? (
             <p className="lists-empty">No cables yet.</p>
           ) : (
-            <ul className="packlist">
-              {cables.map((c) => (
-                <li className="packlist__row" key={c.id}>
-                  <span className="packlist__count">{c.count}×</span>
-                  <span className="packlist__swatch" style={{ background: c.color }} />
-                  <span className="packlist__name">{c.label}</span>
-                </li>
-              ))}
-            </ul>
+            <>
+              <ul className="packlist">
+                {cables.map((c) => (
+                  <li className="packlist__row" key={c.id}>
+                    <span className="packlist__count">{c.count}×</span>
+                    <span className="packlist__swatch" style={{ background: c.color }} />
+                    <span className="packlist__name">{c.label}</span>
+                    {c.lengthMeters != null && <span className="packlist__len">{c.lengthMeters} m</span>}
+                  </li>
+                ))}
+              </ul>
+              {cableLength > 0 && <div className="packlist__total">Total cable · {cableLength} m</div>}
+            </>
           )}
         </section>
 

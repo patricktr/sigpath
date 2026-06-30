@@ -4,8 +4,9 @@ import type { CableEdgeType, DeviceNodeType, SigNode } from "../flow/types";
 
 /** One device model with how many instances are in the diagram. */
 export type PacklistDevice = { key: string; name: string; count: number };
-/** One cable type with how many runs of it are in the diagram. */
-export type PacklistCable = { id: string; label: string; color: string; count: number };
+/** One cable type with how many runs of it are in the diagram, and the total recorded run length
+ *  (meters) across those runs — absent when no run of this type has a length set. */
+export type PacklistCable = { id: string; label: string; color: string; count: number; lengthMeters?: number };
 /** One connection, port-to-port. */
 export type PatchRow = {
   id: string;
@@ -70,14 +71,24 @@ export function deriveLists(nodes: SigNode[], edges: CableEdgeType[]): DerivedLi
 
   // Pack list — cables. Straight runs only; transitions go to Cables & adapters and
   // AC↔DC power is the device's PSU (neither is a like-to-like cable to buy).
-  const cableCounts = new Map<string, number>();
+  const cableCounts = new Map<string, { count: number; length: number }>();
   for (const { e, compat } of links) {
     if (compat && compat.kind !== "straight") continue;
     const id = e.data?.cableTypeId;
-    if (id) cableCounts.set(id, (cableCounts.get(id) ?? 0) + 1);
+    if (!id) continue;
+    const cur = cableCounts.get(id) ?? { count: 0, length: 0 };
+    cur.count += 1;
+    cur.length += e.data?.lengthMeters ?? 0;
+    cableCounts.set(id, cur);
   }
   const cables: PacklistCable[] = [...cableCounts.entries()]
-    .map(([id, count]) => ({ id, label: cableLabel(id), color: cableColor(id), count }))
+    .map(([id, v]) => ({
+      id,
+      label: cableLabel(id),
+      color: cableColor(id),
+      count: v.count,
+      lengthMeters: v.length > 0 ? Math.round(v.length * 10) / 10 : undefined,
+    }))
     .sort((a, b) => a.label.localeCompare(b.label));
 
   // Power cords (p3-psupacklist) — an AC mains inlet needs its matching cord, whether or not power
