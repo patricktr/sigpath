@@ -90,7 +90,7 @@ import type { Build } from "./schema";
 import { ZoneNode, ZoneActionsContext, ZONE_COLORS } from "./ui/ZoneNode";
 import { NoteNode, NoteActionsContext } from "./ui/NoteNode";
 import { ListsPanel } from "./ui/ListsPanel";
-import { SpareRuleEditor } from "./ui/SpareRuleEditor";
+import { BomRulesEditor } from "./ui/BomRulesEditor";
 import { RevisionsPanel } from "./ui/RevisionsPanel";
 import { deriveLists } from "./lists/derive";
 import {
@@ -587,6 +587,12 @@ function AppInner() {
     const ruleFor = (connector: string) => bomRules.byType?.[connector] ?? bomRules.default;
     return deriveLists(flat.nodes, flat.edges, { unit: distanceUnit, ruleFor });
   }, [nodes, edges, diagrams, activeId, distanceUnit, bomRules]);
+
+  // Connector types present in the cable BOM — the ones offered as per-type spare overrides.
+  const bomConnectors = useMemo(
+    () => [...new Set((lists.cableBom ?? []).map((l) => l.sku.connector))],
+    [lists.cableBom],
+  );
 
   // How many blocks reference each diagram — drives the tab "⧉N" chip. One pass over every
   // diagram's nodes (active diagram read live).
@@ -2782,10 +2788,7 @@ function AppInner() {
 
             <section className="pref-section">
               <h3 className="pref-section__title">BOM &amp; spares · this project</h3>
-              <SpareRuleEditor
-                rule={bomRules.default}
-                onChange={(rule) => setBomRules({ ...bomRules, default: rule })}
-              />
+              <BomRulesEditor rules={bomRules} onChange={setBomRules} connectors={bomConnectors} />
               <div className="pref-field" style={{ marginTop: 10 }}>
                 <span className="pref-field__label">
                   Spares show as their own pack-list line (e.g. “6 + 1 spare”).
