@@ -1,19 +1,23 @@
 import type { DerivedLists } from "../lists/derive";
+import { formatLength, type DistanceUnit } from "../units";
 import "./ListsPanel.css";
 
 /** Read-only panel showing the auto-generated pack list and patch list. */
 export function ListsPanel({
   lists,
+  unit,
   onClose,
   onRenumber,
 }: {
   lists: DerivedLists;
+  /** Distance unit for run lengths (storage stays metric; this is display-only). */
+  unit: DistanceUnit;
   onClose: () => void;
   /** Re-sequence every cable's ID by signal group. */
   onRenumber?: () => void;
 }) {
   const { devices, cables, adapters, patches } = lists;
-  const cableLength = Math.round(cables.reduce((sum, c) => sum + (c.lengthMeters ?? 0), 0) * 10) / 10;
+  const totalMeters = cables.reduce((sum, c) => sum + (c.lengthMeters ?? 0), 0);
 
   return (
     <aside className="lists-panel">
@@ -53,11 +57,15 @@ export function ListsPanel({
                     <span className="packlist__count">{c.count}×</span>
                     <span className="packlist__swatch" style={{ background: c.color }} />
                     <span className="packlist__name">{c.label}</span>
-                    {c.lengthMeters != null && <span className="packlist__len">{c.lengthMeters} m</span>}
+                    {c.lengthMeters != null && (
+                      <span className="packlist__len">{formatLength(c.lengthMeters, unit)}</span>
+                    )}
                   </li>
                 ))}
               </ul>
-              {cableLength > 0 && <div className="packlist__total">Total cable · {cableLength} m</div>}
+              {totalMeters > 0 && (
+                <div className="packlist__total">Total cable · {formatLength(totalMeters, unit)}</div>
+              )}
             </>
           )}
         </section>
@@ -127,7 +135,9 @@ export function ListsPanel({
                     <td>
                       <span className="packlist__swatch" style={{ background: p.cableColor }} />
                       {p.cableType}
-                      {p.length != null && <span className="patch-port"> · {p.length} m</span>}
+                      {p.length != null && (
+                        <span className="patch-port"> · {formatLength(p.length, unit)}</span>
+                      )}
                     </td>
                   </tr>
                 ))}

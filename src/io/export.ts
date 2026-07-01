@@ -4,6 +4,7 @@ import type { ReactFlowInstance } from "@xyflow/react";
 import { jsPDF } from "jspdf";
 import type { CableEdgeType, SigNode } from "../flow/types";
 import type { DerivedLists } from "../lists/derive";
+import { distanceSuffix, fromMeters, type DistanceUnit } from "../units";
 
 /** Export formats offered in the File ▸ Export menu. */
 export type ExportKind = "png" | "jpeg" | "pdf" | "csv";
@@ -75,8 +76,8 @@ function csvCell(value: string | number): string {
   return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
 }
 
-/** Pack list + patch list as a single CSV document. */
-export function listsToCsv(lists: DerivedLists): string {
+/** Pack list + patch list as a single CSV document. Lengths in the user's unit. */
+export function listsToCsv(lists: DerivedLists, unit: DistanceUnit = "metric"): string {
   const rows: string[] = [];
   rows.push("Pack list - Devices");
   rows.push("Qty,Device");
@@ -87,10 +88,11 @@ export function listsToCsv(lists: DerivedLists): string {
   for (const c of lists.cables) rows.push(`${c.count},${csvCell(c.label)}`);
   rows.push("");
   rows.push("Patch list");
-  rows.push("ID,From device,From port,To device,To port,Cable,Length (m)");
+  rows.push(`ID,From device,From port,To device,To port,Cable,Length (${distanceSuffix(unit)})`);
   for (const p of lists.patches) {
+    const length = p.length != null ? fromMeters(p.length, unit) : "";
     rows.push(
-      [p.cableId, p.fromDevice, p.fromPort, p.toDevice, p.toPort, p.cableType, p.length ?? ""]
+      [p.cableId, p.fromDevice, p.fromPort, p.toDevice, p.toPort, p.cableType, length]
         .map(csvCell)
         .join(","),
     );

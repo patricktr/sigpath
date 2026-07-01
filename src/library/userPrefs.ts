@@ -3,10 +3,30 @@
  * localStorage: favorited device ids and a most-recently-placed list. (When the
  * community DB / accounts land these move to the user store.)
  */
+import type { DistanceUnit } from "../units";
+
 const FAV_KEY = "sigpath.favorites.v1";
 const RECENT_KEY = "sigpath.recents.v1";
 const CONVERTER_KEY = "sigpath.converterDefaults.v1";
+const UNITS_DISTANCE_KEY = "sigpath.units.distance.v1";
 const RECENT_MAX = 8;
+
+/** Preferred distance unit for cable run lengths (display + entry). Metric default. */
+export function loadDistanceUnit(): DistanceUnit {
+  try {
+    return localStorage.getItem(UNITS_DISTANCE_KEY) === "imperial" ? "imperial" : "metric";
+  } catch {
+    return "metric";
+  }
+}
+
+export function saveDistanceUnit(unit: DistanceUnit): void {
+  try {
+    localStorage.setItem(UNITS_DISTANCE_KEY, unit);
+  } catch {
+    /* ignore storage errors */
+  }
+}
 
 function readArray(key: string): string[] {
   try {

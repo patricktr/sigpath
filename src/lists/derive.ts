@@ -87,7 +87,9 @@ export function deriveLists(nodes: SigNode[], edges: CableEdgeType[]): DerivedLi
       label: cableLabel(id),
       color: cableColor(id),
       count: v.count,
-      lengthMeters: v.length > 0 ? Math.round(v.length * 10) / 10 : undefined,
+      // Full-precision meters; rounding happens once at display (formatLength) in the
+      // chosen unit. Pre-rounding here to 0.1 m drifts after m→ft conversion (30 ft → 29.9).
+      lengthMeters: v.length > 0 ? v.length : undefined,
     }))
     .sort((a, b) => a.label.localeCompare(b.label));
 

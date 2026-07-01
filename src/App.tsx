@@ -106,7 +106,10 @@ import {
   loadConverterDefaults,
   clearConverterDefault,
   converterPairKey,
+  loadDistanceUnit,
+  saveDistanceUnit,
 } from "./library/userPrefs";
+import { distanceSuffix, fromMeters, toMeters, type DistanceUnit } from "./units";
 import { diagramImageBase64, diagramPdfBase64, listsToCsv, type ExportKind } from "./io/export";
 import { ValidationPanel } from "./ui/ValidationPanel";
 import { validate, type ValidationIssue } from "./validation/validate";
@@ -223,11 +226,17 @@ function AppInner() {
     srcConn: string;
     tgtConn: string;
   } | null>(null);
-  // Preferences modal (currently: learned converter defaults).
+  // Preferences modal (units + learned converter defaults).
   const [prefsOpen, setPrefsOpen] = useState(false);
   const [prefRows, setPrefRows] = useState<
     { pairKey: string; pairLabel: string; deviceName: string }[]
   >([]);
+  // Distance unit for cable run lengths — display/entry only; storage stays metric. Persisted per-user.
+  const [distanceUnit, setDistanceUnit] = useState<DistanceUnit>(loadDistanceUnit);
+  const applyDistanceUnit = useCallback((unit: DistanceUnit) => {
+    setDistanceUnit(unit);
+    saveDistanceUnit(unit);
+  }, []);
   const [listsOpen, setListsOpen] = useState(false);
   const [revisionsOpen, setRevisionsOpen] = useState(false);
   const [closePrompt, setClosePrompt] = useState(false);
@@ -844,7 +853,7 @@ function AppInner() {
       try {
         const base = (projectName || "diagram").replace(/\s+/g, "-");
         if (kind === "csv") {
-          const saved = await saveText(listsToCsv(lists), `${base}-lists.csv`, "csv");
+          const saved = await saveText(listsToCsv(lists, distanceUnit), `${base}-lists.csv`, "csv");
           if (saved) setStatus(`Exported · ${saved}`);
           return;
         }
@@ -866,7 +875,7 @@ function AppInner() {
         setStatus(`Export failed: ${String(err)}`);
       }
     },
-    [lists, projectName, theme],
+    [lists, projectName, theme, distanceUnit],
   );
 
   const renameZone = useCallback(
@@ -2061,17 +2070,23 @@ function AppInner() {
                       type="number"
                       min={0}
                       step="0.1"
-                      value={selectedCable.edge.data?.lengthMeters ?? ""}
+                      value={
+                        selectedCable.edge.data?.lengthMeters != null
+                          ? fromMeters(selectedCable.edge.data.lengthMeters, distanceUnit)
+                          : ""
+                      }
                       onFocus={() => takeSnapshot()}
                       onChange={(e) =>
                         setCableLength(
                           selectedCable.edge.id,
-                          e.target.value === "" ? undefined : Number(e.target.value),
+                          e.target.value === ""
+                            ? undefined
+                            : toMeters(Math.round(Number(e.target.value) * 10) / 10, distanceUnit),
                         )
                       }
                       style={{ width: 60 }}
                     />
-                    m
+                    {distanceSuffix(distanceUnit)}
                   </label>
                 </>
               )}
@@ -2331,6 +2346,7 @@ function AppInner() {
           {listsOpen && (
             <ListsPanel
               lists={lists}
+              unit={distanceUnit}
               onClose={() => setListsOpen(false)}
               onRenumber={renumberAll}
             />
@@ -2622,29 +2638,64 @@ function AppInner() {
         <div className="modal-backdrop" onClick={() => setPrefsOpen(false)}>
           <div className="modal" onClick={(e) => e.stopPropagation()}>
             <h2 className="modal__title">Preferences</h2>
-            <p className="modal__body">
-              Converter defaults — the device used to auto-fix each mismatch, learned when
-              you pick one from the converter chooser.
-            </p>
-            {prefRows.length === 0 ? (
-              <p className="modal__body" style={{ fontStyle: "italic" }}>
-                No converter defaults yet. Pick a converter once and it’s remembered here.
+
+            <section className="pref-section">
+              <h3 className="pref-section__title">Units</h3>
+              <div className="pref-field">
+                <span className="pref-field__label">Distance</span>
+                <div className="units-toggle" role="radiogroup" aria-label="Distance units">
+                  <button
+                    type="button"
+                    role="radio"
+                    aria-checked={distanceUnit === "metric"}
+                    className={distanceUnit === "metric" ? "is-on" : ""}
+                    onClick={() => applyDistanceUnit("metric")}
+                  >
+                    Metric (m)
+                  </button>
+                  <button
+                    type="button"
+                    role="radio"
+                    aria-checked={distanceUnit === "imperial"}
+                    className={distanceUnit === "imperial" ? "is-on" : ""}
+                    onClick={() => applyDistanceUnit("imperial")}
+                  >
+                    Imperial (ft)
+                  </button>
+                </div>
+              </div>
+              <p className="pref-section__hint">
+                Cable run lengths are stored in meters and shown in your chosen unit.
               </p>
-            ) : (
-              <ul className="cvt-list">
-                {prefRows.map((r) => (
-                  <li className="pref-row" key={r.pairKey}>
-                    <span className="pref-row__text">
-                      <span className="cvt-row__io">{r.pairLabel}</span>
-                      <span className="cvt-row__name">{r.deviceName}</span>
-                    </span>
-                    <button type="button" className="pref-row__clear" onClick={() => clearPref(r.pairKey)}>
-                      Clear
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            )}
+            </section>
+
+            <section className="pref-section">
+              <h3 className="pref-section__title">Converter defaults</h3>
+              <p className="pref-section__hint">
+                The device used to auto-fix each mismatch, learned when you pick one from the
+                converter chooser.
+              </p>
+              {prefRows.length === 0 ? (
+                <p className="pref-section__hint" style={{ fontStyle: "italic" }}>
+                  No converter defaults yet. Pick a converter once and it’s remembered here.
+                </p>
+              ) : (
+                <ul className="cvt-list">
+                  {prefRows.map((r) => (
+                    <li className="pref-row" key={r.pairKey}>
+                      <span className="pref-row__text">
+                        <span className="cvt-row__io">{r.pairLabel}</span>
+                        <span className="cvt-row__name">{r.deviceName}</span>
+                      </span>
+                      <button type="button" className="pref-row__clear" onClick={() => clearPref(r.pairKey)}>
+                        Clear
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </section>
+
             <div className="modal__actions">
               <button type="button" onClick={() => setPrefsOpen(false)}>
                 Close

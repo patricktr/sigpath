@@ -754,6 +754,59 @@
   color: var(--text);
 }
 
+/* ---- Preferences sections ---- */
+.pref-section {
+  margin: 0 0 18px;
+}
+.pref-section__title {
+  margin: 0 0 8px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+.pref-section__hint {
+  margin: 8px 0 0;
+  color: var(--text-muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+.pref-field {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.pref-field__label {
+  font-size: 13px;
+  color: var(--text);
+}
+/* Segmented unit picker — mirrors .theme-toggle. */
+.units-toggle {
+  display: inline-flex;
+  gap: 2px;
+  padding: 3px;
+  border-radius: var(--radius);
+  background: var(--app-bg);
+}
+.units-toggle button {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.04em;
+  padding: 4px 10px;
+  border: none;
+  border-radius: 2px;
+  background: transparent;
+  color: var(--text-faint);
+  cursor: pointer;
+}
+.units-toggle button.is-on {
+  background: var(--panel-bg);
+  color: var(--text);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
+}
+
 /* ---- Toast ---- */
 .adv-toast {
   position: fixed;
