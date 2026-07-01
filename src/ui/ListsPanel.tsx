@@ -11,6 +11,7 @@ const EXPORT_ITEMS: { format: ExportFormat; label: string }[] = [
   { format: "xlsx", label: "Excel (.xlsx)" },
   { format: "csv", label: "CSV" },
   { format: "clipboard", label: "Copy schedule" },
+  { format: "labels", label: "Cable labels" },
 ];
 
 /** "Export ▾" split menu in the Lists-panel header (p3-cableschedule). */

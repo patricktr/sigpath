@@ -12,7 +12,7 @@ import { distanceSuffix, fromMeters, type DistanceUnit } from "../units";
 export type DocOpts = { projectName: string; unit: DistanceUnit; date?: string };
 
 /** BOM/schedule export formats offered in the Lists panel's "Export ▾" menu. */
-export type ExportFormat = "pdf" | "xlsx" | "csv" | "clipboard";
+export type ExportFormat = "pdf" | "xlsx" | "csv" | "clipboard" | "labels";
 
 type Section = { title: string; head: string[]; rows: (string | number)[][] };
 
@@ -132,6 +132,62 @@ export async function listsToXlsxBase64(lists: DerivedLists, opts: DocOpts): Pro
 export function scheduleToTsv(lists: DerivedLists, unit: DistanceUnit): string {
   const s = scheduleSection(lists, unit);
   return [s.head, ...s.rows].map((r) => r.map((c) => String(c)).join("\t")).join("\n");
+}
+
+function hexToRgb(hex: string): [number, number, number] {
+  const m = /^#?([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i.exec(hex);
+  return m ? [parseInt(m[1], 16), parseInt(m[2], 16), parseInt(m[3], 16)] : [148, 163, 184];
+}
+
+/**
+ * A cable-label sheet as a PDF tiled to Avery 5160 stock (3 × 10 of 2.625" × 1"
+ * labels on US Letter), base64-encoded. One label per run: cable ID, a color
+ * bar, and from → to. Print onto label stock, or on plain paper and cut.
+ */
+export function labelsToPdfBase64(lists: DerivedLists): string {
+  if (lists.patches.length === 0) throw new Error("No cables to label");
+  const doc = new jsPDF({ orientation: "portrait", unit: "pt", format: "letter" });
+  // Avery 5160 geometry, in points (1in = 72pt).
+  const COLS = 3;
+  const ROWS = 10;
+  const LEFT = 13.5;
+  const TOP = 36;
+  const LW = 189;
+  const LH = 72;
+  const HPITCH = 198;
+  const VPITCH = 72;
+  const perPage = COLS * ROWS;
+  const textLeft = 22;
+
+  lists.patches.forEach((p, i) => {
+    const slot = i % perPage;
+    if (i > 0 && slot === 0) doc.addPage();
+    const col = slot % COLS;
+    const row = Math.floor(slot / COLS);
+    const x = LEFT + col * HPITCH;
+    const y = TOP + row * VPITCH;
+
+    const [r, g, b] = hexToRgb(p.cableColor);
+    doc.setFillColor(r, g, b);
+    doc.rect(x + 8, y + 10, 6, LH - 20, "F");
+
+    // Truncate to the first line that fits the label width at the current font size.
+    const fit = (text: string) => doc.splitTextToSize(text, LW - textLeft - 6)[0] ?? "";
+    doc.setTextColor(20);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(13);
+    doc.text(fit(p.cableId || "(unnumbered)"), x + textLeft, y + 26);
+
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(7.5);
+    doc.setTextColor(90);
+    doc.text(fit(`${p.fromDevice} · ${p.fromPort}`), x + textLeft, y + 42);
+    doc.text(fit(`→ ${p.toDevice} · ${p.toPort}`), x + textLeft, y + 54);
+    doc.setFontSize(6.5);
+    doc.setTextColor(130);
+    doc.text(fit(p.cableType), x + textLeft, y + LH - 10);
+  });
+  return arrayBufferToBase64(doc.output("arraybuffer"));
 }
 
 function arrayBufferToBase64(buffer: ArrayBuffer): string {

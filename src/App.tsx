@@ -114,6 +114,7 @@ import { diagramImageBase64, diagramPdfBase64, listsToCsv, type ExportKind } fro
 import {
   listsToPdfBase64,
   listsToXlsxBase64,
+  labelsToPdfBase64,
   scheduleToTsv,
   type ExportFormat,
 } from "./io/exportDocs";
@@ -912,6 +913,8 @@ function AppInner() {
           saved = await saveBinary(listsToPdfBase64(lists, opts), `${base}-schedule.pdf`, "pdf");
         } else if (format === "xlsx") {
           saved = await saveBinary(await listsToXlsxBase64(lists, opts), `${base}-schedule.xlsx`, "xlsx");
+        } else if (format === "labels") {
+          saved = await saveBinary(labelsToPdfBase64(lists), `${base}-labels.pdf`, "pdf");
         }
         if (saved) setStatus(`Exported · ${saved}`);
       } catch (err) {

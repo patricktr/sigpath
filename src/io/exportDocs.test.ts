@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { scheduleToTsv, listsToPdfBase64, listsToXlsxBase64 } from "./exportDocs";
+import { scheduleToTsv, listsToPdfBase64, listsToXlsxBase64, labelsToPdfBase64 } from "./exportDocs";
 import type { DerivedLists } from "../lists/derive";
 
 const lists: DerivedLists = {
@@ -44,6 +44,11 @@ describe("exportDocs (p3-cableschedule)", () => {
   it("listsToXlsxBase64 returns an xlsx (base64 PK zip header)", async () => {
     const b64 = await listsToXlsxBase64(lists, { projectName: "Test", unit: "metric" });
     expect(b64.startsWith("UEsD")).toBe(true);
+  });
+
+  it("labelsToPdfBase64 returns a PDF, and throws with no cables", () => {
+    expect(labelsToPdfBase64(lists).startsWith("JVBER")).toBe(true);
+    expect(() => labelsToPdfBase64(empty)).toThrow("No cables to label");
   });
 
   it("throws on an empty diagram", () => {
