@@ -182,3 +182,20 @@ describe("deriveLists — cable length totals (p3-cableids)", () => {
     expect(cables.find((c) => c.id === "sdi")?.lengthMeters).toBeUndefined();
   });
 });
+
+describe("deriveLists — cable schedule row (p3-cableschedule)", () => {
+  it("enriches each patch with A/B-end connectors and the note", () => {
+    const run: CableEdgeType = {
+      ...sdiRun("a", "o1", "i1", 5),
+      data: { cableTypeId: "sdi", lengthMeters: 5, note: "service loop at rack" },
+    };
+    const patches = deriveLists([device("s", SRC), device("d", DST)], [run]).patches;
+    expect(patches).toHaveLength(1);
+    const p = patches[0];
+    expect(p.fromConnector).toBe("BNC (SDI)");
+    expect(p.toConnector).toBe("BNC (SDI)");
+    expect(p.note).toBe("service loop at rack");
+    expect(p.fromPort).toBe("O1");
+    expect(p.toPort).toBe("I1");
+  });
+});

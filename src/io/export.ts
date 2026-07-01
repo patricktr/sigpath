@@ -87,12 +87,25 @@ export function listsToCsv(lists: DerivedLists, unit: DistanceUnit = "metric"): 
   rows.push("Qty,Cable");
   for (const c of lists.cables) rows.push(`${c.count},${csvCell(c.label)}`);
   rows.push("");
-  rows.push("Patch list");
-  rows.push(`ID,From device,From port,To device,To port,Cable,Length (${distanceSuffix(unit)})`);
+  rows.push("Cable schedule");
+  rows.push(
+    `ID,From device,From port,A-end,To device,To port,B-end,Cable,Length (${distanceSuffix(unit)}),Note`,
+  );
   for (const p of lists.patches) {
     const length = p.length != null ? fromMeters(p.length, unit) : "";
     rows.push(
-      [p.cableId, p.fromDevice, p.fromPort, p.toDevice, p.toPort, p.cableType, length]
+      [
+        p.cableId,
+        p.fromDevice,
+        p.fromPort,
+        p.fromConnector,
+        p.toDevice,
+        p.toPort,
+        p.toConnector,
+        p.cableType,
+        length,
+        p.note ?? "",
+      ]
         .map(csvCell)
         .join(","),
     );

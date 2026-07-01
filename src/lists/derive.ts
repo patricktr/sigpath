@@ -7,7 +7,7 @@ export type PacklistDevice = { key: string; name: string; count: number };
 /** One cable type with how many runs of it are in the diagram, and the total recorded run length
  *  (meters) across those runs — absent when no run of this type has a length set. */
 export type PacklistCable = { id: string; label: string; color: string; count: number; lengthMeters?: number };
-/** One connection, port-to-port. */
+/** One connection, port-to-port — the cable-schedule row (p3-cableschedule). */
 export type PatchRow = {
   id: string;
   /** Human cable ID, e.g. "VID-001" (blank until numbered). */
@@ -16,10 +16,16 @@ export type PatchRow = {
   length?: number;
   fromDevice: string;
   fromPort: string;
+  /** Connector at the output (A) end, e.g. "HDMI", "XLR-3". */
+  fromConnector: string;
   toDevice: string;
   toPort: string;
+  /** Connector at the input (B) end. */
+  toConnector: string;
   cableType: string;
   cableColor: string;
+  /** Free-text schedule note, if set on the cable. */
+  note?: string;
 };
 
 /** One transition cable (passive), needed converter (active), or device PSU (AC↔DC). */
@@ -180,10 +186,13 @@ export function deriveLists(nodes: SigNode[], edges: CableEdgeType[]): DerivedLi
       length: e.data?.lengthMeters,
       fromDevice: src ? deviceTitle(src.data.model, src.data.label) : "—",
       fromPort: out?.name ?? e.sourceHandle ?? "",
+      fromConnector: out ? cableLabel(out.connector) : "",
       toDevice: tgt ? deviceTitle(tgt.data.model, tgt.data.label) : "—",
       toPort: inp?.name ?? e.targetHandle ?? "",
+      toConnector: inp ? cableLabel(inp.connector) : "",
       cableType,
       cableColor: cableColor(cableId),
+      note: e.data?.note,
     };
   });
 

@@ -128,9 +128,15 @@ export function ListsPanel({
                     <td className="patch-id">{p.cableId || "—"}</td>
                     <td>
                       {p.fromDevice} <span className="patch-port">{p.fromPort}</span>
+                      {p.fromConnector && p.fromConnector.toLowerCase() !== p.fromPort.toLowerCase() && (
+                        <span className="patch-conn">{p.fromConnector}</span>
+                      )}
                     </td>
                     <td>
                       {p.toDevice} <span className="patch-port">{p.toPort}</span>
+                      {p.toConnector && p.toConnector.toLowerCase() !== p.toPort.toLowerCase() && (
+                        <span className="patch-conn">{p.toConnector}</span>
+                      )}
                     </td>
                     <td>
                       <span className="packlist__swatch" style={{ background: p.cableColor }} />
@@ -138,6 +144,7 @@ export function ListsPanel({
                       {p.length != null && (
                         <span className="patch-port"> · {formatLength(p.length, unit)}</span>
                       )}
+                      {p.note && <span className="patch-note">{p.note}</span>}
                     </td>
                   </tr>
                 ))}

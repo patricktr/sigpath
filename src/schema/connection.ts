@@ -20,6 +20,8 @@ export type Connection = {
   /** Human cable id/number, e.g. "VID-001". */
   number?: string;
   lengthMeters?: number;
+  /** Free-text note for the cable schedule (e.g. "service loop at rack", "spare"). */
+  note?: string;
   /**
    * The cable's *supported* bandwidth rating (e.g. "sdi-3g") — the "supported" side
    * of the grade gate. Omitted ⇒ unrated, so this cable hop isn't grade-checked.

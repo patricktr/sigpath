@@ -1125,6 +1125,20 @@ function AppInner() {
     [setEdges],
   );
 
+  // Set a cable's free-text schedule note (empty clears it). Snapshot on focus.
+  const setCableNote = useCallback(
+    (edgeId: string, note: string) => {
+      setEdges((eds) =>
+        eds.map((e) =>
+          e.id === edgeId
+            ? { ...e, data: { ...(e.data ?? { cableTypeId: "" }), note: note || undefined } }
+            : e,
+        ),
+      );
+    },
+    [setEdges],
+  );
+
   // Manual routing override: nudge the run's vertical jog left/right by one lane width.
   // Starts from where the cable currently sits (jogInfoRef) so the first nudge doesn't
   // jump, then pins it as an offset from the run midpoint — the auto pass routes around.
@@ -2087,6 +2101,19 @@ function AppInner() {
                       style={{ width: 60 }}
                     />
                     {distanceSuffix(distanceUnit)}
+                  </label>
+                  <label
+                    className="contextbar__title"
+                    style={{ display: "inline-flex", alignItems: "center", gap: 6, fontWeight: 400 }}
+                  >
+                    Note
+                    <input
+                      value={selectedCable.edge.data?.note ?? ""}
+                      placeholder="e.g. service loop"
+                      onFocus={() => takeSnapshot()}
+                      onChange={(e) => setCableNote(selectedCable.edge.id, e.target.value)}
+                      style={{ width: 150 }}
+                    />
                   </label>
                 </>
               )}

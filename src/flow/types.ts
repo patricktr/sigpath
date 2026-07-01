@@ -84,6 +84,8 @@ export type CableEdgeData = {
   cableTypeId: CableTypeId;
   number?: string;
   lengthMeters?: number;
+  /** Free-text cable-schedule note (persisted; mirrors Connection.note). */
+  note?: string;
   /** The cable's supported bandwidth rating (persisted; mirrors Connection.cableGrade). */
   cableGrade?: GradeId;
   /** Per-run demand override (persisted; mirrors Connection.signalGrade). */

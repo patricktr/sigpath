@@ -119,6 +119,25 @@
 .patch-port {
   color: #94a3b8;
 }
+/* A/B-end connector chip on a patch row (p3-cableschedule). */
+.patch-conn {
+  margin-left: 5px;
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 10px;
+  color: #64748b;
+  border: 1px solid var(--panel-border, #e2e8f0);
+  border-radius: 4px;
+  padding: 0 4px;
+  white-space: nowrap;
+}
+/* Free-text schedule note under the cable cell. */
+.patch-note {
+  display: block;
+  margin-top: 2px;
+  font-size: 11px;
+  font-style: italic;
+  color: #64748b;
+}
 .patch-id {
   font-family: var(--font-mono, ui-monospace, monospace);
   font-size: 11px;
