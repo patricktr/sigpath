@@ -3,6 +3,7 @@ import type { DerivedLists } from "../lists/derive";
 import { formatLength, type DistanceUnit } from "../units";
 import type { ExportFormat } from "../io/exportDocs";
 import { INSTALL_LABEL, installStage, nextInstall, isCableDone } from "../install";
+import { skuName } from "../bomRules";
 import type { InstallStatus } from "../schema";
 import "./ListsPanel.css";
 
@@ -75,7 +76,7 @@ export function ListsPanel({
   /** Set an equipment line's received count (presence enables checklist mode). */
   onSetReceived?: (modelId: string, count: number) => void;
 }) {
-  const { devices, cables, adapters, patches } = lists;
+  const { devices, cables, adapters, patches, cableBom } = lists;
   const totalMeters = cables.reduce((sum, c) => sum + (c.lengthMeters ?? 0), 0);
 
   const canCheck = !!(onSetInstall && onSetReceived);
@@ -168,21 +169,34 @@ export function ListsPanel({
 
         <section className="lists-section">
           <h3>Pack list · cables</h3>
-          {cables.length === 0 ? (
+          {(cableBom ? cableBom.length === 0 : cables.length === 0) ? (
             <p className="lists-empty">No cables yet.</p>
           ) : (
             <>
               <ul className="packlist">
-                {cables.map((c) => (
-                  <li className="packlist__row" key={c.id}>
-                    <span className="packlist__count">{c.count}×</span>
-                    <span className="packlist__swatch" style={{ background: c.color }} />
-                    <span className="packlist__name">{c.label}</span>
-                    {c.lengthMeters != null && (
-                      <span className="packlist__len">{formatLength(c.lengthMeters, unit)}</span>
-                    )}
-                  </li>
-                ))}
+                {cableBom
+                  ? cableBom.map((line) => (
+                      <li className="packlist__row" key={line.sku.key}>
+                        <span className="packlist__count">{line.order}×</span>
+                        <span className="packlist__swatch" style={{ background: line.sku.color }} />
+                        <span className="packlist__name">{skuName(line.sku, unit)}</span>
+                        {line.spares > 0 && (
+                          <span className="packlist__spare">
+                            {line.base} + {line.spares} spare
+                          </span>
+                        )}
+                      </li>
+                    ))
+                  : cables.map((c) => (
+                      <li className="packlist__row" key={c.id}>
+                        <span className="packlist__count">{c.count}×</span>
+                        <span className="packlist__swatch" style={{ background: c.color }} />
+                        <span className="packlist__name">{c.label}</span>
+                        {c.lengthMeters != null && (
+                          <span className="packlist__len">{formatLength(c.lengthMeters, unit)}</span>
+                        )}
+                      </li>
+                    ))}
               </ul>
               {totalMeters > 0 && (
                 <div className="packlist__total">Total cable · {formatLength(totalMeters, unit)}</div>

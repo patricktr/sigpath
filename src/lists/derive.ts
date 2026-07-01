@@ -2,6 +2,8 @@ import { cableColor, cableLabel, checkPortCompatibility, deviceTitle, DC_POWER }
 import type { InstallStatus } from "../schema";
 import { isPortBearing } from "../flow/types";
 import type { CableEdgeType, DeviceNodeType, SigNode } from "../flow/types";
+import { computeCableBom, DEFAULT_SPARE_RULE, type BomLine, type CableRun, type SpareRule } from "../bomRules";
+import type { DistanceUnit } from "../units";
 
 /** One device model with how many instances are in the diagram. */
 export type PacklistDevice = { key: string; name: string; count: number };
@@ -45,10 +47,21 @@ export type DerivedLists = {
   cables: PacklistCable[];
   adapters: AdapterRow[];
   patches: PatchRow[];
+  /** Orderable cable BOM grouped by SKU (type + grade + stock length) with spares
+   *  (p3-bomrules). Present only when {@link deriveLists} is given the distance unit. */
+  cableBom?: BomLine[];
 };
 
+/** Options that turn on the SKU-granular cable BOM (p3-bomrules) — needs the display unit
+ *  (for the stock-length ladder) and the per-connector spare rule. */
+export type DeriveOpts = { unit: DistanceUnit; ruleFor?: (connector: string) => SpareRule };
+
 /** Build the pack list (devices + cables) and patch list for a diagram. */
-export function deriveLists(nodes: SigNode[], edges: CableEdgeType[]): DerivedLists {
+export function deriveLists(
+  nodes: SigNode[],
+  edges: CableEdgeType[],
+  opts?: DeriveOpts,
+): DerivedLists {
   const deviceNodes = nodes.filter((n): n is DeviceNodeType => n.type === "device");
 
   // Pack list — devices grouped by model.
@@ -81,6 +94,7 @@ export function deriveLists(nodes: SigNode[], edges: CableEdgeType[]): DerivedLi
   // Pack list — cables. Straight runs only; transitions go to Cables & adapters and
   // AC↔DC power is the device's PSU (neither is a like-to-like cable to buy).
   const cableCounts = new Map<string, { count: number; length: number }>();
+  const cableRuns: CableRun[] = [];
   for (const { e, compat } of links) {
     if (compat && compat.kind !== "straight") continue;
     const id = e.data?.cableTypeId;
@@ -89,6 +103,7 @@ export function deriveLists(nodes: SigNode[], edges: CableEdgeType[]): DerivedLi
     cur.count += 1;
     cur.length += e.data?.lengthMeters ?? 0;
     cableCounts.set(id, cur);
+    cableRuns.push({ connector: id, grade: e.data?.cableGrade, lengthMeters: e.data?.lengthMeters });
   }
   const cables: PacklistCable[] = [...cableCounts.entries()]
     .map(([id, v]) => ({
@@ -200,5 +215,10 @@ export function deriveLists(nodes: SigNode[], edges: CableEdgeType[]): DerivedLi
     };
   });
 
-  return { devices, cables, adapters, patches };
+  // Orderable cable BOM (p3-bomrules) — SKU-grouped with spares. Only when a unit is given.
+  const cableBom = opts
+    ? computeCableBom(cableRuns, opts.ruleFor ?? (() => DEFAULT_SPARE_RULE), opts.unit)
+    : undefined;
+
+  return { devices, cables, adapters, patches, ...(cableBom ? { cableBom } : {}) };
 }

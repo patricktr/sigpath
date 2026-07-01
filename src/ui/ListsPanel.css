@@ -257,6 +257,14 @@
   font-size: 12px;
   font-variant-numeric: tabular-nums;
 }
+/* Spare/overage contribution on a cable BOM line (p3-bomrules): "6 + 1 spare". */
+.packlist__spare {
+  margin-left: auto;
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  color: #d97706;
+  white-space: nowrap;
+}
 
 .patchlist {
   width: 100%;

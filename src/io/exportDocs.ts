@@ -2,6 +2,7 @@ import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 import type { DerivedLists } from "../lists/derive";
 import { distanceSuffix, fromMeters, type DistanceUnit } from "../units";
+import { skuName } from "../bomRules";
 
 /**
  * Rich BOM + cable-schedule documents (p3-cableschedule). Every format — PDF,
@@ -25,8 +26,16 @@ function equipmentSection(lists: DerivedLists): Section {
   };
 }
 
-/** Bulk cables — quantity per cable type, plus total run length where recorded. */
+/** Cables to order. SKU-granular (type + grade + stock length) with spares when the BOM is
+ *  available (p3-bomrules); else the type-grouped fallback with total length. */
 function cablesSection(lists: DerivedLists, unit: DistanceUnit): Section {
+  if (lists.cableBom) {
+    return {
+      title: "Cables",
+      head: ["Qty", "Cable", "Runs", "Spare"],
+      rows: lists.cableBom.map((l) => [l.order, skuName(l.sku, unit), l.base, l.spares]),
+    };
+  }
   return {
     title: "Cables",
     head: ["Qty", "Cable", `Total length (${distanceSuffix(unit)})`],

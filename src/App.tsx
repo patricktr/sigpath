@@ -578,8 +578,10 @@ function AppInner() {
   const lists = useMemo(() => {
     const current = diagrams.map((d) => (d.id === activeId ? { ...d, nodes, edges } : d));
     const flat = flatten(current, activeId);
-    return deriveLists(flat.nodes, flat.edges);
-  }, [nodes, edges, diagrams, activeId]);
+    // p3-bomrules: pass the distance unit so the cable BOM buckets runs into stock lengths.
+    // The spare rule is wired in Phase B; for now the default (round-on, no spares) applies.
+    return deriveLists(flat.nodes, flat.edges, { unit: distanceUnit });
+  }, [nodes, edges, diagrams, activeId, distanceUnit]);
 
   // How many blocks reference each diagram — drives the tab "⧉N" chip. One pass over every
   // diagram's nodes (active diagram read live).
