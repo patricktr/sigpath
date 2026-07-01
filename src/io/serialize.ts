@@ -2,6 +2,7 @@ import { cableColor, SIGPATH_SCHEMA_VERSION, emptyDiagram } from "../schema";
 import type {
   Annotation,
   BlockInstance,
+  BomRules,
   BoundaryPort,
   Connection,
   DeviceInstance,
@@ -214,7 +215,13 @@ export function emptyEditorDiagram(name = "Diagram 1"): EditorDiagram {
 /** Wrap all of the project's diagrams in a versioned document for saving. */
 export function toDocument(
   diagrams: EditorDiagram[],
-  meta: { projectId: string; projectName: string; signalProfile?: SignalProfile; revisions?: Revision[] },
+  meta: {
+    projectId: string;
+    projectName: string;
+    signalProfile?: SignalProfile;
+    revisions?: Revision[];
+    bomRules?: BomRules;
+  },
 ): SigpathDocument {
   const project: Project = {
     id: meta.projectId,
@@ -222,6 +229,7 @@ export function toDocument(
     diagrams: diagrams.map(editorToDiagram),
     ...(meta.signalProfile ? { signalProfile: meta.signalProfile } : {}),
     ...(meta.revisions && meta.revisions.length ? { revisions: meta.revisions } : {}),
+    ...(meta.bomRules ? { bomRules: meta.bomRules } : {}),
   };
   return { schemaVersion: SIGPATH_SCHEMA_VERSION, project };
 }
@@ -233,6 +241,7 @@ export function fromDocument(doc: SigpathDocument): {
   diagrams: EditorDiagram[];
   signalProfile?: SignalProfile;
   revisions: Revision[];
+  bomRules?: BomRules;
 } {
   const project = normalizeDocument(doc).project;
   // Index every diagram's published interface first, so a block can synthesize its port
@@ -248,6 +257,7 @@ export function fromDocument(doc: SigpathDocument): {
     diagrams: diagrams.length > 0 ? diagrams : [emptyEditorDiagram()],
     signalProfile: project?.signalProfile,
     revisions: project?.revisions ?? [],
+    bomRules: project?.bomRules,
   };
 }
 

@@ -4,12 +4,33 @@
  * community DB / accounts land these move to the user store.)
  */
 import type { DistanceUnit } from "../units";
+import { DEFAULT_BOM_RULES, type BomRules } from "../schema";
 
 const FAV_KEY = "sigpath.favorites.v1";
 const RECENT_KEY = "sigpath.recents.v1";
 const CONVERTER_KEY = "sigpath.converterDefaults.v1";
 const UNITS_DISTANCE_KEY = "sigpath.units.distance.v1";
+const BOM_RULES_KEY = "sigpath.bomRules.default.v1";
 const RECENT_MAX = 8;
+
+/** The user's default BOM spare policy — seeds each new project (p3-bomrules). */
+export function loadDefaultBomRules(): BomRules {
+  try {
+    const raw = localStorage.getItem(BOM_RULES_KEY);
+    const data = raw ? JSON.parse(raw) : null;
+    return data && data.default ? (data as BomRules) : DEFAULT_BOM_RULES;
+  } catch {
+    return DEFAULT_BOM_RULES;
+  }
+}
+
+export function saveDefaultBomRules(rules: BomRules): void {
+  try {
+    localStorage.setItem(BOM_RULES_KEY, JSON.stringify(rules));
+  } catch {
+    /* ignore storage errors */
+  }
+}
 
 /** Preferred distance unit for cable run lengths (display + entry). Metric default. */
 export function loadDistanceUnit(): DistanceUnit {

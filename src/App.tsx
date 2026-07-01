@@ -90,6 +90,7 @@ import type { Build } from "./schema";
 import { ZoneNode, ZoneActionsContext, ZONE_COLORS } from "./ui/ZoneNode";
 import { NoteNode, NoteActionsContext } from "./ui/NoteNode";
 import { ListsPanel } from "./ui/ListsPanel";
+import { SpareRuleEditor } from "./ui/SpareRuleEditor";
 import { RevisionsPanel } from "./ui/RevisionsPanel";
 import { deriveLists } from "./lists/derive";
 import {
@@ -108,6 +109,7 @@ import {
   converterPairKey,
   loadDistanceUnit,
   saveDistanceUnit,
+  saveDefaultBomRules,
 } from "./library/userPrefs";
 import { distanceSuffix, fromMeters, toMeters, type DistanceUnit } from "./units";
 import { diagramImageBase64, diagramPdfBase64, listsToCsv, type ExportKind } from "./io/export";
@@ -164,6 +166,8 @@ function AppInner() {
   const {
     projectName,
     setProjectName,
+    bomRules,
+    setBomRules,
     diagrams,
     activeId,
     switchDiagram,
@@ -578,10 +582,11 @@ function AppInner() {
   const lists = useMemo(() => {
     const current = diagrams.map((d) => (d.id === activeId ? { ...d, nodes, edges } : d));
     const flat = flatten(current, activeId);
-    // p3-bomrules: pass the distance unit so the cable BOM buckets runs into stock lengths.
-    // The spare rule is wired in Phase B; for now the default (round-on, no spares) applies.
-    return deriveLists(flat.nodes, flat.edges, { unit: distanceUnit });
-  }, [nodes, edges, diagrams, activeId, distanceUnit]);
+    // p3-bomrules: the cable BOM buckets runs into stock lengths (unit) and applies the
+    // project's spare policy — a per-connector override, else the project default.
+    const ruleFor = (connector: string) => bomRules.byType?.[connector] ?? bomRules.default;
+    return deriveLists(flat.nodes, flat.edges, { unit: distanceUnit, ruleFor });
+  }, [nodes, edges, diagrams, activeId, distanceUnit, bomRules]);
 
   // How many blocks reference each diagram — drives the tab "⧉N" chip. One pass over every
   // diagram's nodes (active diagram read live).
@@ -2773,6 +2778,29 @@ function AppInner() {
               <p className="pref-section__hint">
                 Cable run lengths are stored in meters and shown in your chosen unit.
               </p>
+            </section>
+
+            <section className="pref-section">
+              <h3 className="pref-section__title">BOM &amp; spares · this project</h3>
+              <SpareRuleEditor
+                rule={bomRules.default}
+                onChange={(rule) => setBomRules({ ...bomRules, default: rule })}
+              />
+              <div className="pref-field" style={{ marginTop: 10 }}>
+                <span className="pref-field__label">
+                  Spares show as their own pack-list line (e.g. “6 + 1 spare”).
+                </span>
+                <button
+                  type="button"
+                  className="pref-row__clear"
+                  onClick={() => {
+                    saveDefaultBomRules(bomRules);
+                    setStatus("Saved as your default BOM policy for new projects");
+                  }}
+                >
+                  Set as my default
+                </button>
+              </div>
             </section>
 
             <section className="pref-section">

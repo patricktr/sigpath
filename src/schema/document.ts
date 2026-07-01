@@ -2,6 +2,7 @@ import type { DeviceInstance } from "./device";
 import type { Connection } from "./connection";
 import type { GradeScaleId, GradeId } from "./grades";
 import type { BoundaryPort } from "./boundary";
+import type { BomRules } from "./bom";
 import type { SignalKind } from "./signals";
 
 /**
@@ -14,10 +15,11 @@ import type { SignalKind } from "./signals";
  * added the optional `Project.revisions` embedded history (p2-revisions). v6 (2026-06-25)
  * added the optional `Diagram.trunks` (collapsible cable bundles, p2-trunk). v7 (2026-07-01)
  * added install-checklist state (p3-cableschedule): the optional `Connection.install` status
- * and the optional `Diagram.bomProgress` received-counts map. All additive, so an older file
- * loads unchanged — a missing field reads as absent.
+ * and the optional `Diagram.bomProgress` received-counts map. v8 (2026-07-01) added the optional
+ * `Project.bomRules` (spare/overage policy, p3-bomrules). All additive, so an older file loads
+ * unchanged — a missing field reads as absent.
  */
-export const SIGPATH_SCHEMA_VERSION = 7;
+export const SIGPATH_SCHEMA_VERSION = 8;
 
 /** A labeled, colored region grouping devices (stage, rack, control room). */
 export type Zone = {
@@ -146,6 +148,8 @@ export type Project = {
   signalProfile?: SignalProfile;
   /** Revision history embedded in the file (p2-revisions, schema v5). Absent ⇒ none. */
   revisions?: Revision[];
+  /** BOM spare/overage policy (p3-bomrules, schema v8). Absent ⇒ neutral default. */
+  bomRules?: BomRules;
 };
 
 /** Root persisted document — the contents of a `.sigpath` file (Phase 1). */

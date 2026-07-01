@@ -7,8 +7,9 @@ import type { BuildMeta } from "../flow/buildExtract";
 import { boundaryHash, planBoundaryRefresh } from "../flow/boundaryDrift";
 import { emptyEditorDiagram, fromDocument, synthesizeBlockModel, toDocument } from "../io/serialize";
 import { pruneRevisions, snapshotHash } from "./revisions";
-import { SIGPATH_SCHEMA_VERSION } from "../schema";
-import type { BoundaryPort, Build, Revision, RevisionSnapshot, SigpathDocument, SignalProfile, Trunk } from "../schema";
+import { SIGPATH_SCHEMA_VERSION, DEFAULT_BOM_RULES } from "../schema";
+import type { BomRules, BoundaryPort, Build, Revision, RevisionSnapshot, SigpathDocument, SignalProfile, Trunk } from "../schema";
+import { loadDefaultBomRules } from "../library/userPrefs";
 
 type Options = {
   setNodes: (nodes: SigNode[]) => void;
@@ -74,6 +75,8 @@ export function useProject(initial: EditorDiagram[], opts: Options) {
   // Project-wide signal demand ceiling for grade validation (schema v2). Held here so
   // it round-trips through save/load; the show-format selector (Phase C) drives it.
   const [signalProfile, setSignalProfile] = useState<SignalProfile | undefined>(undefined);
+  // BOM spare/overage policy (p3-bomrules) — project-scoped, seeded from the user's default.
+  const [bomRules, setBomRules] = useState<BomRules>(loadDefaultBomRules);
   const [diagrams, setDiagrams] = useState<EditorDiagram[]>(initial);
   const [activeId, setActiveId] = useState<string>(initial[0]?.id ?? "");
 
@@ -435,8 +438,9 @@ export function useProject(initial: EditorDiagram[], opts: Options) {
         projectName,
         signalProfile,
         revisions: revisionsRef.current,
+        bomRules,
       }),
-    [synced, projectName, signalProfile],
+    [synced, projectName, signalProfile, bomRules],
   );
 
   /**
@@ -513,6 +517,8 @@ export function useProject(initial: EditorDiagram[], opts: Options) {
       projectId.current = parsed.projectId;
       setProjectName(parsed.projectName);
       setSignalProfile(parsed.signalProfile);
+      // Old files lack bomRules → neutral default (unchanged BOM), not the user's policy.
+      setBomRules(parsed.bomRules ?? DEFAULT_BOM_RULES);
       setDiagrams(parsed.diagrams);
       setActiveId(parsed.diagrams[0].id);
       loadActive(parsed.diagrams, parsed.diagrams[0].id);
@@ -527,6 +533,7 @@ export function useProject(initial: EditorDiagram[], opts: Options) {
     projectId.current = crypto.randomUUID();
     setProjectName("Untitled");
     setSignalProfile(undefined);
+    setBomRules(loadDefaultBomRules()); // seed a new project from the user's default policy
     const fresh = emptyEditorDiagram("Diagram 1");
     setDiagrams([fresh]);
     setActiveId(fresh.id);
@@ -541,6 +548,8 @@ export function useProject(initial: EditorDiagram[], opts: Options) {
     setProjectName,
     signalProfile,
     setSignalProfile,
+    bomRules,
+    setBomRules,
     diagrams,
     activeId,
     switchDiagram,

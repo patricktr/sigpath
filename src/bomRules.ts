@@ -1,34 +1,16 @@
-import { cableColor, cableLabel, gradeLabel } from "./schema";
-import type { GradeId } from "./schema";
+import { cableColor, cableLabel, gradeLabel, DEFAULT_SPARE_RULE } from "./schema";
+import type { GradeId, SpareRule } from "./schema";
 import { fromMeters, distanceSuffix, type DistanceUnit } from "./units";
 
 /**
  * Custom BOM / packlist rules — spares & overage (p3-bomrules). The cable BOM is
  * grouped into orderable SKUs (connector + grade + stock length) and each line
  * gets a spare/overage contribution so the count you order isn't the raw run
- * count. Pure — the rule is project state; this module just does the math.
+ * count. Pure — the {@link SpareRule} shape + default live in the schema (persisted
+ * project state); this module owns the math and the SKU grouping.
  */
-export type SpareRule = {
-  /** Round each run's length up to the nearest stock length (creates the length dimension). */
-  roundToStock: boolean;
-  /** Floor: at least this many spares per line. */
-  minSpares: number;
-  /** Add a fixed number of spares per line. */
-  flatSpares: number;
-  /** +1 spare per N units (0 = off). */
-  ratioPerN: number;
-  /** +X% overage, rounded up (0 = off). */
-  percent: number;
-};
-
-/** No spares, round-to-stock on — the neutral default that just buckets runs by stock length. */
-export const DEFAULT_SPARE_RULE: SpareRule = {
-  roundToStock: true,
-  minSpares: 0,
-  flatSpares: 0,
-  ratioPerN: 0,
-  percent: 0,
-};
+export type { SpareRule };
+export { DEFAULT_SPARE_RULE };
 
 const M_PER_FT = 0.3048;
 /** Stock ladders in the display unit. Beyond the top rung, ceil to the next whole unit.
