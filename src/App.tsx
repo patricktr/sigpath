@@ -62,7 +62,7 @@ import type { TrunkCandidate } from "./flow/trunks";
 import type { Pt } from "./flow/obstacleRoute";
 import { EdgeMarqueeSelect } from "./flow/EdgeMarqueeSelect";
 import { rectHitsRun } from "./flow/marqueeHit";
-import type { DeviceModel } from "./schema";
+import type { DeviceModel, InstallStatus } from "./schema";
 import type { SignalKind } from "./schema";
 import { useProject } from "./project/useProject";
 import { parseDocument } from "./io/serialize";
@@ -169,6 +169,7 @@ function AppInner() {
     addDiagram,
     renameDiagram,
     setActiveTrunks,
+    setActiveBomProgress,
     reorderDiagrams,
     deleteDiagram,
     blockRefCount,
@@ -621,6 +622,10 @@ function AppInner() {
   // is then thickened and given a glow halo on top, so a selected error edge
   // still reads as red AND clearly looks selected.
   // Trunks (p2-trunk): the active diagram's bundles, and offers the user has dismissed this session.
+  const activeBomProgress = useMemo(
+    () => diagrams.find((d) => d.id === activeId)?.bomProgress ?? {},
+    [diagrams, activeId],
+  );
   const activeTrunks = useMemo(
     () => diagrams.find((d) => d.id === activeId)?.trunks ?? [],
     [diagrams, activeId],
@@ -1175,6 +1180,33 @@ function AppInner() {
       );
     },
     [setEdges],
+  );
+
+  // Advance a cable's install status (p3-cableschedule). OFF the undo stack — site progress
+  // isn't a design edit — but marks the project dirty so it persists with the diagram.
+  const setCableInstall = useCallback(
+    (edgeId: string, install: InstallStatus) => {
+      setEdges((eds) =>
+        eds.map((e) =>
+          e.id === edgeId ? { ...e, data: { ...(e.data ?? { cableTypeId: "" }), install } } : e,
+        ),
+      );
+      markDirty();
+    },
+    [setEdges, markDirty],
+  );
+
+  // Set an equipment BOM line's received/installed count (p3-cableschedule), keyed by model id.
+  const setBomReceived = useCallback(
+    (modelId: string, count: number) => {
+      setActiveBomProgress((received) => {
+        const next = { ...received };
+        if (count > 0) next[modelId] = count;
+        else delete next[modelId];
+        return next;
+      });
+    },
+    [setActiveBomProgress],
   );
 
   // Manual routing override: nudge the run's vertical jog left/right by one lane width.
@@ -2412,9 +2444,12 @@ function AppInner() {
             <ListsPanel
               lists={lists}
               unit={distanceUnit}
+              bomProgress={activeBomProgress}
               onClose={() => setListsOpen(false)}
               onRenumber={renumberAll}
               onExport={handleListsExport}
+              onSetInstall={setCableInstall}
+              onSetReceived={setBomReceived}
             />
           )}
           {revisionsOpen && (

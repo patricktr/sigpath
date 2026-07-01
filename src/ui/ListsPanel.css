@@ -86,6 +86,115 @@
   background: var(--row-hover, #f1f5f9);
 }
 
+/* Install-checklist mode (p3-cableschedule). */
+.lists-toggle {
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 4px 9px;
+  border: 1px solid var(--panel-border, #e2e8f0);
+  border-radius: 6px;
+  background: var(--btn-bg, #f8fafc);
+  color: var(--text-faint, #64748b);
+  cursor: pointer;
+}
+.lists-toggle.is-on {
+  background: #2563eb;
+  border-color: #2563eb;
+  color: #fff;
+}
+.checklist-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 7px 14px;
+  border-bottom: 1px solid var(--panel-border, #e2e8f0);
+  background: color-mix(in srgb, #2563eb 6%, transparent);
+  font-size: 12px;
+}
+.checklist-progress {
+  font-family: var(--font-mono, ui-monospace, monospace);
+  color: var(--text, #0f172a);
+}
+.checklist-hide {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--text-muted, #64748b);
+  cursor: pointer;
+  white-space: nowrap;
+}
+.packlist__row.is-done .packlist__name {
+  color: var(--text-faint, #94a3b8);
+  text-decoration: line-through;
+}
+/* Received/needed stepper on an equipment BOM line. */
+.bom-recv {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 11px;
+  color: var(--text-muted, #64748b);
+}
+.bom-recv.is-done .bom-recv__count {
+  color: #16a34a;
+  font-weight: 700;
+}
+.bom-recv button {
+  width: 18px;
+  height: 18px;
+  line-height: 1;
+  border: 1px solid var(--panel-border, #e2e8f0);
+  border-radius: 4px;
+  background: var(--btn-bg, #f8fafc);
+  color: var(--text, #0f172a);
+  cursor: pointer;
+  padding: 0;
+}
+.bom-recv button:hover {
+  background: var(--row-hover, #f1f5f9);
+}
+.bom-recv__count {
+  min-width: 30px;
+  text-align: center;
+}
+/* Click-through install-status pill on a cable-schedule row. */
+.install-pill {
+  display: block;
+  margin-top: 4px;
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  padding: 1px 5px;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.install-pill--planned {
+  background: #f1f5f9;
+  color: #64748b;
+  border-color: #e2e8f0;
+}
+.install-pill--pulled {
+  background: color-mix(in srgb, #d97706 16%, transparent);
+  color: #b45309;
+}
+.install-pill--terminated {
+  background: color-mix(in srgb, #2563eb 14%, transparent);
+  color: #2563eb;
+}
+.install-pill--tested {
+  background: color-mix(in srgb, #16a34a 16%, transparent);
+  color: #15803d;
+}
+
 .lists-panel__body {
   flex: 1;
   overflow-y: auto;

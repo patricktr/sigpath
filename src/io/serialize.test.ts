@@ -29,6 +29,47 @@ describe("serialize round-trip", () => {
     expect(cam?.type).toBe("device");
     expect(cam?.type === "device" ? cam.data.signalPins : undefined).toEqual({ sdi: "sdi-3g" });
   });
+
+  it("preserves cable note + install status and diagram bomProgress (p3-cableschedule)", () => {
+    const diagram: EditorDiagram = {
+      id: "d1",
+      name: "Job",
+      nodes: [
+        {
+          id: "a",
+          type: "device",
+          position: { x: 0, y: 0 },
+          data: { model: { id: "m1", model: "Src", category: "source", source: "builtin", ports: [
+            { id: "o", name: "Out", direction: "output", connector: "hdmi" },
+          ] } },
+        },
+        {
+          id: "b",
+          type: "device",
+          position: { x: 0, y: 0 },
+          data: { model: { id: "m2", model: "Dst", category: "display", source: "builtin", ports: [
+            { id: "i", name: "In", direction: "input", connector: "hdmi" },
+          ] } },
+        },
+      ],
+      edges: [
+        {
+          id: "e1",
+          source: "a",
+          target: "b",
+          sourceHandle: "o",
+          targetHandle: "i",
+          type: "cable",
+          data: { cableTypeId: "hdmi", note: "service loop", install: "terminated" },
+        },
+      ],
+      bomProgress: { m1: 2 },
+    };
+    const back = fromDocument(toDocument([diagram], { projectId: "p", projectName: "P" })).diagrams[0];
+    expect(back.edges[0].data?.note).toBe("service loop");
+    expect(back.edges[0].data?.install).toBe("terminated");
+    expect(back.bomProgress).toEqual({ m1: 2 });
+  });
 });
 
 describe("synthesizeBlockModel — curation seam (p2-zonetab Phase C)", () => {

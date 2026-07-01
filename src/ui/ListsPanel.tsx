@@ -2,6 +2,8 @@ import { useState } from "react";
 import type { DerivedLists } from "../lists/derive";
 import { formatLength, type DistanceUnit } from "../units";
 import type { ExportFormat } from "../io/exportDocs";
+import { INSTALL_LABEL, installStage, nextInstall, isCableDone } from "../install";
+import type { InstallStatus } from "../schema";
 import "./ListsPanel.css";
 
 const EXPORT_ITEMS: { format: ExportFormat; label: string }[] = [
@@ -50,33 +52,75 @@ function ExportMenu({ onExport }: { onExport: (format: ExportFormat) => void }) 
 export function ListsPanel({
   lists,
   unit,
+  bomProgress,
   onClose,
   onRenumber,
   onExport,
+  onSetInstall,
+  onSetReceived,
 }: {
   lists: DerivedLists;
   /** Distance unit for run lengths (storage stays metric; this is display-only). */
   unit: DistanceUnit;
+  /** Install checklist: received/installed count per device model id. */
+  bomProgress?: Record<string, number>;
   onClose: () => void;
   /** Re-sequence every cable's ID by signal group. */
   onRenumber?: () => void;
   /** Export the BOM + cable schedule in the chosen format. */
   onExport?: (format: ExportFormat) => void;
+  /** Advance a cable's install status (presence enables checklist mode). */
+  onSetInstall?: (edgeId: string, status: InstallStatus) => void;
+  /** Set an equipment line's received count (presence enables checklist mode). */
+  onSetReceived?: (modelId: string, count: number) => void;
 }) {
   const { devices, cables, adapters, patches } = lists;
   const totalMeters = cables.reduce((sum, c) => sum + (c.lengthMeters ?? 0), 0);
+
+  const canCheck = !!(onSetInstall && onSetReceived);
+  const [checklist, setChecklist] = useState(false);
+  const [hideDone, setHideDone] = useState(false);
+  const received = (modelId: string) => bomProgress?.[modelId] ?? 0;
+  const gearDone = devices.filter((d) => received(d.key) >= d.count).length;
+  const cablesTested = patches.filter((p) => isCableDone(p.install)).length;
 
   return (
     <aside className="lists-panel">
       <header className="lists-panel__head">
         <h2>Lists</h2>
         <div className="lists-panel__actions">
+          {canCheck && (
+            <button
+              type="button"
+              className={checklist ? "lists-toggle is-on" : "lists-toggle"}
+              aria-pressed={checklist}
+              onClick={() => setChecklist((c) => !c)}
+            >
+              Install
+            </button>
+          )}
           {onExport && <ExportMenu onExport={onExport} />}
           <button type="button" className="lists-panel__close" onClick={onClose} aria-label="Close">
             ×
           </button>
         </div>
       </header>
+
+      {checklist && canCheck && (
+        <div className="checklist-bar">
+          <span className="checklist-progress">
+            Cables {cablesTested}/{patches.length} tested · Gear {gearDone}/{devices.length} received
+          </span>
+          <label className="checklist-hide">
+            <input
+              type="checkbox"
+              checked={hideDone}
+              onChange={(e) => setHideDone(e.target.checked)}
+            />
+            Hide completed
+          </label>
+        </div>
+      )}
 
       <div className="lists-panel__body">
         <section className="lists-section">
@@ -85,12 +129,38 @@ export function ListsPanel({
             <p className="lists-empty">No devices yet.</p>
           ) : (
             <ul className="packlist">
-              {devices.map((d) => (
-                <li className="packlist__row" key={d.key}>
-                  <span className="packlist__count">{d.count}×</span>
-                  <span className="packlist__name">{d.name}</span>
-                </li>
-              ))}
+              {devices.map((d) => {
+                const recv = received(d.key);
+                const done = recv >= d.count;
+                if (checklist && hideDone && done) return null;
+                return (
+                  <li className={checklist && done ? "packlist__row is-done" : "packlist__row"} key={d.key}>
+                    <span className="packlist__count">{d.count}×</span>
+                    <span className="packlist__name">{d.name}</span>
+                    {checklist && onSetReceived && (
+                      <span className={done ? "bom-recv is-done" : "bom-recv"}>
+                        <button
+                          type="button"
+                          onClick={() => onSetReceived(d.key, Math.max(0, recv - 1))}
+                          aria-label="Decrease received"
+                        >
+                          −
+                        </button>
+                        <span className="bom-recv__count">
+                          {recv}/{d.count}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => onSetReceived(d.key, recv + 1)}
+                          aria-label="Increase received"
+                        >
+                          +
+                        </button>
+                      </span>
+                    )}
+                  </li>
+                );
+              })}
             </ul>
           )}
         </section>
@@ -173,9 +243,23 @@ export function ListsPanel({
                 </tr>
               </thead>
               <tbody>
-                {patches.map((p) => (
+                {patches
+                  .filter((p) => !(checklist && hideDone && isCableDone(p.install)))
+                  .map((p) => (
                   <tr key={p.id}>
-                    <td className="patch-id">{p.cableId || "—"}</td>
+                    <td className="patch-id">
+                      {p.cableId || "—"}
+                      {checklist && onSetInstall && (
+                        <button
+                          type="button"
+                          className={`install-pill install-pill--${installStage(p.install)}`}
+                          onClick={() => onSetInstall(p.id, nextInstall(p.install))}
+                          title="Click to advance install status"
+                        >
+                          {INSTALL_LABEL[installStage(p.install)]}
+                        </button>
+                      )}
+                    </td>
                     <td>
                       {p.fromDevice} <span className="patch-port">{p.fromPort}</span>
                       {p.fromConnector && p.fromConnector.toLowerCase() !== p.fromPort.toLowerCase() && (

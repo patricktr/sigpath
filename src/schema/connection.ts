@@ -9,6 +9,9 @@ export type PortRef = {
   portId: string;
 };
 
+/** Install-tracking status for a cable run (p3-cableschedule). Absent ⇒ "planned". */
+export type InstallStatus = "planned" | "pulled" | "terminated" | "tested";
+
 /** A cable run between two ports. Maps to a React Flow edge plus domain data. */
 export type Connection = {
   id: string;
@@ -22,6 +25,8 @@ export type Connection = {
   lengthMeters?: number;
   /** Free-text note for the cable schedule (e.g. "service loop at rack", "spare"). */
   note?: string;
+  /** Install-tracking status (p3-cableschedule). Absent ⇒ "planned". Off the undo stack. */
+  install?: InstallStatus;
   /**
    * The cable's *supported* bandwidth rating (e.g. "sdi-3g") — the "supported" side
    * of the grade gate. Omitted ⇒ unrated, so this cable hop isn't grade-checked.

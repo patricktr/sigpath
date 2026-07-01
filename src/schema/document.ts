@@ -12,10 +12,12 @@ import type { SignalKind } from "./signals";
  * (p2-zonetab): the optional `Diagram.boundary` (the ports a diagram publishes when
  * embedded) and `Diagram.blocks` (placed references to other diagrams). v5 (2026-06-25)
  * added the optional `Project.revisions` embedded history (p2-revisions). v6 (2026-06-25)
- * added the optional `Diagram.trunks` (collapsible cable bundles, p2-trunk). All additive,
- * so an older file loads unchanged — a missing field reads as absent.
+ * added the optional `Diagram.trunks` (collapsible cable bundles, p2-trunk). v7 (2026-07-01)
+ * added install-checklist state (p3-cableschedule): the optional `Connection.install` status
+ * and the optional `Diagram.bomProgress` received-counts map. All additive, so an older file
+ * loads unchanged — a missing field reads as absent.
  */
-export const SIGPATH_SCHEMA_VERSION = 6;
+export const SIGPATH_SCHEMA_VERSION = 7;
 
 /** A labeled, colored region grouping devices (stage, rack, control room). */
 export type Zone = {
@@ -55,6 +57,9 @@ export type Diagram = {
   blocks?: BlockInstance[];
   /** Collapsible cable bundles (p2-trunk). Absent ⇒ none. */
   trunks?: Trunk[];
+  /** Install checklist: received/installed count per device model id (p3-cableschedule).
+   *  Absent ⇒ nothing received yet. */
+  bomProgress?: Record<string, number>;
 };
 
 /**

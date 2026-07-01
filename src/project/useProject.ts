@@ -194,6 +194,18 @@ export function useProject(initial: EditorDiagram[], opts: Options) {
     [takeSnapshot, activeId],
   );
 
+  /** Update the active diagram's install-checklist received-counts (p3-cableschedule) — persisted
+   *  but OFF the undo stack (site progress isn't a design edit). Just marks the project dirty. */
+  const setActiveBomProgress = useCallback(
+    (updater: (received: Record<string, number>) => Record<string, number>) => {
+      setDiagrams((ds) =>
+        ds.map((d) => (d.id === activeId ? { ...d, bomProgress: updater(d.bomProgress ?? {}) } : d)),
+      );
+      onChange?.();
+    },
+    [activeId, onChange],
+  );
+
   /** Move `draggedId` to sit at `targetId`'s position (tab reorder). Persisted order, so
    *  it's a snapshot'd, undoable edit. activeId is unchanged. */
   const reorderDiagrams = useCallback(
@@ -535,6 +547,7 @@ export function useProject(initial: EditorDiagram[], opts: Options) {
     addDiagram,
     renameDiagram,
     setActiveTrunks,
+    setActiveBomProgress,
     reorderDiagrams,
     deleteDiagram,
     blockRefCount,

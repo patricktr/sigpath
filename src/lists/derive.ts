@@ -1,4 +1,5 @@
 import { cableColor, cableLabel, checkPortCompatibility, deviceTitle, DC_POWER } from "../schema";
+import type { InstallStatus } from "../schema";
 import { isPortBearing } from "../flow/types";
 import type { CableEdgeType, DeviceNodeType, SigNode } from "../flow/types";
 
@@ -26,6 +27,8 @@ export type PatchRow = {
   cableColor: string;
   /** Free-text schedule note, if set on the cable. */
   note?: string;
+  /** Install-tracking status (checklist mode). Absent ⇒ "planned". */
+  install?: InstallStatus;
 };
 
 /** One transition cable (passive), needed converter (active), or device PSU (AC↔DC). */
@@ -193,6 +196,7 @@ export function deriveLists(nodes: SigNode[], edges: CableEdgeType[]): DerivedLi
       cableType,
       cableColor: cableColor(cableId),
       note: e.data?.note,
+      install: e.data?.install,
     };
   });
 

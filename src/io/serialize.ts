@@ -76,6 +76,7 @@ export function editorToDiagram(d: EditorDiagram): Diagram {
     number: e.data?.number,
     lengthMeters: e.data?.lengthMeters,
     note: e.data?.note,
+    install: e.data?.install,
     cableGrade: e.data?.cableGrade,
     signalGrade: e.data?.signalGrade,
     jogOffset: e.data?.jogOffset,
@@ -123,6 +124,7 @@ export function editorToDiagram(d: EditorDiagram): Diagram {
     ...(blocks.length ? { blocks } : {}),
     ...(d.boundary ? { boundary: d.boundary } : {}),
     ...(d.trunks?.length ? { trunks: d.trunks } : {}),
+    ...(d.bomProgress && Object.keys(d.bomProgress).length ? { bomProgress: d.bomProgress } : {}),
   };
 }
 
@@ -185,6 +187,7 @@ function diagramToEditor(d: Diagram, boundaryById: BoundaryLookup): EditorDiagra
       number: c.number,
       lengthMeters: c.lengthMeters,
       note: c.note,
+      install: c.install,
       cableGrade: c.cableGrade,
       signalGrade: c.signalGrade,
       jogOffset: c.jogOffset,
@@ -199,6 +202,7 @@ function diagramToEditor(d: Diagram, boundaryById: BoundaryLookup): EditorDiagra
     edges,
     ...(d.boundary ? { boundary: d.boundary } : {}),
     ...(d.trunks ? { trunks: d.trunks } : {}),
+    ...(d.bomProgress ? { bomProgress: d.bomProgress } : {}),
   };
 }
 

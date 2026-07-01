@@ -1,5 +1,5 @@
 import type { Node, Edge } from "@xyflow/react";
-import type { DeviceModel, CableTypeId, GradeId, BoundaryPort, Port, Trunk } from "../schema";
+import type { DeviceModel, CableTypeId, GradeId, BoundaryPort, Port, Trunk, InstallStatus } from "../schema";
 import type { Pt } from "./obstacleRoute";
 import type { Hop } from "./cableHops";
 
@@ -86,6 +86,8 @@ export type CableEdgeData = {
   lengthMeters?: number;
   /** Free-text cable-schedule note (persisted; mirrors Connection.note). */
   note?: string;
+  /** Install-tracking status (persisted; mirrors Connection.install). Off the undo stack. */
+  install?: InstallStatus;
   /** The cable's supported bandwidth rating (persisted; mirrors Connection.cableGrade). */
   cableGrade?: GradeId;
   /** Per-run demand override (persisted; mirrors Connection.signalGrade). */
@@ -119,4 +121,7 @@ export type EditorDiagram = {
   boundary?: { ports: BoundaryPort[]; rev: number };
   /** Collapsible cable bundles (p2-trunk). Diagram-level metadata like `boundary`. */
   trunks?: Trunk[];
+  /** Install checklist: received/installed count per device model id (p3-cableschedule).
+   *  Diagram-level like `trunks`; off the undo stack. Absent ⇒ nothing received yet. */
+  bomProgress?: Record<string, number>;
 };
