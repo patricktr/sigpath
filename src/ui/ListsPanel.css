@@ -32,6 +32,59 @@
   cursor: pointer;
   color: #64748b;
 }
+.lists-panel__actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* "Export ▾" menu (p3-cableschedule). */
+.export-menu {
+  position: relative;
+}
+.export-menu__btn {
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 4px 9px;
+  border: 1px solid var(--panel-border, #e2e8f0);
+  border-radius: 6px;
+  background: var(--btn-bg, #f8fafc);
+  color: var(--text, #0f172a);
+  cursor: pointer;
+}
+.export-menu__btn:hover {
+  background: var(--row-hover, #f1f5f9);
+}
+.export-menu__pop {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 4px);
+  z-index: 20;
+  min-width: 156px;
+  display: flex;
+  flex-direction: column;
+  padding: 4px;
+  background: var(--panel-bg, #fff);
+  border: 1px solid var(--panel-border, #e2e8f0);
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.14);
+}
+.export-menu__pop button {
+  text-align: left;
+  font: inherit;
+  font-size: 13px;
+  padding: 7px 10px;
+  border: none;
+  border-radius: 5px;
+  background: none;
+  color: var(--text, #0f172a);
+  cursor: pointer;
+}
+.export-menu__pop button:hover {
+  background: var(--row-hover, #f1f5f9);
+}
 
 .lists-panel__body {
   flex: 1;

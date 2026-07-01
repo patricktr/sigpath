@@ -111,6 +111,12 @@ import {
 } from "./library/userPrefs";
 import { distanceSuffix, fromMeters, toMeters, type DistanceUnit } from "./units";
 import { diagramImageBase64, diagramPdfBase64, listsToCsv, type ExportKind } from "./io/export";
+import {
+  listsToPdfBase64,
+  listsToXlsxBase64,
+  scheduleToTsv,
+  type ExportFormat,
+} from "./io/exportDocs";
 import { ValidationPanel } from "./ui/ValidationPanel";
 import { validate, type ValidationIssue } from "./validation/validate";
 import { deepGrade } from "./validation/deepGrade";
@@ -876,6 +882,38 @@ function AppInner() {
       }
     },
     [lists, projectName, theme, distanceUnit],
+  );
+
+  // BOM + cable-schedule exports from the Lists panel (p3-cableschedule). PDF/XLSX write a
+  // file via the native dialog; CSV too; "clipboard" copies the schedule as TSV for pasting.
+  const handleListsExport = useCallback(
+    async (format: ExportFormat) => {
+      try {
+        const base = (projectName || "diagram").replace(/\s+/g, "-");
+        const opts = {
+          projectName: projectName || "Untitled",
+          unit: distanceUnit,
+          date: new Date().toLocaleDateString(),
+        };
+        if (format === "clipboard") {
+          await navigator.clipboard.writeText(scheduleToTsv(lists, distanceUnit));
+          setStatus("Cable schedule copied — paste into a spreadsheet");
+          return;
+        }
+        let saved: string | null = null;
+        if (format === "csv") {
+          saved = await saveText(listsToCsv(lists, distanceUnit), `${base}-schedule.csv`, "csv");
+        } else if (format === "pdf") {
+          saved = await saveBinary(listsToPdfBase64(lists, opts), `${base}-schedule.pdf`, "pdf");
+        } else if (format === "xlsx") {
+          saved = await saveBinary(await listsToXlsxBase64(lists, opts), `${base}-schedule.xlsx`, "xlsx");
+        }
+        if (saved) setStatus(`Exported · ${saved}`);
+      } catch (err) {
+        setStatus(`Export failed: ${String(err)}`);
+      }
+    },
+    [lists, projectName, distanceUnit],
   );
 
   const renameZone = useCallback(
@@ -2376,6 +2414,7 @@ function AppInner() {
               unit={distanceUnit}
               onClose={() => setListsOpen(false)}
               onRenumber={renumberAll}
+              onExport={handleListsExport}
             />
           )}
           {revisionsOpen && (

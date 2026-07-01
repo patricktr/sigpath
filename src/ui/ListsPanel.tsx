@@ -1,6 +1,50 @@
+import { useState } from "react";
 import type { DerivedLists } from "../lists/derive";
 import { formatLength, type DistanceUnit } from "../units";
+import type { ExportFormat } from "../io/exportDocs";
 import "./ListsPanel.css";
+
+const EXPORT_ITEMS: { format: ExportFormat; label: string }[] = [
+  { format: "pdf", label: "PDF document" },
+  { format: "xlsx", label: "Excel (.xlsx)" },
+  { format: "csv", label: "CSV" },
+  { format: "clipboard", label: "Copy schedule" },
+];
+
+/** "Export ▾" split menu in the Lists-panel header (p3-cableschedule). */
+function ExportMenu({ onExport }: { onExport: (format: ExportFormat) => void }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="export-menu" onMouseLeave={() => setOpen(false)}>
+      <button
+        type="button"
+        className="export-menu__btn"
+        aria-haspopup="menu"
+        aria-expanded={open}
+        onClick={() => setOpen((o) => !o)}
+      >
+        Export ▾
+      </button>
+      {open && (
+        <div className="export-menu__pop" role="menu">
+          {EXPORT_ITEMS.map((it) => (
+            <button
+              key={it.format}
+              type="button"
+              role="menuitem"
+              onClick={() => {
+                setOpen(false);
+                onExport(it.format);
+              }}
+            >
+              {it.label}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 /** Read-only panel showing the auto-generated pack list and patch list. */
 export function ListsPanel({
@@ -8,6 +52,7 @@ export function ListsPanel({
   unit,
   onClose,
   onRenumber,
+  onExport,
 }: {
   lists: DerivedLists;
   /** Distance unit for run lengths (storage stays metric; this is display-only). */
@@ -15,6 +60,8 @@ export function ListsPanel({
   onClose: () => void;
   /** Re-sequence every cable's ID by signal group. */
   onRenumber?: () => void;
+  /** Export the BOM + cable schedule in the chosen format. */
+  onExport?: (format: ExportFormat) => void;
 }) {
   const { devices, cables, adapters, patches } = lists;
   const totalMeters = cables.reduce((sum, c) => sum + (c.lengthMeters ?? 0), 0);
@@ -23,9 +70,12 @@ export function ListsPanel({
     <aside className="lists-panel">
       <header className="lists-panel__head">
         <h2>Lists</h2>
-        <button type="button" className="lists-panel__close" onClick={onClose} aria-label="Close">
-          ×
-        </button>
+        <div className="lists-panel__actions">
+          {onExport && <ExportMenu onExport={onExport} />}
+          <button type="button" className="lists-panel__close" onClick={onClose} aria-label="Close">
+            ×
+          </button>
+        </div>
       </header>
 
       <div className="lists-panel__body">
