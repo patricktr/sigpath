@@ -1,0 +1,443 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>sigpath — Cable schedule + BOM export</title>
+    <style>
+      :root {
+        --bg: #f6f8fb;
+        --panel: #ffffff;
+        --ink: #0f172a;
+        --muted: #64748b;
+        --line: #e2e8f0;
+        --accent: #2563eb;
+        --accent-soft: #dbeafe;
+        --done: #16a34a;
+        --next: #d97706;
+        --planned: #94a3b8;
+        --code-bg: #0f172a;
+        --code-ink: #e2e8f0;
+        --shadow: 0 1px 2px rgba(15, 23, 42, 0.06), 0 8px 24px rgba(15, 23, 42, 0.06);
+        --video: #3b82f6;
+        --audio: #22c55e;
+        --av: #8b5cf6;
+        --network: #06b6d4;
+        --control: #f59e0b;
+        --power: #ef4444;
+        --radius: 12px;
+        --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica,
+          Arial, sans-serif;
+        --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas,
+          "Liberation Mono", monospace;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #0b1120;
+          --panel: #131c2e;
+          --ink: #e2e8f0;
+          --muted: #94a3b8;
+          --line: #25304a;
+          --accent: #60a5fa;
+          --accent-soft: #1e293b;
+          --code-bg: #0a1020;
+          --code-ink: #d8e2f1;
+          --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 10px 30px rgba(0, 0, 0, 0.35);
+        }
+      }
+      * { box-sizing: border-box; }
+      html { scroll-behavior: smooth; }
+      body {
+        margin: 0;
+        font-family: var(--font);
+        color: var(--ink);
+        background: var(--bg);
+        line-height: 1.55;
+        -webkit-font-smoothing: antialiased;
+      }
+      .wrap { max-width: 980px; margin: 0 auto; padding: 0 20px 80px; }
+
+      header.hero {
+        background:
+          radial-gradient(1200px 240px at 15% -40%, var(--accent-soft), transparent),
+          var(--panel);
+        border-bottom: 1px solid var(--line);
+        padding: 40px 0 28px;
+        margin-bottom: 28px;
+      }
+      .hero-inner { max-width: 980px; margin: 0 auto; padding: 0 20px; }
+      .wordmark { display: flex; align-items: center; gap: 12px; }
+      .wordmark .logo {
+        display: inline-flex; gap: 4px; align-items: center;
+        padding: 6px 8px; border-radius: 8px; background: var(--ink);
+      }
+      .wordmark .logo span { width: 8px; height: 18px; border-radius: 2px; display: block; }
+      .wordmark h1 { font-size: 26px; margin: 0; letter-spacing: -0.02em; }
+      .hero p.tagline { color: var(--muted); margin: 6px 0 0; font-size: 15px; max-width: 74ch; }
+      .meta { margin-top: 14px; font-size: 13px; color: var(--muted); }
+      .meta a { color: var(--accent); text-decoration: none; }
+      .meta a:hover { text-decoration: underline; }
+
+      h2.section { font-size: 19px; margin: 40px 0 14px; letter-spacing: -0.01em; scroll-margin-top: 16px; }
+      h2.section .num {
+        display: inline-grid; place-items: center; width: 24px; height: 24px;
+        font-size: 13px; border-radius: 7px; background: var(--accent-soft);
+        color: var(--accent); margin-right: 9px; vertical-align: 2px;
+      }
+      h3.sub { font-size: 14.5px; margin: 20px 0 8px; letter-spacing: -0.01em; }
+      p.lead { color: var(--muted); margin: 0 0 18px; max-width: 78ch; }
+      p { max-width: 78ch; }
+
+      .principles { background: var(--accent-soft); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px 20px; }
+      .principles ul { margin: 8px 0 0; padding-left: 18px; }
+      .principles li { margin: 5px 0; }
+      .principles strong { color: var(--ink); }
+
+      .tag { font-size: 11px; padding: 1px 7px; border-radius: 6px; background: var(--accent-soft); color: var(--accent); margin-left: 6px; white-space: nowrap; }
+      .pill {
+        display: inline-block; font-size: 11px; font-weight: 600; letter-spacing: 0.03em;
+        padding: 2px 9px; border-radius: 999px; border: 1px solid var(--line); color: var(--muted);
+      }
+
+      ol.flow { list-style: none; counter-reset: step; padding: 0; margin: 12px 0; }
+      ol.flow > li { position: relative; padding: 4px 0 14px 40px; border-left: 2px solid var(--line); margin-left: 13px; }
+      ol.flow > li:last-child { border-left-color: transparent; padding-bottom: 0; }
+      ol.flow > li::before {
+        counter-increment: step; content: counter(step);
+        position: absolute; left: -14px; top: 0; width: 26px; height: 26px;
+        display: grid; place-items: center; border-radius: 50%;
+        background: var(--accent); color: #fff; font-size: 13px; font-weight: 700;
+      }
+      ol.flow .st { font-weight: 600; }
+      ol.flow .sd { color: var(--muted); font-size: 13.5px; }
+
+      pre {
+        background: var(--code-bg); color: var(--code-ink); border-radius: 10px;
+        padding: 13px 15px; overflow-x: auto; font-family: var(--mono);
+        font-size: 12.5px; line-height: 1.5; border: 1px solid var(--line); margin: 12px 0;
+      }
+      pre .c { color: #7e8aa3; }
+      pre .k { color: #7dd3fc; }
+      pre .s { color: #86efac; }
+      code { font-family: var(--mono); font-size: 0.9em; background: color-mix(in srgb, var(--accent-soft) 60%, var(--panel)); padding: 1px 5px; border-radius: 5px; }
+      pre code { background: none; padding: 0; font-size: inherit; }
+
+      .table-scroll { overflow-x: auto; border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); margin: 8px 0; }
+      table { border-collapse: collapse; width: 100%; font-size: 13.5px; background: var(--panel); }
+      th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+      th { background: color-mix(in srgb, var(--accent-soft) 50%, var(--panel)); font-size: 12px; text-transform: uppercase; letter-spacing: 0.03em; color: var(--muted); }
+      tr:last-child td { border-bottom: none; }
+      td strong { color: var(--ink); }
+      td code { white-space: nowrap; }
+      .ok { color: var(--done); font-weight: 600; }
+      .bad { color: var(--power); font-weight: 600; }
+      .mono-cell { font-family: var(--mono); font-size: 12px; white-space: nowrap; }
+      .eff { font-family: var(--mono); font-size: 11px; font-weight: 700; padding: 1px 7px; border-radius: 5px; }
+      .eff-s { color: var(--done); background: color-mix(in srgb, var(--done) 14%, transparent); }
+      .eff-m { color: var(--next); background: color-mix(in srgb, var(--next) 14%, transparent); }
+      .eff-l { color: var(--power); background: color-mix(in srgb, var(--power) 14%, transparent); }
+
+      .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 12px; margin: 8px 0; }
+      .card { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px 16px; box-shadow: var(--shadow); }
+      .card h4 { margin: 0 0 5px; font-size: 14.5px; display: flex; align-items: center; gap: 8px; }
+      .card p { margin: 0; font-size: 13px; color: var(--muted); }
+      .card p + p { margin-top: 7px; }
+      .card .rec { display: inline-block; margin-top: 9px; font-size: 11.5px; font-weight: 600; color: var(--done); }
+      .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+
+      .callout { border-left: 3px solid var(--accent); background: color-mix(in srgb, var(--accent-soft) 55%, var(--panel)); padding: 12px 16px; border-radius: 0 10px 10px 0; margin: 14px 0; font-size: 13.5px; }
+      .callout strong { color: var(--ink); }
+      .callout.warn { border-left-color: var(--next); background: color-mix(in srgb, #fde68a 30%, var(--panel)); }
+      .callout.good { border-left-color: var(--done); background: color-mix(in srgb, var(--done) 12%, var(--panel)); }
+
+      footer { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--line); font-size: 12.5px; color: var(--muted); }
+      footer a { color: var(--accent); }
+    </style>
+  </head>
+  <body>
+    <header class="hero">
+      <div class="hero-inner">
+        <div class="wordmark">
+          <span class="logo" aria-hidden="true">
+            <span style="background: var(--video)"></span>
+            <span style="background: var(--av)"></span>
+            <span style="background: var(--power)"></span>
+          </span>
+          <h1>sigpath</h1>
+        </div>
+        <p class="tagline">
+          <strong>Cable schedule + BOM export.</strong> Turn the connections already on the canvas
+          into the deliverables a crew actually carries to site — an enriched port-to-port cable
+          schedule and an equipment bill of materials — exportable as a printable PDF, an Excel
+          workbook, CSV, and physical cable labels, plus an in-app install checklist that tracks each
+          run from planned to tested. The design behind roadmap item <code>p3-cableschedule</code>.
+        </p>
+        <div class="meta">
+          Last updated July 1, 2026 ·
+          <a href="../ROADMAP.html">← Product roadmap</a> ·
+          <a href="CABLE-ROUTING.html">Cable routing →</a> ·
+          <a href="ZONE-TAB.html">Zone ↔ tab →</a> ·
+          <a href="https://github.com/patricktr/sigpath">github.com/patricktr/sigpath</a>
+        </div>
+      </div>
+    </header>
+
+    <div class="wrap">
+      <!-- TL;DR -->
+      <h2 class="section">The one idea</h2>
+      <div class="principles">
+        <ul>
+          <li><strong>The data already exists — this feature is formatting, not computing.</strong>
+            <code>deriveLists(nodes, edges)</code> already yields a <code>patches</code> port-to-port
+            table and a device pack list. Every export is a <em>pure view</em> over one
+            <code>DerivedLists</code>; nothing re-walks the graph. Enrich that struct once, format it
+            five ways.</li>
+          <li><strong>Enrich once, format many.</strong> Widen <code>PatchRow</code> with the two end
+            connectors, colors, and a per-cable note a single time. The Lists panel, PDF, XLSX, CSV,
+            clipboard, and label sheet all read the same enriched rows — no per-format graph logic,
+            no drift between what you see and what you export.</li>
+          <li><strong>Meters in, chosen unit out.</strong> Lengths stay stored in meters (see
+            <code>units.ts</code> / <code>p2-prefs</code>); every schedule surface renders through
+            <code>formatLength(m, unit)</code>. One rounding point, at the edge, so PDF/XLSX/CSV all
+            agree with the on-screen table and with each other.</li>
+          <li><strong>Install state travels with the project.</strong> Checklist status is job state,
+            not a UI preference — it persists <em>in the <code>.sig</code> file</em> (additive schema
+            bump v6 → v7) so a shared diagram carries its progress. It marks the project dirty but
+            stays <em>off the undo stack</em> — checking off a pulled cable is not a design edit.</li>
+          <li><strong>Technical, not commercial.</strong> The BOM is quantity + manufacturer/model.
+            No pricing, vendors, or part numbers — sigpath stays a design tool, not a quoting app.
+            Spare/overage math is a separate, already-scoped item (<code>p3-bomrules</code>).</li>
+        </ul>
+      </div>
+
+      <!-- 1. TODAY -->
+      <h2 class="section"><span class="num">1</span>Today: the data is here, the deliverables aren't</h2>
+      <p class="lead">
+        <code>deriveLists</code> (<code>src/lists/derive.ts</code>) already produces everything the
+        roadmap line asks for — it's surfaced in the read-only Lists panel and dumped to CSV. What's
+        missing is <em>presentation</em>: a client/installer-grade document, richer columns, and a
+        way to track the job on site.
+      </p>
+      <div class="table-scroll">
+        <table>
+          <thead><tr><th>Roadmap ask</th><th>What we have</th><th>Where</th><th>Gap</th></tr></thead>
+          <tbody>
+            <tr>
+              <td><strong>Port-to-port table</strong><br />(ID, type, length, from→to)</td>
+              <td>The <strong>Patch list</strong> — one <code>PatchRow</code> per connection:
+                <code>cableId, from{Device,Port}, to{Device,Port}, cableType, length</code>.</td>
+              <td>Lists panel + <code>listsToCsv</code></td>
+              <td>No end-connector columns, no color, no notes; not a standalone document.</td>
+            </tr>
+            <tr>
+              <td><strong>Equipment-quantity list</strong></td>
+              <td>The <strong>Pack list · devices</strong> — qty × manufacturer/model, plus a cables
+                pack list (qty per type + total length) and adapters/PSUs.</td>
+              <td>Lists panel + <code>listsToCsv</code></td>
+              <td>Only CSV; no PDF/XLSX; no received-vs-needed tracking.</td>
+            </tr>
+            <tr>
+              <td><strong>Export</strong></td>
+              <td>CSV of all three lists; PNG/JPEG/PDF of the <em>diagram image</em>.</td>
+              <td><code>menu:export</code> → <code>handleExport</code></td>
+              <td>PDF is a picture of the canvas, not a schedule. No XLSX, clipboard, or labels.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="callout good">
+        <strong>Consequence:</strong> the port-to-port table is not a missing feature — it's a
+        thin one. The work is to <em>enrich</em> it and give it real output surfaces, riding on the
+        one <code>DerivedLists</code> seam the whole app already trusts.
+      </div>
+
+      <!-- 2. DECISIONS -->
+      <h2 class="section"><span class="num">2</span>Locked decisions</h2>
+      <div class="table-scroll">
+        <table>
+          <thead><tr><th>Question</th><th>Decision</th><th>Why</th></tr></thead>
+          <tbody>
+            <tr><td>Schedule richness</td><td><strong>Enrich</strong>: add A-end/B-end connector type, cable color, and a per-cable note.</td><td>The connectors are already resolved in <code>links</code>; notes are the one column crews always hand-scrawl.</td></tr>
+            <tr><td>Export formats</td><td><strong>All four</strong>: printable PDF, XLSX, interactive checklist, cable-label sheets (CSV stays, enriched). Plus clipboard TSV as a freebie.</td><td>Each serves a different moment: client sign-off (PDF), spreadsheet wrangling (XLSX), on-site tracking (checklist), termination (labels).</td></tr>
+            <tr><td>Checklist model</td><td><strong>Both</strong>: cables get a <code>Planned → Pulled → Terminated → Tested</code> status; equipment tracks received/installed <em>count vs needed</em>.</td><td>Mirrors the industry status-tracking column; the count model is the user's "QTY out = QTY needed".</td></tr>
+            <tr><td>BOM scope</td><td><strong>Technical only</strong> — qty + manufacturer/model. No price/vendor/part#.</td><td>Keeps sigpath free and design-focused; commercial fields are a different product.</td></tr>
+            <tr><td>Checklist persistence</td><td><strong>In the <code>.sig</code> file</strong> (schema v7), off the undo stack.</td><td>Progress must survive reload and travel when a project is shared with the installer.</td></tr>
+            <tr><td>Export entry point</td><td>An <strong>“Export ▾” menu in the Lists-panel header</strong>; keep the native File▸Export items working.</td><td>The data lives in the Lists panel — put the actions where the user is already looking at it.</td></tr>
+            <tr><td>Page size</td><td>Default <strong>US Letter</strong>; A4 a later Preferences toggle.</td><td>Ship the common case; the pane from <code>p2-prefs</code> is the natural home for the toggle.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- 3. DATA MODEL -->
+      <h2 class="section"><span class="num">3</span>Data model &amp; persistence</h2>
+      <p class="lead">Three additive fields. Two ride on the cable edge; one is diagram-level. All
+        round-trip through <code>serialize.ts</code> behind a single schema bump.</p>
+      <pre><code><span class="c">// src/flow/types.ts — CableEdgeData gains two persisted fields</span>
+<span class="k">type</span> CableEdgeData = {
+  cableTypeId: CableTypeId;
+  number?: <span class="k">string</span>;          <span class="c">// existing cable ID (AV-001)</span>
+  lengthMeters?: <span class="k">number</span>;    <span class="c">// existing</span>
+  note?: <span class="k">string</span>;            <span class="c">// NEW — free-text schedule note</span>
+  install?: InstallStatus;   <span class="c">// NEW — "planned" | "pulled" | "terminated" | "tested"</span>
+  <span class="c">/* …grade, jogOffset, derived render fields unchanged… */</span>
+};
+
+<span class="c">// Diagram-level: received/installed counts, keyed by device model id.</span>
+<span class="c">// Lives beside `boundary` and `trunks` on EditorDiagram, like other job metadata.</span>
+<span class="k">type</span> EditorDiagram = { <span class="c">/* … */</span> bomProgress?: Record&lt;<span class="k">string</span>, <span class="k">number</span>&gt; };</code></pre>
+      <ul>
+        <li><strong>Where install status renders in the schedule.</strong> A cable with no
+          <code>install</code> is treated as <code>planned</code> (the default), so old diagrams read
+          correctly with zero migration.</li>
+        <li><strong>Undo.</strong> <code>note</code> edits go through the normal snapshot path (a
+          design edit). <code>install</code> and <code>bomProgress</code> mutations bypass the undo
+          stack — they set <code>dirty</code> and persist, but Ctrl-Z during a design session never
+          rewinds site progress.</li>
+        <li><strong>Schema.</strong> <code>SIGPATH_SCHEMA_VERSION</code> 6 → 7, additive and
+          backward-tolerant, exactly as <code>p2-trunk</code> did at v6. Serialize writes the new
+          fields when present; deserialize defaults them when absent.</li>
+      </ul>
+
+      <!-- 4. THE SCHEDULE -->
+      <h2 class="section"><span class="num">4</span>The enriched cable schedule</h2>
+      <p class="lead">One widened <code>PatchRow</code> feeds every surface. Columns, and where each
+        comes from:</p>
+      <div class="table-scroll">
+        <table>
+          <thead><tr><th>Column</th><th>Source</th><th>New?</th></tr></thead>
+          <tbody>
+            <tr><td><strong>ID</strong></td><td><code>edge.data.number</code> (auto-numberable, <code>p3-cableids</code>)</td><td>—</td></tr>
+            <tr><td><strong>Cable type</strong> + color swatch</td><td><code>cableLabel/cableColor(cableTypeId)</code></td><td>color is new</td></tr>
+            <tr><td><strong>From</strong> device · port</td><td><code>src.data.model</code> · <code>out.name</code></td><td>—</td></tr>
+            <tr><td><strong>A-end connector</strong></td><td><code>out.connector</code> → <code>cableLabel</code></td><td class="ok">new</td></tr>
+            <tr><td><strong>To</strong> device · port</td><td><code>tgt.data.model</code> · <code>inp.name</code></td><td>—</td></tr>
+            <tr><td><strong>B-end connector</strong></td><td><code>inp.connector</code> → <code>cableLabel</code></td><td class="ok">new</td></tr>
+            <tr><td><strong>Length</strong></td><td><code>formatLength(edge.lengthMeters, unit)</code></td><td>—</td></tr>
+            <tr><td><strong>Note</strong></td><td><code>edge.data.note</code></td><td class="ok">new</td></tr>
+            <tr><td><strong>Status</strong> (checklist mode)</td><td><code>edge.data.install</code></td><td class="ok">new</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>All new columns already have their raw material in the per-link resolution
+        <code>deriveLists</code> does today (<code>out</code>/<code>inp</code> ports) — the enrichment
+        is exposing them on <code>PatchRow</code>, not new computation.</p>
+
+      <!-- 5. EXPORTS -->
+      <h2 class="section"><span class="num">5</span>Export surfaces</h2>
+      <div class="grid">
+        <div class="card">
+          <h4><span class="dot" style="background: var(--power)"></span>Printable PDF</h4>
+          <p>A real document: title block (project, date), <strong>Equipment BOM</strong> table, then
+            the <strong>Cable schedule</strong> table, paginated with repeating headers.</p>
+          <p><code>jspdf</code> is already a dep; add <code>jspdf-autotable</code> for the grids.</p>
+          <span class="rec">Phase B · replaces the diagram-image PDF only for lists</span>
+        </div>
+        <div class="card">
+          <h4><span class="dot" style="background: var(--done)"></span>XLSX workbook</h4>
+          <p>Multi-sheet: <em>Devices</em>, <em>Cables</em>, <em>Cable schedule</em>. Real columns,
+            widths, a header row — the AV-industry default (Stardraw exports xlsx).</p>
+          <p>SheetJS, <strong>lazy-loaded</strong> on first use so it never taxes startup.</p>
+          <span class="rec">Phase B</span>
+        </div>
+        <div class="card">
+          <h4><span class="dot" style="background: var(--av)"></span>CSV + clipboard</h4>
+          <p>Enrich the existing <code>listsToCsv</code> with the new columns. Add a
+            <strong>Copy (TSV)</strong> action that drops straight into Google Sheets / Excel.</p>
+          <span class="rec">Phase A/B · near-free</span>
+        </div>
+        <div class="card">
+          <h4><span class="dot" style="background: var(--control)"></span>Cable-label sheets</h4>
+          <p>A print view laying out one label per run (<strong>ID</strong>, from→to, color) tiled to
+            common stock (Avery), printed via the OS dialog to paper or PDF.</p>
+          <span class="rec">Phase D</span>
+        </div>
+      </div>
+      <div class="callout">
+        <strong>Print, not just generate.</strong> The label sheet and (optionally) the PDF use a
+        dedicated print stylesheet + <code>window.print()</code>, letting the OS handle "Save as PDF"
+        and real paper — cheaper and higher-fidelity than pixel-painting a canvas.
+      </div>
+
+      <!-- 6. CHECKLIST -->
+      <h2 class="section"><span class="num">6</span>Interactive install checklist</h2>
+      <p class="lead">A mode on the Lists panel that turns the read-only schedule into a live site
+        tracker. Two independent trackers, one per list:</p>
+      <ol class="flow">
+        <li><span class="st">Cables — a status pipeline.</span> <span class="sd">Each run cycles
+          <code>Planned → Pulled → Terminated → Tested</code> via a click-through pill (or a select).
+          The status writes to <code>edge.data.install</code>. A per-signal-group progress readout
+          ("SDI 6 / 8 terminated") sits atop the table.</span></li>
+        <li><span class="st">Equipment — received vs needed.</span> <span class="sd">Each BOM line shows
+          <code>needed</code> (the derived count) and an editable <code>received</code>
+          (<code>bomProgress[modelId]</code>). A line is "complete" when received ≥ needed — the
+          user's "QTY out = QTY needed".</span></li>
+        <li><span class="st">Hide-completed filter.</span> <span class="sd">One toggle collapses done
+          runs / satisfied BOM lines so what's left on site is what's left to do. Ephemeral view
+          state, like the signal filter (<code>p2-typefilter</code>).</span></li>
+      </ol>
+      <div class="callout warn">
+        <strong>Scope guard.</strong> Status is a flat per-cable field, not a workflow engine — no
+        assignees, timestamps, or test-result attachments (those belong to a commissioning tool). If
+        install mode starts growing verbs, that's the signal it's a separate feature.
+      </div>
+
+      <!-- 7. PHASING -->
+      <h2 class="section"><span class="num">7</span>Phasing</h2>
+      <p class="lead">Each phase ships and commits independently; A unblocks the rest.</p>
+      <div class="table-scroll">
+        <table>
+          <thead><tr><th>Phase</th><th>Scope</th><th>Touches</th><th>Effort</th></tr></thead>
+          <tbody>
+            <tr>
+              <td><strong>A · Enrich</strong></td>
+              <td>Note field + inspector input; widen <code>PatchRow</code> (A/B connector, color, note); render enriched Patch list; update CSV.</td>
+              <td><code>flow/types</code>, <code>derive</code>, <code>ListsPanel</code>, <code>export</code>, <code>App</code> inspector</td>
+              <td><span class="eff eff-s">SMALL</span></td>
+            </tr>
+            <tr>
+              <td><strong>B · Static exports</strong></td>
+              <td>PDF (jspdf-autotable) BOM + schedule; XLSX (SheetJS, lazy); clipboard TSV; Lists-panel "Export ▾".</td>
+              <td><code>io/export</code> (+ new <code>io/exportPdf</code>, <code>io/exportXlsx</code>), <code>ListsPanel</code></td>
+              <td><span class="eff eff-m">MEDIUM</span></td>
+            </tr>
+            <tr>
+              <td><strong>C · Install checklist</strong></td>
+              <td>Cable status + BOM received counts; schema v7 + serialize; checklist mode + hide-done; off-undo mutations.</td>
+              <td><code>flow/types</code>, <code>schema/document</code>, <code>io/serialize</code>, <code>ListsPanel</code>, <code>App</code></td>
+              <td><span class="eff eff-m">MEDIUM</span></td>
+            </tr>
+            <tr>
+              <td><strong>D · Cable labels</strong></td>
+              <td>Print-view label layout tiled to stock; print stylesheet; export action.</td>
+              <td>new <code>ui/LabelSheet</code>, print CSS, <code>ListsPanel</code></td>
+              <td><span class="eff eff-m">MEDIUM</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- 8. DEFERRED -->
+      <h2 class="section"><span class="num">8</span>Deferred &amp; adjacent</h2>
+      <ul>
+        <li><strong>Spares / overage</strong> — "pack one extra per N", round lengths to stock: its
+          own roadmap item, <code>p3-bomrules</code>. The BOM here stays raw counts; that layer adds
+          traceable spare lines on top.</li>
+        <li><strong>Custom connector-pair cable types</strong> (<code>p4-cabletypes</code>) — once a
+          cable carries its own two end connectors, the A/B-end columns read from the cable type
+          instead of the mated ports. The schedule columns are chosen to absorb that with no shape
+          change.</li>
+        <li><strong>Physical location / rack columns</strong> — a real "from rack → to rack" needs a
+          rack/room model sigpath doesn't have yet. Explicitly out of scope; the device label is the
+          location proxy until then.</li>
+        <li><strong>A4 page size, label-stock presets, price fields</strong> — Preferences toggles /
+          later polish, not blockers for A–D.</li>
+      </ul>
+
+      <footer>
+        sigpath — local-first AV signal-flow. Design doc for <code>p3-cableschedule</code>.
+        See also <a href="CABLE-ROUTING.html">Cable routing</a>,
+        <a href="ZONE-TAB.html">Zone ↔ tab</a>, <a href="../ROADMAP.html">the roadmap</a>.
+      </footer>
+    </div>
+  </body>
+</html>
