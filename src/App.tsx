@@ -925,7 +925,7 @@ function AppInner() {
         } else if (format === "pdf") {
           saved = await saveBinary(listsToPdfBase64(lists, opts), `${base}-schedule.pdf`, "pdf");
         } else if (format === "xlsx") {
-          saved = await saveBinary(await listsToXlsxBase64(lists, opts), `${base}-schedule.xlsx`, "xlsx");
+          saved = await saveBinary(listsToXlsxBase64(lists, opts), `${base}-schedule.xlsx`, "xlsx");
         } else if (format === "labels") {
           saved = await saveBinary(labelsToPdfBase64(lists), `${base}-labels.pdf`, "pdf");
         }

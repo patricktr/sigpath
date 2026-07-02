@@ -3,6 +3,7 @@ import autoTable from "jspdf-autotable";
 import type { DerivedLists } from "../lists/derive";
 import { distanceSuffix, fromMeters, type DistanceUnit } from "../units";
 import { skuName } from "../bomRules";
+import { xlsxBase64 } from "./xlsx";
 
 /**
  * Rich BOM + cable-schedule documents (p3-cableschedule). Every format — PDF,
@@ -124,17 +125,14 @@ export function listsToPdfBase64(lists: DerivedLists, opts: DocOpts): string {
   return arrayBufferToBase64(doc.output("arraybuffer"));
 }
 
-/** BOM + cable schedule as a multi-sheet XLSX workbook, base64-encoded. Lazy-loads SheetJS. */
-export async function listsToXlsxBase64(lists: DerivedLists, opts: DocOpts): Promise<string> {
+/** BOM + cable schedule as a multi-sheet XLSX workbook, base64-encoded (hand-rolled writer). */
+export function listsToXlsxBase64(lists: DerivedLists, opts: DocOpts): string {
   assertNonEmpty(lists);
-  const XLSX = await import("xlsx");
-  const wb = XLSX.utils.book_new();
-  for (const s of sections(lists, opts.unit)) {
-    const ws = XLSX.utils.aoa_to_sheet([s.head, ...s.rows]);
-    // Sheet names cap at 31 chars and can't contain []:*?/\ — our titles are safe.
-    XLSX.utils.book_append_sheet(wb, ws, s.title.slice(0, 31));
-  }
-  return XLSX.write(wb, { type: "base64", bookType: "xlsx" }) as string;
+  const sheets = sections(lists, opts.unit).map((s) => ({
+    name: s.title,
+    rows: [s.head, ...s.rows] as (string | number)[][],
+  }));
+  return xlsxBase64(sheets);
 }
 
 /** The cable schedule as TSV, for pasting straight into Sheets/Excel. */

@@ -41,9 +41,8 @@ describe("exportDocs (p3-cableschedule)", () => {
     expect(listsToPdfBase64(lists, { projectName: "Test", unit: "metric" }).startsWith("JVBER")).toBe(true);
   });
 
-  it("listsToXlsxBase64 returns an xlsx (base64 PK zip header)", async () => {
-    const b64 = await listsToXlsxBase64(lists, { projectName: "Test", unit: "metric" });
-    expect(b64.startsWith("UEsD")).toBe(true);
+  it("listsToXlsxBase64 returns an xlsx (base64 PK zip header)", () => {
+    expect(listsToXlsxBase64(lists, { projectName: "Test", unit: "metric" }).startsWith("UEsD")).toBe(true);
   });
 
   it("labelsToPdfBase64 returns a PDF, and throws with no cables", () => {
