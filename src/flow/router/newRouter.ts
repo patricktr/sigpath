@@ -1,5 +1,5 @@
-import { routeOrthogonal } from "./orthogonalRoute";
-import type { ExitDir } from "./orthogonalRoute";
+import { crossContextOf, routeOrthogonalPruned } from "./orthogonalRoute";
+import type { CrossContext, ExitDir, RoutePort, StubSpec } from "./orthogonalRoute";
 import type { Rect, Pt } from "../obstacleRoute";
 import {
   rectContains,
@@ -16,7 +16,7 @@ import { inputPorts, outputPorts, bidirectionalPorts } from "../../schema";
 import type { Port } from "../../schema";
 import { isPortBearing } from "../types";
 import type { PortBearingNode, SigNode } from "../types";
-import type { EdgeEnds, PortSide, Router, RouteRequest, RouteResult } from "./types";
+import type { EdgeEnds, PortAnchor, PortSide, Router, RouteRequest, RouteResult } from "./types";
 
 /**
  * The general router (p2-router). It owns ALL cable runs through one pipeline:
@@ -63,9 +63,51 @@ export function collectObstacleRects(nodes: SigNode[]): { id: string; rect: Rect
 const SIDE_DIR: Record<PortSide, ExitDir> = { L: "-x", R: "+x", T: "-y", B: "+y" };
 type Geom = { x: number; y: number; side: PortSide; dir: ExitDir };
 
-/** Resolve a port's canvas anchor + which side it exits. Input→left, output→right,
- *  bidirectional→bottom (anchor X estimated by even spacing; CableEdge snaps the real jack). */
-function portGeom(node: PortBearingNode, port: Port): Geom {
+/** A box deflated to its true core, so only a real pass-through counts as a violation —
+ *  the perpendicular exit stub touching a port's own edge, and edge-hugging (a routing
+ *  QUALITY concern, not a constraint one), are exempt. Mirrors the gate's BOXCHECK_INSET. */
+const CORE_INSET = 12;
+const coreOf = (r: Rect): Rect => ({
+  x: r.x + CORE_INSET,
+  y: r.y + CORE_INSET,
+  w: r.w - 2 * CORE_INSET,
+  h: r.h - 2 * CORE_INSET,
+});
+const coresOf = (rects: Rect[]): Rect[] => rects.map(coreOf).filter((r) => r.w > 0 && r.h > 0);
+
+/** Preferred first/last straight-run length on a horizontal (L/R) exit — long enough for the
+ *  cable-ID badge to ride the run before the first bend. SOFT: when routing with this much
+ *  room fails, we retry with the plain port stub (shrink under pressure). */
+const LABEL_STUB = 64;
+const labelStubs = (from: Geom, to: Geom): StubSpec | undefined => {
+  const f = from.side === "L" || from.side === "R" ? LABEL_STUB : undefined;
+  const t = to.side === "L" || to.side === "R" ? LABEL_STUB : undefined;
+  return f || t ? { from: f, to: t } : undefined;
+};
+
+/** Detour with label room when possible, plain stubs when not. */
+function detour(
+  from: RoutePort,
+  to: RoutePort,
+  fromG: Geom,
+  toG: Geom,
+  obstacles: Rect[],
+  own: Rect[],
+  cross?: CrossContext,
+): Pt[] | null {
+  const want = labelStubs(fromG, toG);
+  if (want) {
+    const roomy = routeOrthogonalPruned(from, to, obstacles, own, want, cross);
+    if (roomy) return roomy;
+  }
+  return routeOrthogonalPruned(from, to, obstacles, own, undefined, cross);
+}
+
+/** Resolve a port's canvas anchor + which side it exits. A MEASURED anchor (real handle
+ *  center from React Flow) wins outright; otherwise estimate — input→left, output→right,
+ *  bidirectional→bottom (anchor X by even spacing; CableEdge snaps the real jack). */
+function portGeom(node: PortBearingNode, port: Port, anchor?: PortAnchor): Geom {
+  if (anchor) return { x: anchor.x, y: anchor.y, side: anchor.side, dir: SIDE_DIR[anchor.side] };
   const model = node.data.model;
   const { w, h } = deviceSize(node);
   if (port.direction === "input") {
@@ -97,8 +139,8 @@ function route(req: RouteRequest): RouteResult {
     const sp = src.data.model.ports.find((p) => p.id === e.sourceHandle);
     const tp = tgt.data.model.ports.find((p) => p.id === e.targetHandle);
     if (!sp || !tp) continue;
-    const from = portGeom(src, sp);
-    const to = portGeom(tgt, tp);
+    const from = portGeom(src, sp, req.anchors?.get(e.source)?.get(`source:${sp.id}`));
+    const to = portGeom(tgt, tp, req.anchors?.get(e.target)?.get(`target:${tp.id}`));
     geom.set(e.id, { from, to, horizontal: from.side === "R" && to.side === "L" });
   }
 
@@ -116,7 +158,17 @@ function route(req: RouteRequest): RouteResult {
     rects.filter((d) => d.id === e.source || d.id === e.target).map((d) => d.rect);
 
   // Detour pass: blocked output→input runs, and every bidi/non-horizontal run.
+  //
+  // Classify first: a CLEAR forward run joins the lane pass and seeds the crossing context
+  // with its default Z (a close stand-in for its final lane). Everything else routes
+  // SEQUENTIALLY, shortest run first, each finished route joining the context — so the A*'s
+  // soft crossing penalty sees what is already on the canvas (locally-good crossing
+  // minimization; no global optimizer).
   const waypointsById = new Map<string, Pt[]>();
+  const giveUps: string[] = [];
+  type Work = { e: (typeof edges)[number]; g: NonNullable<ReturnType<typeof geom.get>>; obstacles: Rect[]; own: Rect[]; centerWith: Rect[] | null };
+  const work: Work[] = [];
+  const ctxEntries: { id: string | null; pts: Pt[] }[] = [];
   for (const e of edges) {
     const g = geom.get(e.id);
     if (!g) continue;
@@ -126,21 +178,50 @@ function route(req: RouteRequest): RouteResult {
     const toPt = { x: to.x, y: to.y };
     if (horizontal) {
       // Only reroute when the straight Z is actually blocked (else the lane pass handles it) —
-      // identical trigger to legacy. Own devices are NOT obstacles here (a side exit can't
-      // re-enter its own device), matching legacy and keeping the common case unchanged.
+      // identical trigger to legacy for the forward case. A forward run's side exit can't
+      // re-enter its own device, but a BACKWARDS run (target behind the source, e.g. a power
+      // conditioner feeding a device up-left of it) doubles the default Z straight back over
+      // its own box — so own boxes count as blockers too, deflated to their cores so the
+      // legitimate port-edge exit is exempt.
       const midX = (from.x + to.x) / 2;
-      if (obstacles.length === 0) continue;
-      if (!pathHitsObstacle(defaultRoutePoints(fromPt, toPt, midX), obstacles)) continue;
-      const interior = routeOrthogonal({ ...fromPt, dir: from.dir }, { ...toPt, dir: to.dir }, obstacles, []);
-      if (interior) {
-        const centered = centerDetourVerticals([fromPt, ...interior, toPt], obstacles);
-        waypointsById.set(e.id, centered.slice(1, -1));
+      const own = ownOf(e);
+      const defaultZ = defaultRoutePoints(fromPt, toPt, midX);
+      const hitsOwn = pathHitsObstacle(defaultZ, coresOf(own));
+      const blocked = hitsOwn || (obstacles.length > 0 && pathHitsObstacle(defaultZ, obstacles));
+      if (!blocked) {
+        ctxEntries.push({ id: e.id, pts: defaultZ });
+        continue;
       }
+      work.push({ e, g, obstacles, own: hitsOwn ? own : [], centerWith: hitsOwn ? [...obstacles, ...own] : obstacles });
     } else {
       // Bidi/bottom-port (and any non-output→input) run: route around boxes incl. its own two
       // devices, so a bottom port whose target is above routes around, not up through, itself.
-      const interior = routeOrthogonal({ ...fromPt, dir: from.dir }, { ...toPt, dir: to.dir }, obstacles, ownOf(e));
-      if (interior && interior.length) waypointsById.set(e.id, interior);
+      work.push({ e, g, obstacles, own: ownOf(e), centerWith: null });
+    }
+  }
+  const span = (w: Work) => Math.abs(w.g.from.x - w.g.to.x) + Math.abs(w.g.from.y - w.g.to.y);
+  work.sort((a, b) => span(a) - span(b) || (a.e.id < b.e.id ? -1 : 1));
+  const ctx = crossContextOf(ctxEntries.map((en) => en.pts));
+  for (const w of work) {
+    const { from, to, horizontal } = w.g;
+    const fromPt = { x: from.x, y: from.y };
+    const toPt = { x: to.x, y: to.y };
+    const interior = detour({ ...fromPt, dir: from.dir }, { ...toPt, dir: to.dir }, from, to, w.obstacles, w.own, ctx);
+    if (interior) {
+      let final: Pt[];
+      if (horizontal) {
+        final = centerDetourVerticals([fromPt, ...interior, toPt], w.centerWith ?? w.obstacles);
+        waypointsById.set(w.e.id, final.slice(1, -1));
+      } else {
+        final = [fromPt, ...interior, toPt];
+        waypointsById.set(w.e.id, interior);
+      }
+      ctxEntries.push({ id: w.e.id, pts: final });
+      const add = crossContextOf([final]);
+      ctx.h.push(...add.h);
+      ctx.v.push(...add.v);
+    } else {
+      giveUps.push(w.e.id); // no clean detour — the default path may cross a box (warned upstream)
     }
   }
 
@@ -197,6 +278,40 @@ function route(req: RouteRequest): RouteResult {
   }
   const nudged = nudgeCollinearOverlaps(polylines);
 
+  // Post-lane hard-constraint recheck: assignLanes/nudge move a run's jog without consulting
+  // boxes, so a lane can land inside a device the midpoint Z cleared. Any run whose FINAL
+  // polyline pierces a box core is demoted to the general A* detour — it loses its lane slot
+  // but keeps the "never behind a device" constraint. User-pinned jogs (jogOffset) are
+  // respected as-is: an explicit drag outranks the automatic constraint.
+  for (const e of edges) {
+    const g = geom.get(e.id);
+    if (!g || !g.horizontal || waypointsById.has(e.id)) continue;
+    if (e.data?.jogOffset != null) continue;
+    const interior = nudged.get(e.id);
+    if (!interior) continue;
+    const { from, to } = g;
+    const full: Pt[] = [{ x: from.x, y: from.y }, ...interior, { x: to.x, y: to.y }];
+    const obstacles = othersOf(e, from, to);
+    const own = ownOf(e);
+    if (!pathHitsObstacle(full, coresOf(obstacles)) && !pathHitsObstacle(full, coresOf(own))) continue;
+    const wp = detour(
+      { x: from.x, y: from.y, dir: from.dir },
+      { x: to.x, y: to.y, dir: to.dir },
+      from,
+      to,
+      obstacles,
+      own,
+      crossContextOf(ctxEntries.filter((en) => en.id !== e.id).map((en) => en.pts)),
+    );
+    if (wp) {
+      nudged.delete(e.id);
+      jogInfo.delete(e.id);
+      waypointsById.set(e.id, wp);
+    } else {
+      giveUps.push(e.id);
+    }
+  }
+
   // A detour's spread path wins over the nudged Z (disjoint by construction).
   const waypoints = new Map<string, Pt[]>(nudged);
   for (const [id, wp] of waypointsById) waypoints.set(id, wp);
@@ -205,7 +320,7 @@ function route(req: RouteRequest): RouteResult {
   for (const [id, g] of geom) {
     ends.set(id, { sx: g.from.x, sy: g.from.y, tx: g.to.x, ty: g.to.y, sourceSide: g.from.side, targetSide: g.to.side });
   }
-  return { waypoints, jogInfo, ends };
+  return { waypoints, jogInfo, ends, giveUps };
 }
 
 export const newRouter: Router = { route };

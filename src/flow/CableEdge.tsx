@@ -41,29 +41,32 @@ export function CableEdge({
 
   const waypoints = data?.waypoints;
   const hops = data?.hops ?? [];
+  const sHoriz = sourcePosition === Position.Left || sourcePosition === Position.Right;
+  const tHoriz = targetPosition === Position.Left || targetPosition === Position.Right;
+  // The run's full orthogonal polyline — drawn in the routed/hopped branches, and always
+  // used to place the cable-ID badges on the REAL first/last straight run.
+  let pts: Pt[];
   if (waypoints && waypoints.length) {
     // Stitch the exact (measured) ports onto the routed interior, then snap the first/last
     // bend to the port's exit axis so the stub is exactly perpendicular: Y for a left/right
     // port (horizontal exit), X for a top/bottom (bidi) port (vertical exit). This both
     // absorbs the pixel-or-two of routing approximation AND pins a bidi run's exit to the
     // real jack X regardless of the router's estimated bottom-port anchor.
-    const pts: Pt[] = [
+    pts = [
       { x: sourceX, y: sourceY },
       ...waypoints.map((p) => ({ ...p })),
       { x: targetX, y: targetY },
     ];
-    if (sourcePosition === Position.Left || sourcePosition === Position.Right) pts[1].y = sourceY;
+    if (sHoriz) pts[1].y = sourceY;
     else pts[1].x = sourceX;
-    if (targetPosition === Position.Left || targetPosition === Position.Right) pts[pts.length - 2].y = targetY;
+    if (tHoriz) pts[pts.length - 2].y = targetY;
     else pts[pts.length - 2].x = targetX;
     path = cablePath(pts, BEND_RADIUS, hops);
   } else if (hops.length) {
     // A smooth-step run that crosses another cable — reconstruct its polyline (the same one the
     // hop layer detected over) so the bump can ride it. Hopless straight runs stay on React
     // Flow's smooth-step below, so they're visually unchanged.
-    const sHoriz = sourcePosition === Position.Left || sourcePosition === Position.Right;
-    const tHoriz = targetPosition === Position.Left || targetPosition === Position.Right;
-    const pts = smoothStepPolyline(sourceX, sourceY, sHoriz, targetX, targetY, tHoriz);
+    pts = smoothStepPolyline(sourceX, sourceY, sHoriz, targetX, targetY, tHoriz);
     path = cablePath(pts, BEND_RADIUS, hops);
   } else {
     // A clean straight run (no waypoints, no crossings) — React Flow's default smooth-step path.
@@ -76,6 +79,7 @@ export function CableEdge({
       targetPosition,
     });
     path = p;
+    pts = smoothStepPolyline(sourceX, sourceY, sHoriz, targetX, targetY, tHoriz); // placement only
   }
 
   const gradient = data?.gradient;
@@ -88,22 +92,30 @@ export function CableEdge({
   // dense tangle. The badge follows the port's actual side — outward, never inset toward
   // the far end (which buries it inside the port's own device when a run doubles back) and
   // never on a horizontal offset for a bottom/top jack (where it would hide under the node).
-  const inset = Math.min(34, Math.max(14, Math.abs(targetX - sourceX) * 0.38));
-  const place = (x: number, y: number, pos: Position) => {
+  // The inset reads the REAL first/last straight run (the router holds a ~64px label stub
+  // where it can): a long run carries the badge fully on the wire; a cramped one keeps the
+  // badge tight to the port rather than floating it over the bend or a neighboring vertical.
+  const firstRun = pts.length > 1 ? Math.abs(pts[1].x - pts[0].x) + Math.abs(pts[1].y - pts[0].y) : 0;
+  const lastRun =
+    pts.length > 1
+      ? Math.abs(pts[pts.length - 1].x - pts[pts.length - 2].x) + Math.abs(pts[pts.length - 1].y - pts[pts.length - 2].y)
+      : 0;
+  const insetFor = (run: number) => Math.min(34, Math.max(14, run - 26));
+  const place = (x: number, y: number, pos: Position, run: number) => {
     switch (pos) {
       case Position.Left:
-        return { x: x - inset, y };
+        return { x: x - insetFor(run), y };
       case Position.Top:
         return { x, y: y - 20 };
       case Position.Bottom:
         return { x, y: y + 20 };
       case Position.Right:
       default:
-        return { x: x + inset, y };
+        return { x: x + insetFor(run), y };
     }
   };
-  const srcLabel = place(sourceX, sourceY, sourcePosition);
-  const tgtLabel = place(targetX, targetY, targetPosition);
+  const srcLabel = place(sourceX, sourceY, sourcePosition, firstRun);
+  const tgtLabel = place(targetX, targetY, targetPosition, lastRun);
 
   return (
     <>

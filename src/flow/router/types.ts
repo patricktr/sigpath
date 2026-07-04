@@ -13,10 +13,22 @@ import type { SigNode, CableEdgeType } from "../types";
 export type RouteRequest = {
   nodes: SigNode[];
   edges: CableEdgeType[];
+  /**
+   * MEASURED port anchors (canvas coords), keyed nodeId → `${"source"|"target"}:${portId}`.
+   * When present they override the router's estimated port geometry (approxPortY rows, the
+   * even-spacing bidi X guess), so routing — and everything derived from `ends`, notably
+   * crossing-hop detection — happens on the exact geometry CableEdge draws. Absent (headless
+   * harness, unmeasured first frame) the estimates are used; the two must stay interchangeable.
+   */
+  anchors?: PortAnchors;
 };
 
 /** Which edge of its device a port sits on: left input, right output, top, bottom (bidi). */
 export type PortSide = "L" | "R" | "T" | "B";
+
+/** A measured port anchor: the handle's center in canvas coords + the side it exits. */
+export type PortAnchor = { x: number; y: number; side: PortSide };
+export type PortAnchors = Map<string, Map<string, PortAnchor>>;
 
 /** The resolved endpoints of a routed run, in the geometry the router worked in. `*Side`
  *  drives the perpendicular exit (and the metric's post-stitch snap): Y for L/R, X for T/B. */
@@ -48,6 +60,12 @@ export type RouteResult = {
    * absent. The single source of endpoint truth, per design §3.4.
    */
   ends: Map<string, EdgeEnds>;
+  /**
+   * Edges that WANTED an obstacle-avoiding route but drew a default path instead (no clean
+   * detour found) — i.e. runs that may cross a device box on screen. Surfaced so the shell
+   * can warn instead of failing the hard constraint silently. Absent/empty ⇒ all clean.
+   */
+  giveUps?: string[];
 };
 
 export interface Router {

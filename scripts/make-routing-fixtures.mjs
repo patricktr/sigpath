@@ -80,6 +80,26 @@ const scenarios = {
     dev("A", 0, 0, outs(2), "Source"),
     dev("B", 460, 0, ins(2), "Dest"),
   ],
+  // BACKWARDS output→input runs (the Furman case): a power conditioner whose right-edge
+  // outlets feed devices up-left and down-left of it. The default Z doubles straight back
+  // over the conditioner's own box — the router must route AROUND it, not through it.
+  "backwards-power": [
+    dev("PC", 240, 240, outs(8, "power"), "Power Conditioner"),
+    dev("T1", 0, 0, [P("pwr", "input", "power", "Power")], "Load Above"),
+    dev("T2", 0, 620, [P("pwr", "input", "power", "Power")], "Load Below"),
+  ],
+  // 64 devices — well past the old MAX_OBSTACLES=40 bail, where every detour/bidi run used
+  // to give up at once and draw straight through the field. Long runs must route via the
+  // pruned obstacle set; the bidi pair must cross the whole grid cleanly.
+  "big-grid": [
+    ...Array.from({ length: 64 }, (_, k) => {
+      const r = Math.floor(k / 8);
+      const c = k % 8;
+      return dev(`g${r}c${c}`, c * 260, r * 160, [P("in", "input", "sdi", "In"), P("out", "output", "sdi", "Out")], `G${r}${c}`);
+    }),
+    dev("N1", -300, 560, [P("net", "bidirectional", "rj45", "Net")], "Switch W"),
+    dev("N2", 2200, 560, [P("net", "bidirectional", "rj45", "Net")], "Switch E"),
+  ],
 };
 
 const edges = {
@@ -101,6 +121,17 @@ const edges = {
   pinned: [
     edge("p1", "A", "o1", "B", "i1"),
     edge("p2", "A", "o2", "B", "i2", { jogOffset: 80 }),
+  ],
+  "backwards-power": [
+    edge("pw1", "PC", "o1", "T1", "pwr", { cableTypeId: "power" }),
+    edge("pw2", "PC", "o2", "T2", "pwr", { cableTypeId: "power" }),
+  ],
+  "big-grid": [
+    edge("bg1", "g0c0", "out", "g7c7", "in"), // long diagonal across the field
+    edge("bg2", "g3c0", "out", "g3c7", "in"), // straight through a full row of boxes
+    edge("bg3", "g7c0", "out", "g0c7", "in"), // rising diagonal
+    edge("bg4", "g5c2", "out", "g2c5", "in"), // interior run
+    edge("bgnet", "N1", "net", "N2", "net", { cableTypeId: "ethernet" }), // bidi across everything
   ],
 };
 

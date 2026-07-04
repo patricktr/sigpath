@@ -1,27 +1,88 @@
 {
+  "backwards-power.sigpath": {
+    "Diagram 1": {
+      "edges": 2,
+      "routed": 2,
+      "unrouted": 0,
+      "crossings": 0,
+      "bends": 8,
+      "overlaps": 0,
+      "length": 1828,
+      "cost": 8.18,
+      "perEdge": {
+        "pw1": {
+          "bends": 4,
+          "length": 856
+        },
+        "pw2": {
+          "bends": 4,
+          "length": 972
+        }
+      }
+    }
+  },
   "bidi-bottom.sigpath": {
     "Diagram 1": {
       "edges": 1,
-      "routed": 0,
-      "unrouted": 1,
+      "routed": 1,
+      "unrouted": 0,
       "crossings": 0,
-      "bends": 0,
+      "bends": 2,
       "overlaps": 0,
-      "length": 0,
-      "cost": 0,
-      "perEdge": {}
+      "length": 540,
+      "cost": 2.05,
+      "perEdge": {
+        "net1": {
+          "bends": 2,
+          "length": 540
+        }
+      }
+    }
+  },
+  "big-grid.sigpath": {
+    "Diagram 1": {
+      "edges": 5,
+      "routed": 5,
+      "unrouted": 0,
+      "crossings": 7,
+      "bends": 18,
+      "overlaps": 0,
+      "length": 11284,
+      "cost": 33.13,
+      "perEdge": {
+        "bg1": {
+          "bends": 4,
+          "length": 2900
+        },
+        "bg2": {
+          "bends": 4,
+          "length": 1780
+        },
+        "bg3": {
+          "bends": 4,
+          "length": 2772
+        },
+        "bg4": {
+          "bends": 4,
+          "length": 1092
+        },
+        "bgnet": {
+          "bends": 2,
+          "length": 2740
+        }
+      }
     }
   },
   "dense-real.sigpath": {
     "Diagram 1": {
       "edges": 24,
-      "routed": 21,
-      "unrouted": 3,
-      "crossings": 4,
-      "bends": 38,
-      "overlaps": 0,
-      "length": 10032,
-      "cost": 47,
+      "routed": 24,
+      "unrouted": 0,
+      "crossings": 6,
+      "bends": 50,
+      "overlaps": 2,
+      "length": 15166,
+      "cost": 63.52,
       "perEdge": {
         "cable-6980808a-974a-4d7c-b920-137752362a39": {
           "bends": 2,
@@ -106,6 +167,18 @@
         "xy-edge__4a41be62-3d2d-4f62-a1f8-840d0ecc3dfdsdi-out-3-2af94bbd-32be-492f-9583-1f77ba3d4759sdi-in-6": {
           "bends": 2,
           "length": 240
+        },
+        "cable-90c8eab4-2742-4f94-92ab-74e916814c4a": {
+          "bends": 4,
+          "length": 666.6666666666667
+        },
+        "cable-eaac146b-f739-4a92-ba6c-7785cb2d6a05": {
+          "bends": 4,
+          "length": 1779.3333333333335
+        },
+        "cable-cc43a3c2-85f4-4c72-bedc-6bf61ff15dcf": {
+          "bends": 4,
+          "length": 2688
         }
       }
     },
@@ -126,15 +199,15 @@
       "edges": 5,
       "routed": 5,
       "unrouted": 0,
-      "crossings": 2,
+      "crossings": 0,
       "bends": 4,
       "overlaps": 0,
-      "length": 1840,
-      "cost": 8.18,
+      "length": 1936,
+      "cost": 4.19,
       "perEdge": {
         "h1": {
           "bends": 4,
-          "length": 432
+          "length": 528
         },
         "h2": {
           "bends": 0,

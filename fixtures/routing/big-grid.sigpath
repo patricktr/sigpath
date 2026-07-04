@@ -1,0 +1,1921 @@
+{
+  "schemaVersion": 8,
+  "project": {
+    "id": "proj-big-grid",
+    "name": "big-grid",
+    "diagrams": [
+      {
+        "id": "fix-big-grid",
+        "name": "Diagram 1",
+        "devices": [
+          {
+            "id": "g0c0",
+            "model": {
+              "id": "m-g0c0",
+              "model": "G00",
+              "category": "other",
+              "source": "builtin",
+              "ports": [
+                {
+                  "id": "in",
+                  "name": "In",
+                  "direction": "input",
+                  "connector": "sdi"
+                },
+                {
+                  "id": "out",
+                  "name": "Out",
+                  "direction": "output",
+                  "connector": "sdi"
+                }
+              ]
+            },
+            "label": "G00",
+            "position": {
+              "x": 0,
+              "y": 0
+            }
+          },
+          {
+            "id": "g0c1",
+            "model": {
+              "id": "m-g0c1",
+              "model": "G01",
+              "category": "other",
+              "source": "builtin",
+              "ports": [
+                {
+                  "id": "in",
+                  "name": "In",
+                  "direction": "input",
+                  "connector": "sdi"
+                },
+                {
+                  "id": "out",
+                  "name": "Out",
+                  "direction": "output",
+                  "connector": "sdi"
+                }
+              ]
+            },
+            "label": "G01",
+            "position": {
+              "x": 260,
+              "y": 0
+            }
+          },
+          {
+            "id": "g0c2",
+            "model": {
+              "id": "m-g0c2",
+              "model": "G02",
+              "category": "other",
+              "source": "builtin",
+              "ports": [
+                {
+                  "id": "in",
+                  "name": "In",
+                  "direction": "input",
+                  "connector": "sdi"
+                },
+                {
+                  "id": "out",
+                  "name": "Out",
+                  "direction": "output",
+                  "connector": "sdi"
+                }
+              ]
+            },
+            "label": "G02",
+            "position": {
+              "x": 520,
+              "y": 0
+            }
+          },
+          {
+            "id": "g0c3",
+            "model": {
+              "id": "m-g0c3",
+              "model": "G03",
+              "category": "other",
+              "source": "builtin",
+              "ports": [
+                {
+                  "id": "in",
+                  "name": "In",
+                  "direction": "input",
+                  "connector": "sdi"
+                },
+                {
+                  "id": "out",
+                  "name": "Out",
+                  "direction": "output",
+                  "connector": "sdi"
+                }
+              ]
+            },
+            "label": "G03",
+            "position": {
+              "x": 780,
+              "y": 0
+            }
+          },
+          {
+            "id": "g0c4",
+            "model": {
+              "id": "m-g0c4",
+              "model": "G04",
+              "category": "other",
+              "source": "builtin",
+              "ports": [
+                {
+                  "id": "in",
+                  "name": "In",
+                  "direction": "input",
+                  "connector": "sdi"
+                },
+                {
+                  "id": "out",
+                  "name": "Out",
+                  "direction": "output",
+                  "connector": "sdi"
+                }
+              ]
+            },
+            "label": "G04",
+            "position": {
+              "x": 1040,
+              "y": 0
+            }
+          },
+          {
+            "id": "g0c5",
+            "model": {
+              "id": "m-g0c5",
+              "model": "G05",
+              "category": "other",
+              "source": "builtin",
+              "ports": [
+                {
+                  "id": "in",
+                  "name": "In",
+                  "direction": "input",
+                  "connector": "sdi"
+                },
+                {
+                  "id": "out",
+                  "name": "Out",
+                  "direction": "output",
+                  "connector": "sdi"
+                }
+              ]
+            },
+            "label": "G05",
+            "position": {
+              "x": 1300,
+              "y": 0
+            }
+          },
+          {
+            "id": "g0c6",
+            "model": {
+              "id": "m-g0c6",
+              "model": "G06",
+              "category": "other",
+              "source": "builtin",
+              "ports": [
+                {
+                  "id": "in",
+                  "name": "In",
+                  "direction": "input",
+                  "connector": "sdi"
+                },
+                {
+                  "id": "out",
+                  "name": "Out",
+                  "direction": "output",
+                  "connector": "sdi"
+                }
+              ]
+            },
+            "label": "G06",
+            "position": {
+              "x": 1560,
+              "y": 0
+            }
+          },
+          {
+            "id": "g0c7",
+            "model": {
+              "id": "m-g0c7",
+              "model": "G07",
+              "category": "other",
+              "source": "builtin",
+              "ports": [
+                {
+                  "id": "in",
+                  "name": "In",
+                  "direction": "input",
+                  "connector": "sdi"
+                },
+                {
+                  "id": "out",
+                  "name": "Out",
+                  "direction": "output",
+                  "connector": "sdi"
+                }
+              ]
+            },
+            "label": "G07",
+            "position": {
+              "x": 1820,
+              "y": 0
+            }
+          },
+          {
+            "id": "g1c0",
+            "model": {
+              "id": "m-g1c0",
+              "model": "G10",
+              "category": "other",
+              "source": "builtin",
+              "ports": [
+                {
+                  "id": "in",
+                  "name": "In",
+                  "direction": "input",
+                  "connector": "sdi"
+                },
+                {
+                  "id": "out",
+                  "name": "Out",
+                  "direction": "output",
+                  "connector": "sdi"
+                }
+              ]
+            },
+            "label": "G10",
+            "position": {
+              "x": 0,
+              "y": 160
+            }
+          },
+          {
+            "id": "g1c1",
+            "model": {
+              "id": "m-g1c1",
+              "model": "G11",
+              "category": "other",
+              "source": "builtin",
+              "ports": [
+                {
+                  "id": "in",
+                  "name": "In",
+                  "direction": "input",
+                  "connector": "sdi"
+                },
+                {
+                  "id": "out",
+                  "name": "Out",
+                  "direction": "output",
+                  "connector": "sdi"
+                }
+              ]
+            },
+            "label": "G11",
+            "position": {
+              "x": 260,
+              "y": 160
+            }
+          },
+          {
+            "id": "g1c2",
+            "model": {
+              "id": "m-g1c2",
+              "model": "G12",
+              "category": "other",
+              "source": "builtin",
+              "ports": [
+                {
+                  "id": "in",
+                  "name": "In",
+                  "direction": "input",
+                  "connector": "sdi"
+                },
+                {
+                  "id": "out",
+                  "name": "Out",
+                  "direction": "output",
+                  "connector": "sdi"
+                }
+              ]
+            },
+            "label": "G12",
+            "position": {
+              "x": 520,
+              "y": 160
+            }
+          },
+          {
+            "id": "g1c3",
+            "model": {
+              "id": "m-g1c3",
+              "model": "G13",
+              "category": "other",
+              "source": "builtin",
+              "ports": [
+                {
+                  "id": "in",
+                  "name": "In",
+                  "direction": "input",
+                  "connector": "sdi"
+                },
+                {
+                  "id": "out",
+                  "name": "Out",
+                  "direction": "output",
+                  "connector": "sdi"
+                }
+              ]
+            },
+            "label": "G13",
+            "position": {
+              "x": 780,
+              "y": 160
+            }
+          },
+          {
+            "id": "g1c4",
+            "model": {
+              "id": "m-g1c4",
+              "model": "G14",
+              "category": "other",
+              "source": "builtin",
+              "ports": [
+                {
+                  "id": "in",
+                  "name": "In",
+                  "direction": "input",
+                  "connector": "sdi"
+                },
+                {
+                  "id": "out",
+                  "name": "Out",
+                  "direction": "output",
+                  "connector": "sdi"
+                }
+              ]
+            },
+            "label": "G14",
+            "position": {
+              "x": 1040,
+              "y": 160
+            }
+          },
+          {
+            "id": "g1c5",
+            "model": {
+              "id": "m-g1c5",
+              "model": "G15",
+              "category": "other",
+              "source": "builtin",
+              "ports": [
+                {
+                  "id": "in",
+                  "name": "In",
+                  "direction": "input",
+                  "connector": "sdi"
+                },
+                {
+                  "id": "out",
+                  "name": "Out",
+                  "direction": "output",
+                  "connector": "sdi"
+                }
+              ]
+            },
+            "label": "G15",
+            "position": {
+              "x": 1300,
+              "y": 160
+            }
+          },
+          {
+            "id": "g1c6",
+            "model": {
+              "id": "m-g1c6",
+              "model": "G16",
+              "category": "other",
+              "source": "builtin",
+              "ports": [
+                {
+                  "id": "in",
+                  "name": "In",
+                  "direction": "input",
+                  "connector": "sdi"
+                },
+                {
+                  "id": "out",
+                  "name": "Out",
+                  "direction": "output",
+                  "connector": "sdi"
+                }
+              ]
+            },
+            "label": "G16",
+            "position": {
+              "x": 1560,
+              "y": 160
+            }
+          },
+          {
+            "id": "g1c7",
+            "model": {
+              "id": "m-g1c7",
+              "model": "G17",
+              "category": "other",
+              "source": "builtin",
+              "ports": [
+                {
+                  "id": "in",
+                  "name": "In",
+                  "direction": "input",
+                  "connector": "sdi"
+                },
+                {
+                  "id": "out",
+                  "name": "Out",
+                  "direction": "output",
+                  "connector": "sdi"
+                }
+              ]
+            },
+            "label": "G17",
+            "position": {
+              "x": 1820,
+              "y": 160
+            }
+          },
+          {
+            "id": "g2c0",
+            "model": {
+              "id": "m-g2c0",
+              "model": "G20",
+              "category": "other",
+              "source": "builtin",
+              "ports": [
+                {
+                  "id": "in",
+                  "name": "In",
+                  "direction": "input",
+                  "connector": "sdi"
+                },
+                {
+                  "id": "out",
+                  "name": "Out",
+                  "direction": "output",
+                  "connector": "sdi"
+                }
+              ]
+            },
+            "label": "G20",
+            "position": {
+              "x": 0,
+              "y": 320
+            }
+          },
+          {
+            "id": "g2c1",
+            "model": {
+              "id": "m-g2c1",
+              "model": "G21",
+              "category": "other",
+              "source": "builtin",
+              "ports": [
+                {
+                  "id": "in",
+                  "name": "In",
+                  "direction": "input",
+                  "connector": "sdi"
+                },
+                {
+                  "id": "out",
+                  "name": "Out",
+                  "direction": "output",
+                  "connector": "sdi"
+                }
+              ]
+            },
+            "label": "G21",
+            "position": {
+              "x": 260,
+              "y": 320
+            }
+          },
+          {
+            "id": "g2c2",
+            "model": {
+              "id": "m-g2c2",
+              "model": "G22",
+              "category": "other",
+              "source": "builtin",
+              "ports": [
+                {
+                  "id": "in",
+                  "name": "In",
+                  "direction": "input",
+                  "connector": "sdi"
+                },
+                {
+                  "id": "out",
+                  "name": "Out",
+                  "direction": "output",
+                  "connector": "sdi"
+                }
+              ]
+            },
+            "label": "G22",
+            "position": {
+              "x": 520,
+              "y": 320
+            }
+          },
+          {
+            "id": "g2c3",
+            "model": {
+              "id": "m-g2c3",
+              "model": "G23",
+              "category": "other",
+              "source": "builtin",
+              "ports": [
+                {
+                  "id": "in",
+                  "name": "In",
+                  "direction": "input",
+                  "connector": "sdi"
+                },
+                {
+                  "id": "out",
+                  "name": "Out",
+                  "direction": "output",
+                  "connector": "sdi"
+                }
+              ]
+            },
+            "label": "G23",
+            "position": {
+              "x": 780,
+              "y": 320
+            }
+          },
+          {
+            "id": "g2c4",
+            "model": {
+              "id": "m-g2c4",
+              "model": "G24",
+              "category": "other",
+              "source": "builtin",
+              "ports": [
+                {
+                  "id": "in",
+                  "name": "In",
+                  "direction": "input",
+                  "connector": "sdi"
+                },
+                {
+                  "id": "out",
+                  "name": "Out",
+                  "direction": "output",
+                  "connector": "sdi"
+                }
+              ]
+            },
+            "label": "G24",
+            "position": {
+              "x": 1040,
+              "y": 320
+            }
+          },
+          {
+            "id": "g2c5",
+            "model": {
+              "id": "m-g2c5",
+              "model": "G25",
+              "category": "other",
+              "source": "builtin",
+              "ports": [
+                {
+                  "id": "in",
+                  "name": "In",
+                  "direction": "input",
+                  "connector": "sdi"
+                },
+                {
+                  "id": "out",
+                  "name": "Out",
+                  "direction": "output",
+                  "connector": "sdi"
+                }
+              ]
+            },
+            "label": "G25",
+            "position": {
+              "x": 1300,
+              "y": 320
+            }
+          },
+          {
+            "id": "g2c6",
+            "model": {
+              "id": "m-g2c6",
+              "model": "G26",
+              "category": "other",
+              "source": "builtin",
+              "ports": [
+                {
+                  "id": "in",
+                  "name": "In",
+                  "direction": "input",
+                  "connector": "sdi"
+                },
+                {
+                  "id": "out",
+                  "name": "Out",
+                  "direction": "output",
+                  "connector": "sdi"
+                }
+              ]
+            },
+            "label": "G26",
+            "position": {
+              "x": 1560,
+              "y": 320
+            }
+          },
+          {
+            "id": "g2c7",
+            "model": {
+              "id": "m-g2c7",
+              "model": "G27",
+              "category": "other",
+              "source": "builtin",
+              "ports": [
+                {
+                  "id": "in",
+                  "name": "In",
+                  "direction": "input",
+                  "connector": "sdi"
+                },
+                {
+                  "id": "out",
+                  "name": "Out",
+                  "direction": "output",
+                  "connector": "sdi"
+                }
+              ]
+            },
+            "label": "G27",
+            "position": {
+              "x": 1820,
+              "y": 320
+            }
+          },
+          {
+            "id": "g3c0",
+            "model": {
+              "id": "m-g3c0",
+              "model": "G30",
+              "category": "other",
+              "source": "builtin",
+              "ports": [
+                {
+                  "id": "in",
+                  "name": "In",
+                  "direction": "input",
+                  "connector": "sdi"
+                },
+                {
+                  "id": "out",
+                  "name": "Out",
+                  "direction": "output",
+                  "connector": "sdi"
+                }
+              ]
+            },
+            "label": "G30",
+            "position": {
+              "x": 0,
+              "y": 480
+            }
+          },
+          {
+            "id": "g3c1",
+            "model": {
+              "id": "m-g3c1",
+              "model": "G31",
+              "category": "other",
+              "source": "builtin",
+              "ports": [
+                {
+                  "id": "in",
+                  "name": "In",
+                  "direction": "input",
+                  "connector": "sdi"
+                },
+                {
+                  "id": "out",
+                  "name": "Out",
+                  "direction": "output",
+                  "connector": "sdi"
+                }
+              ]
+            },
+            "label": "G31",
+            "position": {
+              "x": 260,
+              "y": 480
+            }
+          },
+          {
+            "id": "g3c2",
+            "model": {
+              "id": "m-g3c2",
+              "model": "G32",
+              "category": "other",
+              "source": "builtin",
+              "ports": [
+                {
+                  "id": "in",
+                  "name": "In",
+                  "direction": "input",
+                  "connector": "sdi"
+                },
+                {
+                  "id": "out",
+                  "name": "Out",
+                  "direction": "output",
+                  "connector": "sdi"
+                }
+              ]
+            },
+            "label": "G32",
+            "position": {
+              "x": 520,
+              "y": 480
+            }
+          },
+          {
+            "id": "g3c3",
+            "model": {
+              "id": "m-g3c3",
+              "model": "G33",
+              "category": "other",
+              "source": "builtin",
+              "ports": [
+                {
+                  "id": "in",
+                  "name": "In",
+                  "direction": "input",
+                  "connector": "sdi"
+                },
+                {
+                  "id": "out",
+                  "name": "Out",
+                  "direction": "output",
+                  "connector": "sdi"
+                }
+              ]
+            },
+            "label": "G33",
+            "position": {
+              "x": 780,
+              "y": 480
+            }
+          },
+          {
+            "id": "g3c4",
+            "model": {
+              "id": "m-g3c4",
+              "model": "G34",
+              "category": "other",
+              "source": "builtin",
+              "ports": [
+                {
+                  "id": "in",
+                  "name": "In",
+                  "direction": "input",
+                  "connector": "sdi"
+                },
+                {
+                  "id": "out",
+                  "name": "Out",
+                  "direction": "output",
+                  "connector": "sdi"
+                }
+              ]
+            },
+            "label": "G34",
+            "position": {
+              "x": 1040,
+              "y": 480
+            }
+          },
+          {
+            "id": "g3c5",
+            "model": {
+              "id": "m-g3c5",
+              "model": "G35",
+              "category": "other",
+              "source": "builtin",
+              "ports": [
+                {
+                  "id": "in",
+                  "name": "In",
+                  "direction": "input",
+                  "connector": "sdi"
+                },
+                {
+                  "id": "out",
+                  "name": "Out",
+                  "direction": "output",
+                  "connector": "sdi"
+                }
+              ]
+            },
+            "label": "G35",
+            "position": {
+              "x": 1300,
+              "y": 480
+            }
+          },
+          {
+            "id": "g3c6",
+            "model": {
+              "id": "m-g3c6",
+              "model": "G36",
+              "category": "other",
+              "source": "builtin",
+              "ports": [
+                {
+                  "id": "in",
+                  "name": "In",
+                  "direction": "input",
+                  "connector": "sdi"
+                },
+                {
+                  "id": "out",
+                  "name": "Out",
+                  "direction": "output",
+                  "connector": "sdi"
+                }
+              ]
+            },
+            "label": "G36",
+            "position": {
+              "x": 1560,
+              "y": 480
+            }
+          },
+          {
+            "id": "g3c7",
+            "model": {
+              "id": "m-g3c7",
+              "model": "G37",
+              "category": "other",
+              "source": "builtin",
+              "ports": [
+                {
+                  "id": "in",
+                  "name": "In",
+                  "direction": "input",
+                  "connector": "sdi"
+                },
+                {
+                  "id": "out",
+                  "name": "Out",
+                  "direction": "output",
+                  "connector": "sdi"
+                }
+              ]
+            },
+            "label": "G37",
+            "position": {
+              "x": 1820,
+              "y": 480
+            }
+          },
+          {
+            "id": "g4c0",
+            "model": {
+              "id": "m-g4c0",
+              "model": "G40",
+              "category": "other",
+              "source": "builtin",
+              "ports": [
+                {
+                  "id": "in",
+                  "name": "In",
+                  "direction": "input",
+                  "connector": "sdi"
+                },
+                {
+                  "id": "out",
+                  "name": "Out",
+                  "direction": "output",
+                  "connector": "sdi"
+                }
+              ]
+            },
+            "label": "G40",
+            "position": {
+              "x": 0,
+              "y": 640
+            }
+          },
+          {
+            "id": "g4c1",
+            "model": {
+              "id": "m-g4c1",
+              "model": "G41",
+              "category": "other",
+              "source": "builtin",
+              "ports": [
+                {
+                  "id": "in",
+                  "name": "In",
+                  "direction": "input",
+                  "connector": "sdi"
+                },
+                {
+                  "id": "out",
+                  "name": "Out",
+                  "direction": "output",
+                  "connector": "sdi"
+                }
+              ]
+            },
+            "label": "G41",
+            "position": {
+              "x": 260,
+              "y": 640
+            }
+          },
+          {
+            "id": "g4c2",
+            "model": {
+              "id": "m-g4c2",
+              "model": "G42",
+              "category": "other",
+              "source": "builtin",
+              "ports": [
+                {
+                  "id": "in",
+                  "name": "In",
+                  "direction": "input",
+                  "connector": "sdi"
+                },
+                {
+                  "id": "out",
+                  "name": "Out",
+                  "direction": "output",
+                  "connector": "sdi"
+                }
+              ]
+            },
+            "label": "G42",
+            "position": {
+              "x": 520,
+              "y": 640
+            }
+          },
+          {
+            "id": "g4c3",
+            "model": {
+              "id": "m-g4c3",
+              "model": "G43",
+              "category": "other",
+              "source": "builtin",
+              "ports": [
+                {
+                  "id": "in",
+                  "name": "In",
+                  "direction": "input",
+                  "connector": "sdi"
+                },
+                {
+                  "id": "out",
+                  "name": "Out",
+                  "direction": "output",
+                  "connector": "sdi"
+                }
+              ]
+            },
+            "label": "G43",
+            "position": {
+              "x": 780,
+              "y": 640
+            }
+          },
+          {
+            "id": "g4c4",
+            "model": {
+              "id": "m-g4c4",
+              "model": "G44",
+              "category": "other",
+              "source": "builtin",
+              "ports": [
+                {
+                  "id": "in",
+                  "name": "In",
+                  "direction": "input",
+                  "connector": "sdi"
+                },
+                {
+                  "id": "out",
+                  "name": "Out",
+                  "direction": "output",
+                  "connector": "sdi"
+                }
+              ]
+            },
+            "label": "G44",
+            "position": {
+              "x": 1040,
+              "y": 640
+            }
+          },
+          {
+            "id": "g4c5",
+            "model": {
+              "id": "m-g4c5",
+              "model": "G45",
+              "category": "other",
+              "source": "builtin",
+              "ports": [
+                {
+                  "id": "in",
+                  "name": "In",
+                  "direction": "input",
+                  "connector": "sdi"
+                },
+                {
+                  "id": "out",
+                  "name": "Out",
+                  "direction": "output",
+                  "connector": "sdi"
+                }
+              ]
+            },
+            "label": "G45",
+            "position": {
+              "x": 1300,
+              "y": 640
+            }
+          },
+          {
+            "id": "g4c6",
+            "model": {
+              "id": "m-g4c6",
+              "model": "G46",
+              "category": "other",
+              "source": "builtin",
+              "ports": [
+                {
+                  "id": "in",
+                  "name": "In",
+                  "direction": "input",
+                  "connector": "sdi"
+                },
+                {
+                  "id": "out",
+                  "name": "Out",
+                  "direction": "output",
+                  "connector": "sdi"
+                }
+              ]
+            },
+            "label": "G46",
+            "position": {
+              "x": 1560,
+              "y": 640
+            }
+          },
+          {
+            "id": "g4c7",
+            "model": {
+              "id": "m-g4c7",
+              "model": "G47",
+              "category": "other",
+              "source": "builtin",
+              "ports": [
+                {
+                  "id": "in",
+                  "name": "In",
+                  "direction": "input",
+                  "connector": "sdi"
+                },
+                {
+                  "id": "out",
+                  "name": "Out",
+                  "direction": "output",
+                  "connector": "sdi"
+                }
+              ]
+            },
+            "label": "G47",
+            "position": {
+              "x": 1820,
+              "y": 640
+            }
+          },
+          {
+            "id": "g5c0",
+            "model": {
+              "id": "m-g5c0",
+              "model": "G50",
+              "category": "other",
+              "source": "builtin",
+              "ports": [
+                {
+                  "id": "in",
+                  "name": "In",
+                  "direction": "input",
+                  "connector": "sdi"
+                },
+                {
+                  "id": "out",
+                  "name": "Out",
+                  "direction": "output",
+                  "connector": "sdi"
+                }
+              ]
+            },
+            "label": "G50",
+            "position": {
+              "x": 0,
+              "y": 800
+            }
+          },
+          {
+            "id": "g5c1",
+            "model": {
+              "id": "m-g5c1",
+              "model": "G51",
+              "category": "other",
+              "source": "builtin",
+              "ports": [
+                {
+                  "id": "in",
+                  "name": "In",
+                  "direction": "input",
+                  "connector": "sdi"
+                },
+                {
+                  "id": "out",
+                  "name": "Out",
+                  "direction": "output",
+                  "connector": "sdi"
+                }
+              ]
+            },
+            "label": "G51",
+            "position": {
+              "x": 260,
+              "y": 800
+            }
+          },
+          {
+            "id": "g5c2",
+            "model": {
+              "id": "m-g5c2",
+              "model": "G52",
+              "category": "other",
+              "source": "builtin",
+              "ports": [
+                {
+                  "id": "in",
+                  "name": "In",
+                  "direction": "input",
+                  "connector": "sdi"
+                },
+                {
+                  "id": "out",
+                  "name": "Out",
+                  "direction": "output",
+                  "connector": "sdi"
+                }
+              ]
+            },
+            "label": "G52",
+            "position": {
+              "x": 520,
+              "y": 800
+            }
+          },
+          {
+            "id": "g5c3",
+            "model": {
+              "id": "m-g5c3",
+              "model": "G53",
+              "category": "other",
+              "source": "builtin",
+              "ports": [
+                {
+                  "id": "in",
+                  "name": "In",
+                  "direction": "input",
+                  "connector": "sdi"
+                },
+                {
+                  "id": "out",
+                  "name": "Out",
+                  "direction": "output",
+                  "connector": "sdi"
+                }
+              ]
+            },
+            "label": "G53",
+            "position": {
+              "x": 780,
+              "y": 800
+            }
+          },
+          {
+            "id": "g5c4",
+            "model": {
+              "id": "m-g5c4",
+              "model": "G54",
+              "category": "other",
+              "source": "builtin",
+              "ports": [
+                {
+                  "id": "in",
+                  "name": "In",
+                  "direction": "input",
+                  "connector": "sdi"
+                },
+                {
+                  "id": "out",
+                  "name": "Out",
+                  "direction": "output",
+                  "connector": "sdi"
+                }
+              ]
+            },
+            "label": "G54",
+            "position": {
+              "x": 1040,
+              "y": 800
+            }
+          },
+          {
+            "id": "g5c5",
+            "model": {
+              "id": "m-g5c5",
+              "model": "G55",
+              "category": "other",
+              "source": "builtin",
+              "ports": [
+                {
+                  "id": "in",
+                  "name": "In",
+                  "direction": "input",
+                  "connector": "sdi"
+                },
+                {
+                  "id": "out",
+                  "name": "Out",
+                  "direction": "output",
+                  "connector": "sdi"
+                }
+              ]
+            },
+            "label": "G55",
+            "position": {
+              "x": 1300,
+              "y": 800
+            }
+          },
+          {
+            "id": "g5c6",
+            "model": {
+              "id": "m-g5c6",
+              "model": "G56",
+              "category": "other",
+              "source": "builtin",
+              "ports": [
+                {
+                  "id": "in",
+                  "name": "In",
+                  "direction": "input",
+                  "connector": "sdi"
+                },
+                {
+                  "id": "out",
+                  "name": "Out",
+                  "direction": "output",
+                  "connector": "sdi"
+                }
+              ]
+            },
+            "label": "G56",
+            "position": {
+              "x": 1560,
+              "y": 800
+            }
+          },
+          {
+            "id": "g5c7",
+            "model": {
+              "id": "m-g5c7",
+              "model": "G57",
+              "category": "other",
+              "source": "builtin",
+              "ports": [
+                {
+                  "id": "in",
+                  "name": "In",
+                  "direction": "input",
+                  "connector": "sdi"
+                },
+                {
+                  "id": "out",
+                  "name": "Out",
+                  "direction": "output",
+                  "connector": "sdi"
+                }
+              ]
+            },
+            "label": "G57",
+            "position": {
+              "x": 1820,
+              "y": 800
+            }
+          },
+          {
+            "id": "g6c0",
+            "model": {
+              "id": "m-g6c0",
+              "model": "G60",
+              "category": "other",
+              "source": "builtin",
+              "ports": [
+                {
+                  "id": "in",
+                  "name": "In",
+                  "direction": "input",
+                  "connector": "sdi"
+                },
+                {
+                  "id": "out",
+                  "name": "Out",
+                  "direction": "output",
+                  "connector": "sdi"
+                }
+              ]
+            },
+            "label": "G60",
+            "position": {
+              "x": 0,
+              "y": 960
+            }
+          },
+          {
+            "id": "g6c1",
+            "model": {
+              "id": "m-g6c1",
+              "model": "G61",
+              "category": "other",
+              "source": "builtin",
+              "ports": [
+                {
+                  "id": "in",
+                  "name": "In",
+                  "direction": "input",
+                  "connector": "sdi"
+                },
+                {
+                  "id": "out",
+                  "name": "Out",
+                  "direction": "output",
+                  "connector": "sdi"
+                }
+              ]
+            },
+            "label": "G61",
+            "position": {
+              "x": 260,
+              "y": 960
+            }
+          },
+          {
+            "id": "g6c2",
+            "model": {
+              "id": "m-g6c2",
+              "model": "G62",
+              "category": "other",
+              "source": "builtin",
+              "ports": [
+                {
+                  "id": "in",
+                  "name": "In",
+                  "direction": "input",
+                  "connector": "sdi"
+                },
+                {
+                  "id": "out",
+                  "name": "Out",
+                  "direction": "output",
+                  "connector": "sdi"
+                }
+              ]
+            },
+            "label": "G62",
+            "position": {
+              "x": 520,
+              "y": 960
+            }
+          },
+          {
+            "id": "g6c3",
+            "model": {
+              "id": "m-g6c3",
+              "model": "G63",
+              "category": "other",
+              "source": "builtin",
+              "ports": [
+                {
+                  "id": "in",
+                  "name": "In",
+                  "direction": "input",
+                  "connector": "sdi"
+                },
+                {
+                  "id": "out",
+                  "name": "Out",
+                  "direction": "output",
+                  "connector": "sdi"
+                }
+              ]
+            },
+            "label": "G63",
+            "position": {
+              "x": 780,
+              "y": 960
+            }
+          },
+          {
+            "id": "g6c4",
+            "model": {
+              "id": "m-g6c4",
+              "model": "G64",
+              "category": "other",
+              "source": "builtin",
+              "ports": [
+                {
+                  "id": "in",
+                  "name": "In",
+                  "direction": "input",
+                  "connector": "sdi"
+                },
+                {
+                  "id": "out",
+                  "name": "Out",
+                  "direction": "output",
+                  "connector": "sdi"
+                }
+              ]
+            },
+            "label": "G64",
+            "position": {
+              "x": 1040,
+              "y": 960
+            }
+          },
+          {
+            "id": "g6c5",
+            "model": {
+              "id": "m-g6c5",
+              "model": "G65",
+              "category": "other",
+              "source": "builtin",
+              "ports": [
+                {
+                  "id": "in",
+                  "name": "In",
+                  "direction": "input",
+                  "connector": "sdi"
+                },
+                {
+                  "id": "out",
+                  "name": "Out",
+                  "direction": "output",
+                  "connector": "sdi"
+                }
+              ]
+            },
+            "label": "G65",
+            "position": {
+              "x": 1300,
+              "y": 960
+            }
+          },
+          {
+            "id": "g6c6",
+            "model": {
+              "id": "m-g6c6",
+              "model": "G66",
+              "category": "other",
+              "source": "builtin",
+              "ports": [
+                {
+                  "id": "in",
+                  "name": "In",
+                  "direction": "input",
+                  "connector": "sdi"
+                },
+                {
+                  "id": "out",
+                  "name": "Out",
+                  "direction": "output",
+                  "connector": "sdi"
+                }
+              ]
+            },
+            "label": "G66",
+            "position": {
+              "x": 1560,
+              "y": 960
+            }
+          },
+          {
+            "id": "g6c7",
+            "model": {
+              "id": "m-g6c7",
+              "model": "G67",
+              "category": "other",
+              "source": "builtin",
+              "ports": [
+                {
+                  "id": "in",
+                  "name": "In",
+                  "direction": "input",
+                  "connector": "sdi"
+                },
+                {
+                  "id": "out",
+                  "name": "Out",
+                  "direction": "output",
+                  "connector": "sdi"
+                }
+              ]
+            },
+            "label": "G67",
+            "position": {
+              "x": 1820,
+              "y": 960
+            }
+          },
+          {
+            "id": "g7c0",
+            "model": {
+              "id": "m-g7c0",
+              "model": "G70",
+              "category": "other",
+              "source": "builtin",
+              "ports": [
+                {
+                  "id": "in",
+                  "name": "In",
+                  "direction": "input",
+                  "connector": "sdi"
+                },
+                {
+                  "id": "out",
+                  "name": "Out",
+                  "direction": "output",
+                  "connector": "sdi"
+                }
+              ]
+            },
+            "label": "G70",
+            "position": {
+              "x": 0,
+              "y": 1120
+            }
+          },
+          {
+            "id": "g7c1",
+            "model": {
+              "id": "m-g7c1",
+              "model": "G71",
+              "category": "other",
+              "source": "builtin",
+              "ports": [
+                {
+                  "id": "in",
+                  "name": "In",
+                  "direction": "input",
+                  "connector": "sdi"
+                },
+                {
+                  "id": "out",
+                  "name": "Out",
+                  "direction": "output",
+                  "connector": "sdi"
+                }
+              ]
+            },
+            "label": "G71",
+            "position": {
+              "x": 260,
+              "y": 1120
+            }
+          },
+          {
+            "id": "g7c2",
+            "model": {
+              "id": "m-g7c2",
+              "model": "G72",
+              "category": "other",
+              "source": "builtin",
+              "ports": [
+                {
+                  "id": "in",
+                  "name": "In",
+                  "direction": "input",
+                  "connector": "sdi"
+                },
+                {
+                  "id": "out",
+                  "name": "Out",
+                  "direction": "output",
+                  "connector": "sdi"
+                }
+              ]
+            },
+            "label": "G72",
+            "position": {
+              "x": 520,
+              "y": 1120
+            }
+          },
+          {
+            "id": "g7c3",
+            "model": {
+              "id": "m-g7c3",
+              "model": "G73",
+              "category": "other",
+              "source": "builtin",
+              "ports": [
+                {
+                  "id": "in",
+                  "name": "In",
+                  "direction": "input",
+                  "connector": "sdi"
+                },
+                {
+                  "id": "out",
+                  "name": "Out",
+                  "direction": "output",
+                  "connector": "sdi"
+                }
+              ]
+            },
+            "label": "G73",
+            "position": {
+              "x": 780,
+              "y": 1120
+            }
+          },
+          {
+            "id": "g7c4",
+            "model": {
+              "id": "m-g7c4",
+              "model": "G74",
+              "category": "other",
+              "source": "builtin",
+              "ports": [
+                {
+                  "id": "in",
+                  "name": "In",
+                  "direction": "input",
+                  "connector": "sdi"
+                },
+                {
+                  "id": "out",
+                  "name": "Out",
+                  "direction": "output",
+                  "connector": "sdi"
+                }
+              ]
+            },
+            "label": "G74",
+            "position": {
+              "x": 1040,
+              "y": 1120
+            }
+          },
+          {
+            "id": "g7c5",
+            "model": {
+              "id": "m-g7c5",
+              "model": "G75",
+              "category": "other",
+              "source": "builtin",
+              "ports": [
+                {
+                  "id": "in",
+                  "name": "In",
+                  "direction": "input",
+                  "connector": "sdi"
+                },
+                {
+                  "id": "out",
+                  "name": "Out",
+                  "direction": "output",
+                  "connector": "sdi"
+                }
+              ]
+            },
+            "label": "G75",
+            "position": {
+              "x": 1300,
+              "y": 1120
+            }
+          },
+          {
+            "id": "g7c6",
+            "model": {
+              "id": "m-g7c6",
+              "model": "G76",
+              "category": "other",
+              "source": "builtin",
+              "ports": [
+                {
+                  "id": "in",
+                  "name": "In",
+                  "direction": "input",
+                  "connector": "sdi"
+                },
+                {
+                  "id": "out",
+                  "name": "Out",
+                  "direction": "output",
+                  "connector": "sdi"
+                }
+              ]
+            },
+            "label": "G76",
+            "position": {
+              "x": 1560,
+              "y": 1120
+            }
+          },
+          {
+            "id": "g7c7",
+            "model": {
+              "id": "m-g7c7",
+              "model": "G77",
+              "category": "other",
+              "source": "builtin",
+              "ports": [
+                {
+                  "id": "in",
+                  "name": "In",
+                  "direction": "input",
+                  "connector": "sdi"
+                },
+                {
+                  "id": "out",
+                  "name": "Out",
+                  "direction": "output",
+                  "connector": "sdi"
+                }
+              ]
+            },
+            "label": "G77",
+            "position": {
+              "x": 1820,
+              "y": 1120
+            }
+          },
+          {
+            "id": "N1",
+            "model": {
+              "id": "m-N1",
+              "model": "Switch W",
+              "category": "other",
+              "source": "builtin",
+              "ports": [
+                {
+                  "id": "net",
+                  "name": "Net",
+                  "direction": "bidirectional",
+                  "connector": "rj45"
+                }
+              ]
+            },
+            "label": "Switch W",
+            "position": {
+              "x": -300,
+              "y": 560
+            }
+          },
+          {
+            "id": "N2",
+            "model": {
+              "id": "m-N2",
+              "model": "Switch E",
+              "category": "other",
+              "source": "builtin",
+              "ports": [
+                {
+                  "id": "net",
+                  "name": "Net",
+                  "direction": "bidirectional",
+                  "connector": "rj45"
+                }
+              ]
+            },
+            "label": "Switch E",
+            "position": {
+              "x": 2200,
+              "y": 560
+            }
+          }
+        ],
+        "connections": [
+          {
+            "id": "bg1",
+            "from": {
+              "instanceId": "g0c0",
+              "portId": "out"
+            },
+            "to": {
+              "instanceId": "g7c7",
+              "portId": "in"
+            },
+            "cableTypeId": "sdi",
+            "number": "bg1"
+          },
+          {
+            "id": "bg2",
+            "from": {
+              "instanceId": "g3c0",
+              "portId": "out"
+            },
+            "to": {
+              "instanceId": "g3c7",
+              "portId": "in"
+            },
+            "cableTypeId": "sdi",
+            "number": "bg2"
+          },
+          {
+            "id": "bg3",
+            "from": {
+              "instanceId": "g7c0",
+              "portId": "out"
+            },
+            "to": {
+              "instanceId": "g0c7",
+              "portId": "in"
+            },
+            "cableTypeId": "sdi",
+            "number": "bg3"
+          },
+          {
+            "id": "bg4",
+            "from": {
+              "instanceId": "g5c2",
+              "portId": "out"
+            },
+            "to": {
+              "instanceId": "g2c5",
+              "portId": "in"
+            },
+            "cableTypeId": "sdi",
+            "number": "bg4"
+          },
+          {
+            "id": "bgnet",
+            "from": {
+              "instanceId": "N1",
+              "portId": "net"
+            },
+            "to": {
+              "instanceId": "N2",
+              "portId": "net"
+            },
+            "cableTypeId": "ethernet",
+            "number": "bgnet"
+          }
+        ],
+        "zones": [],
+        "annotations": [],
+        "orientation": "free"
+      }
+    ]
+  }
+}

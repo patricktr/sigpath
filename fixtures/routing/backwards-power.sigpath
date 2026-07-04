@@ -1,0 +1,154 @@
+{
+  "schemaVersion": 8,
+  "project": {
+    "id": "proj-backwards-power",
+    "name": "backwards-power",
+    "diagrams": [
+      {
+        "id": "fix-backwards-power",
+        "name": "Diagram 1",
+        "devices": [
+          {
+            "id": "PC",
+            "model": {
+              "id": "m-PC",
+              "model": "Power Conditioner",
+              "category": "other",
+              "source": "builtin",
+              "ports": [
+                {
+                  "id": "o1",
+                  "name": "O1",
+                  "direction": "output",
+                  "connector": "power"
+                },
+                {
+                  "id": "o2",
+                  "name": "O2",
+                  "direction": "output",
+                  "connector": "power"
+                },
+                {
+                  "id": "o3",
+                  "name": "O3",
+                  "direction": "output",
+                  "connector": "power"
+                },
+                {
+                  "id": "o4",
+                  "name": "O4",
+                  "direction": "output",
+                  "connector": "power"
+                },
+                {
+                  "id": "o5",
+                  "name": "O5",
+                  "direction": "output",
+                  "connector": "power"
+                },
+                {
+                  "id": "o6",
+                  "name": "O6",
+                  "direction": "output",
+                  "connector": "power"
+                },
+                {
+                  "id": "o7",
+                  "name": "O7",
+                  "direction": "output",
+                  "connector": "power"
+                },
+                {
+                  "id": "o8",
+                  "name": "O8",
+                  "direction": "output",
+                  "connector": "power"
+                }
+              ]
+            },
+            "label": "Power Conditioner",
+            "position": {
+              "x": 240,
+              "y": 240
+            }
+          },
+          {
+            "id": "T1",
+            "model": {
+              "id": "m-T1",
+              "model": "Load Above",
+              "category": "other",
+              "source": "builtin",
+              "ports": [
+                {
+                  "id": "pwr",
+                  "name": "Power",
+                  "direction": "input",
+                  "connector": "power"
+                }
+              ]
+            },
+            "label": "Load Above",
+            "position": {
+              "x": 0,
+              "y": 0
+            }
+          },
+          {
+            "id": "T2",
+            "model": {
+              "id": "m-T2",
+              "model": "Load Below",
+              "category": "other",
+              "source": "builtin",
+              "ports": [
+                {
+                  "id": "pwr",
+                  "name": "Power",
+                  "direction": "input",
+                  "connector": "power"
+                }
+              ]
+            },
+            "label": "Load Below",
+            "position": {
+              "x": 0,
+              "y": 620
+            }
+          }
+        ],
+        "connections": [
+          {
+            "id": "pw1",
+            "from": {
+              "instanceId": "PC",
+              "portId": "o1"
+            },
+            "to": {
+              "instanceId": "T1",
+              "portId": "pwr"
+            },
+            "cableTypeId": "power",
+            "number": "pw1"
+          },
+          {
+            "id": "pw2",
+            "from": {
+              "instanceId": "PC",
+              "portId": "o2"
+            },
+            "to": {
+              "instanceId": "T2",
+              "portId": "pwr"
+            },
+            "cableTypeId": "power",
+            "number": "pw2"
+          }
+        ],
+        "zones": [],
+        "annotations": [],
+        "orientation": "free"
+      }
+    ]
+  }
+}

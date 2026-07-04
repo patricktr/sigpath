@@ -15,6 +15,7 @@ import {
   useNodesState,
   useEdgesState,
   useUpdateNodeInternals,
+  useStoreApi,
   type Connection,
   type ReactFlowInstance,
 } from "@xyflow/react";
@@ -56,6 +57,7 @@ import {
 import { approxPortY, LANE_GAP } from "./flow/parallelLanes";
 import { pickRouter } from "./flow/router";
 import { collectObstacleRects } from "./flow/router/newRouter";
+import { measuredPortAnchors } from "./flow/router/anchors";
 import { planMakeRoom } from "./flow/makeRoom";
 import { detectTrunkCandidates, collapsedTrunkWaypoints } from "./flow/trunks";
 import type { TrunkCandidate } from "./flow/trunks";
@@ -146,6 +148,11 @@ function AppInner() {
   // changes its handles, so we must tell React Flow to re-measure (otherwise a new
   // port's handle is unknown and a cable dropped on it resolves to a phantom).
   const updateNodeInternals = useUpdateNodeInternals();
+  // Imperative store access for MEASURED handle positions. Read inside the `rendered` memo:
+  // every measure/drag flows back into `nodes` (dimension change events), which re-runs the
+  // memo, so the lookup is always at least as fresh as the geometry that triggered routing —
+  // without subscribing (a nodeLookup selector would re-render on every store tick).
+  const storeApi = useStoreApi();
 
   // Always-fresh views of the live canvas for the project hook to snapshot.
   const nodesRef = useRef(nodes);
@@ -658,8 +665,24 @@ function AppInner() {
       return port ? cableColor(port.connector) : undefined;
     };
 
-    const { waypoints, jogInfo, ends } = pickRouter().route({ nodes, edges });
+    const anchors = measuredPortAnchors(storeApi.getState().nodeLookup, nodes);
+    const { waypoints, jogInfo, ends, giveUps } = pickRouter().route({ nodes, edges, anchors });
     jogInfoRef.current = jogInfo;
+    if (import.meta.env.DEV && giveUps?.length) {
+      console.warn(`[router] ${giveUps.length} run(s) found no clean detour and may cross a device box:`, giveUps.join(", "));
+    }
+    if (import.meta.env.DEV) {
+      // Debug hook for the measured-geometry gate (scripts/browser-route-check.mjs --dump):
+      // the exact routing inputs/outputs this frame, replayable offline in node.
+      (window as unknown as Record<string, unknown>).__routeDebug = {
+        nodes,
+        edges,
+        anchors: anchors && [...anchors].map(([nid, m]) => [nid, [...m]]),
+        waypoints: [...waypoints],
+        ends: [...ends],
+        giveUps,
+      };
+    }
 
     // Collapsed trunks: replace each member's path with a shared, box-avoided spine + fan stubs,
     // and place a count badge; expanded trunks keep normal member paths + a re-collapse badge.
@@ -752,7 +775,7 @@ function AppInner() {
     }
 
     return { edges: styled, candidates, trunkBadges, polylines };
-  }, [edges, validation, nodes, activeTrunks, dismissedTrunks]);
+  }, [edges, validation, nodes, activeTrunks, dismissedTrunks, storeApi]);
 
   // Crossing hops (p2-crossinghops): bump points per edge, gated on the toggle. Separate from `rendered`
   // so flipping hops never re-runs the router — it only re-detects over the existing geometry.
