@@ -88,6 +88,14 @@ const scenarios = {
     dev("T1", 0, 0, [P("pwr", "input", "power", "Power")], "Load Above"),
     dev("T2", 0, 620, [P("pwr", "input", "power", "Power")], "Load Below"),
   ],
+  // Two bidi (bottom-jack) ethernet runs sharing one corridor — the NET-002/NET-003 case:
+  // both A* routes pick the same grid lines and lie perfectly collinear unless the detour
+  // spread pass fans bidi runs apart too (it once covered horizontal detours only).
+  "bidi-pair": [
+    dev("SW1", 0, 0, [P("net1", "bidirectional", "rj45", "Net 1"), P("net2", "bidirectional", "rj45", "Net 2")], "Switch A"),
+    dev("SW2", 560, 0, [P("net1", "bidirectional", "rj45", "Net 1"), P("net2", "bidirectional", "rj45", "Net 2")], "Switch B"),
+    dev("M", 260, 40, [P("i1", "input", "sdi")], "Obstacle"),
+  ],
   // 64 devices — well past the old MAX_OBSTACLES=40 bail, where every detour/bidi run used
   // to give up at once and draw straight through the field. Long runs must route via the
   // pruned obstacle set; the bidi pair must cross the whole grid cleanly.
@@ -125,6 +133,10 @@ const edges = {
   "backwards-power": [
     edge("pw1", "PC", "o1", "T1", "pwr", { cableTypeId: "power" }),
     edge("pw2", "PC", "o2", "T2", "pwr", { cableTypeId: "power" }),
+  ],
+  "bidi-pair": [
+    edge("np1", "SW1", "net1", "SW2", "net1", { cableTypeId: "ethernet" }),
+    edge("np2", "SW1", "net2", "SW2", "net2", { cableTypeId: "ethernet" }),
   ],
   "big-grid": [
     edge("bg1", "g0c0", "out", "g7c7", "in"), // long diagonal across the field

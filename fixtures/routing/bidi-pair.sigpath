@@ -1,0 +1,124 @@
+{
+  "schemaVersion": 8,
+  "project": {
+    "id": "proj-bidi-pair",
+    "name": "bidi-pair",
+    "diagrams": [
+      {
+        "id": "fix-bidi-pair",
+        "name": "Diagram 1",
+        "devices": [
+          {
+            "id": "SW1",
+            "model": {
+              "id": "m-SW1",
+              "model": "Switch A",
+              "category": "other",
+              "source": "builtin",
+              "ports": [
+                {
+                  "id": "net1",
+                  "name": "Net 1",
+                  "direction": "bidirectional",
+                  "connector": "rj45"
+                },
+                {
+                  "id": "net2",
+                  "name": "Net 2",
+                  "direction": "bidirectional",
+                  "connector": "rj45"
+                }
+              ]
+            },
+            "label": "Switch A",
+            "position": {
+              "x": 0,
+              "y": 0
+            }
+          },
+          {
+            "id": "SW2",
+            "model": {
+              "id": "m-SW2",
+              "model": "Switch B",
+              "category": "other",
+              "source": "builtin",
+              "ports": [
+                {
+                  "id": "net1",
+                  "name": "Net 1",
+                  "direction": "bidirectional",
+                  "connector": "rj45"
+                },
+                {
+                  "id": "net2",
+                  "name": "Net 2",
+                  "direction": "bidirectional",
+                  "connector": "rj45"
+                }
+              ]
+            },
+            "label": "Switch B",
+            "position": {
+              "x": 560,
+              "y": 0
+            }
+          },
+          {
+            "id": "M",
+            "model": {
+              "id": "m-M",
+              "model": "Obstacle",
+              "category": "other",
+              "source": "builtin",
+              "ports": [
+                {
+                  "id": "i1",
+                  "name": "i1",
+                  "direction": "input",
+                  "connector": "sdi"
+                }
+              ]
+            },
+            "label": "Obstacle",
+            "position": {
+              "x": 260,
+              "y": 40
+            }
+          }
+        ],
+        "connections": [
+          {
+            "id": "np1",
+            "from": {
+              "instanceId": "SW1",
+              "portId": "net1"
+            },
+            "to": {
+              "instanceId": "SW2",
+              "portId": "net1"
+            },
+            "cableTypeId": "ethernet",
+            "number": "np1"
+          },
+          {
+            "id": "np2",
+            "from": {
+              "instanceId": "SW1",
+              "portId": "net2"
+            },
+            "to": {
+              "instanceId": "SW2",
+              "portId": "net2"
+            },
+            "cableTypeId": "ethernet",
+            "number": "np2"
+          }
+        ],
+        "zones": [],
+        "annotations": [],
+        "orientation": "free"
+      }
+    ]
+  }
+}

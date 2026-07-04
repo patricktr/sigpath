@@ -225,10 +225,14 @@ function route(req: RouteRequest): RouteResult {
     }
   }
 
-  // Fan apart co-located HORIZONTAL detours into separate lines (bidi detours keep their path).
-  const hDetours = [...waypointsById].filter(([id]) => geom.get(id)?.horizontal);
-  if (hDetours.length > 1) {
-    const routes = hDetours.map(([id, interior]) => {
+  // Fan apart co-located detours into separate lines — ALL A*-routed runs, bidi included.
+  // Two bidi runs sharing a corridor pick the SAME grid lines (the comfort lines make that
+  // more likely, not less) and would otherwise lie perfectly collinear (the NET-002/NET-003
+  // overlap). The spread never moves the first/last segment, so port stubs — and CableEdge's
+  // exit-axis snap — stay anchored.
+  const detours = [...waypointsById];
+  if (detours.length > 1) {
+    const routes = detours.map(([id, interior]) => {
       const g = geom.get(id)!;
       return { id, pts: [{ x: g.from.x, y: g.from.y }, ...interior, { x: g.to.x, y: g.to.y }] };
     });

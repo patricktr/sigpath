@@ -39,6 +39,28 @@
       }
     }
   },
+  "bidi-pair.sigpath": {
+    "Diagram 1": {
+      "edges": 2,
+      "routed": 2,
+      "unrouted": 0,
+      "crossings": 1,
+      "bends": 4,
+      "overlaps": 0,
+      "length": 1440,
+      "cost": 6.14,
+      "perEdge": {
+        "np1": {
+          "bends": 2,
+          "length": 706
+        },
+        "np2": {
+          "bends": 2,
+          "length": 734
+        }
+      }
+    }
+  },
   "big-grid.sigpath": {
     "Diagram 1": {
       "edges": 5,
@@ -80,7 +102,7 @@
       "unrouted": 0,
       "crossings": 6,
       "bends": 50,
-      "overlaps": 2,
+      "overlaps": 0,
       "length": 15166,
       "cost": 63.52,
       "perEdge": {

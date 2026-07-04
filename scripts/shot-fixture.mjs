@@ -1,10 +1,12 @@
-// One-off: screenshot fixtures through the same stubbed-Tauri flow as browser-route-check.
+// Screenshot fixtures through the same stubbed-Tauri flow as browser-route-check —
+// a quick visual spot-check of routing changes without launching the Tauri app.
+// Usage: node scripts/shot-fixture.mjs <fixture-basename...>   (SHOT_DIR overrides output dir)
 import { createServer } from "vite";
 import { chromium } from "playwright";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 
-const ROOT = dirname(fileURLToPath(import.meta.url));
+const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const FIX_DIR = join(ROOT, "fixtures", "routing");
 const OUT = process.env.SHOT_DIR ?? ROOT;
 const PORT = 5198;
