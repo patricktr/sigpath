@@ -64,7 +64,7 @@ import { detectTrunkCandidates, collapsedTrunkWaypoints, trunkId } from "./flow/
 import type { TrunkCandidate } from "./flow/trunks";
 import type { Pt } from "./flow/obstacleRoute";
 import { EdgeMarqueeSelect } from "./flow/EdgeMarqueeSelect";
-import { rectHitsRun } from "./flow/marqueeHit";
+import { rectHitsPolyline, rectHitsRun } from "./flow/marqueeHit";
 import type { DeviceModel, InstallStatus } from "./schema";
 import type { SignalKind } from "./schema";
 import { useProject } from "./project/useProject";
@@ -316,6 +316,9 @@ function AppInner() {
   // Each joggable (non-detour) run's current jog X + its run midpoint, refreshed every
   // render — lets a manual nudge start from where the cable actually sits (no jump).
   const jogInfoRef = useRef<Map<string, { midX: number; jogX: number }>>(new Map());
+  // Each edge's final drawn polyline (from the `rendered` memo) — the geometry marquee
+  // hit-testing runs on, so a selection box grabs exactly the cables it visually covers.
+  const polylinesRef = useRef<Map<string, Pt[]>>(new Map());
 
   // Drawing a connection auto-types the cable from the source port's connector.
   // Build a fresh cable edge for a source→target port pair: typed/colored from the
@@ -669,6 +672,7 @@ function AppInner() {
     const anchors = measuredPortAnchors(storeApi.getState().nodeLookup, nodes);
     const { waypoints, jogInfo, ends, giveUps } = pickRouter().route({ nodes, edges, anchors });
     jogInfoRef.current = jogInfo;
+    // (polylinesRef is refreshed at the end of this memo, once trunk overrides are folded in.)
     if (import.meta.env.DEV && giveUps?.length) {
       console.warn(`[router] ${giveUps.length} run(s) found no clean detour and may cross a device box:`, giveUps.join(", "));
     }
@@ -775,6 +779,7 @@ function AppInner() {
       }
     }
 
+    polylinesRef.current = polylines;
     return { edges: styled, candidates, trunkBadges, polylines };
   }, [edges, validation, nodes, activeTrunks, dismissedTrunks, storeApi]);
 
@@ -1641,6 +1646,15 @@ function AppInner() {
       if (r.w < 2 && r.h < 2) return; // a click, not a drag
       const ids = new Set<string>();
       for (const e of edgesRef.current) {
+        // Prefer the run's REAL drawn polyline (waypoints/detours/spines/smooth-step) — the
+        // standard-Z approximation misplaces anything non-standard (a bidi run's phantom line
+        // lands at port row 0 and gets "selected" from across the canvas). Fall back to the
+        // approximation only when no polyline exists for the edge.
+        const pts = polylinesRef.current.get(e.id);
+        if (pts) {
+          if (rectHitsPolyline(pts, r)) ids.add(e.id);
+          continue;
+        }
         const g = edgeEndsFlow(e);
         if (g && rectHitsRun(g.sx, g.sy, g.tx, g.ty, r)) ids.add(e.id);
       }

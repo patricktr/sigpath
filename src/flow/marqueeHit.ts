@@ -1,6 +1,31 @@
 export type FlowRect = { x: number; y: number; w: number; h: number };
 
 /**
+ * Does the rectangle touch an orthogonal cable polyline — the run's REAL drawn geometry
+ * (router waypoints, detours, trunk spines, smooth-step reconstruction)? For axis-aligned
+ * segments, "segment bbox overlaps rect" IS intersection, so this stays exact and cheap.
+ * Preferred over {@link rectHitsRun}, whose standard-Z approximation places a bidi run's
+ * phantom hit-line at port row 0 (a marquee then "selects" a cable that isn't there).
+ */
+export function rectHitsPolyline(pts: { x: number; y: number }[], r: FlowRect): boolean {
+  const rx2 = r.x + r.w;
+  const ry2 = r.y + r.h;
+  for (let i = 1; i < pts.length; i++) {
+    const a = pts[i - 1];
+    const b = pts[i];
+    if (
+      Math.max(a.x, b.x) >= r.x &&
+      Math.min(a.x, b.x) <= rx2 &&
+      Math.max(a.y, b.y) >= r.y &&
+      Math.min(a.y, b.y) <= ry2
+    ) {
+      return true;
+    }
+  }
+  return false;
+}
+
+/**
  * Does an axis-aligned rectangle intersect the orthogonal smooth-step run from
  * (sx,sy) to (tx,ty)? The run is approximated by its three segments — a horizontal
  * stub at sy, a vertical jog at the mid-x, and a horizontal stub at ty — which is how
