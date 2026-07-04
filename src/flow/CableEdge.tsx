@@ -84,14 +84,12 @@ export function CableEdge({
 
   const gradient = data?.gradient;
   const gradientId = `cablegrad-${id}`;
-  const bundle = data?.trunkBundle;
-  let edgeStyle = gradient ? { ...style, stroke: `url(#${gradientId})` } : style;
-  if (bundle) {
-    // A collapsed-trunk member: all members overlap on one spine, so draw it heavier —
-    // the canvas-colored dash overlay below turns the fat line into a striped bundle.
-    const base = typeof edgeStyle?.strokeWidth === "number" ? edgeStyle.strokeWidth : 2;
-    edgeStyle = { ...edgeStyle, strokeWidth: base + 3 };
-  }
+  const edgeStyle = gradient ? { ...style, stroke: `url(#${gradientId})` } : style;
+  // One member per collapsed trunk carries the shared spine: drawn ONCE, thick, with the
+  // zebra overlay — while every member (this one included) stays an ordinary thin cable.
+  // Fan stubs then read as individual cables gathering into a loom instead of a striped mush.
+  const spinePts = data?.trunkSpine;
+  const spineD = spinePts && spinePts.length > 1 ? cablePath(spinePts, BEND_RADIUS) : null;
   const number = data?.number;
 
   // The cable ID rides near BOTH ports (just OUTSIDE each, along its exit stub), not at
@@ -144,8 +142,13 @@ export function CableEdge({
           </linearGradient>
         </defs>
       )}
+      {spineD && (
+        <>
+          <path d={spineD} className="cable-bundle-spine" style={{ stroke: edgeStyle?.stroke }} />
+          <path d={spineD} className="cable-bundle-stripe" />
+        </>
+      )}
       <BaseEdge id={id} path={path} markerEnd={markerEnd} style={edgeStyle} />
-      {bundle && <path d={path} className="cable-bundle-stripe" />}
       {number && (
         <EdgeLabelRenderer>
           <div

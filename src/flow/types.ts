@@ -99,9 +99,12 @@ export type CableEdgeData = {
    *  connector color, the source→target colors to stroke it with a gradient. */
   gradient?: { from: string; to: string };
   /** Derived at render time (not persisted): this run is a member of a COLLAPSED trunk,
-   *  riding the shared spine — drawn thicker with a canvas-colored dash overlay so the
-   *  spine reads as a bundle, not one fat cable. */
+   *  riding the shared spine. Members draw as ordinary thin cables (their fan stubs ARE
+   *  individual cables); the bundle look comes from `trunkSpine` below. */
   trunkBundle?: boolean;
+  /** Derived at render time (not persisted): set on ONE member per collapsed trunk — the
+   *  shared spine polyline, drawn once as a thick zebra-striped backbone under the members. */
+  trunkSpine?: Pt[];
   /** Derived at render time (not persisted): interior bend points of an
    *  obstacle-avoiding detour around device boxes. When set, CableEdge draws this
    *  orthogonal path instead of the default smooth-step jog (and ignores `parallel`). */

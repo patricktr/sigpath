@@ -101,7 +101,10 @@ t = await barText(page);
 check("bar flips to Bundle context", t.includes("Bundle ·"));
 check("Unbundle available", t.includes("Unbundle"));
 check("Expand toggle available (created collapsed)", t.includes("Expand"));
-check("collapsed members draw the zebra bundle stripe", (await page.locator(".cable-bundle-stripe").count()) === 2);
+check(
+  "the bundle draws ONE zebra spine (thick backbone + stripe)",
+  (await page.locator(".cable-bundle-spine").count()) === 1 && (await page.locator(".cable-bundle-stripe").count()) === 1,
+);
 // Member ID badges must sit fully clear of the device boxes (they used to render
 // half-under the node when the fan point sat exactly at the device edge).
 check(
@@ -170,7 +173,7 @@ check(
   `co-located bundles stagger their fan lines (A@${Math.round(fanX.a ?? -1)} vs B@${Math.round(fanX.b ?? -1)})`,
   fanX.a != null && fanX.b != null && Math.abs(fanX.a - fanX.b) >= 8,
 );
-check("four members draw bundle stripes", (await page.locator(".cable-bundle-stripe").count()) === 4);
+check("each of the two bundles draws exactly one striped spine", (await page.locator(".cable-bundle-stripe").count()) === 2);
 await page.screenshot({ path: join(SHOT, "shot-two-bundles.png") });
 
 await browser.close();

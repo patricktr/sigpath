@@ -15,9 +15,16 @@
   white-space: nowrap;
 }
 
-/* Zebra overlay on a collapsed trunk's spine: canvas-colored dashes over the (thicker)
-   member stroke read as a striped loom instead of one fat cable. Non-interactive so the
-   edge underneath keeps its click/hover behavior. */
+/* A collapsed trunk's shared spine, drawn ONCE (by one designated member) as a thick
+   backbone in the signal color, with a canvas-colored dash overlay — a striped loom.
+   Members themselves stay ordinary thin cables (their fans ARE individual cables).
+   Non-interactive so the edges underneath keep their click/hover behavior. */
+.cable-bundle-spine {
+  fill: none;
+  stroke-width: 6;
+  stroke-linecap: round;
+  pointer-events: none;
+}
 .cable-bundle-stripe {
   fill: none;
   stroke: var(--canvas-bg);

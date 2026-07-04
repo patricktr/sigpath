@@ -730,12 +730,16 @@ function AppInner() {
         y: es.reduce((a, e) => a + (e.sy + e.ty) / 2, 0) / n,
       };
     };
+    const trunkSpineByEdge = new Map<string, Pt[]>();
     for (const t of activeTrunks) {
       const label = t.label ?? `${t.memberConnectionIds.length}× ${t.signalKind}`;
       if (t.collapsed) {
         const w = folded.get(t.id);
         if (w) {
           for (const [id, pts] of w.perEdge) trunkOverride.set(id, pts);
+          // One member carries the spine drawing (all members share its geometry anyway).
+          const carrier = t.memberConnectionIds.find((id) => w.perEdge.has(id));
+          if (carrier) trunkSpineByEdge.set(carrier, w.spine);
           trunkBadges.push({ id: t.id, collapsed: true, label, x: w.badge.x, y: w.badge.y });
           continue;
         }
@@ -780,7 +784,9 @@ function AppInner() {
       // Empty/absent = a clean straight run — CableEdge falls back to its smooth-step default.
       const wp = trunkOverride.get(e.id) ?? waypoints.get(e.id);
       if (wp && wp.length) data = { ...(data ?? { cableTypeId: "" }), waypoints: wp };
-      if (trunkOverride.has(e.id)) data = { ...(data ?? { cableTypeId: "" }), trunkBundle: true };
+      if (trunkOverride.has(e.id)) {
+        data = { ...(data ?? { cableTypeId: "" }), trunkBundle: true, trunkSpine: trunkSpineByEdge.get(e.id) };
+      }
       return { ...e, style, animated, data };
     });
 

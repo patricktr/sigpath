@@ -91,21 +91,43 @@ const FAN_REACH = 32;
  *  fan verticals on the same line. */
 const FAN_STAGGER = 16;
 
+export type CollapsedTrunk = {
+  perEdge: Map<string, Pt[]>;
+  badge: Pt;
+  /** The shared spine polyline (fan-in point → fan-out point) — the ONLY part drawn with
+   *  the thick zebra treatment; member fans render as ordinary thin cables gathering in. */
+  spine: Pt[];
+  /** Compact geometry for the crossing context: the spine, the two fan combs, and each
+   *  member's port stubs ONCE — NOT one full copy per member, which would make a later
+   *  spine pay the crossing penalty N times for one real crossing and contort around it. */
+  ctxAdd: Pt[][];
+};
+
 export function collapsedTrunkWaypoints(
   trunk: Pick<Trunk, "memberConnectionIds">,
   ends: Map<string, EdgeEnds>,
   obstacles: Rect[],
   reach: number = FAN_REACH,
   cross?: CrossContext,
-): { perEdge: Map<string, Pt[]>; badge: Pt } | null {
+): CollapsedTrunk | null {
   const members = trunk.memberConnectionIds.map((id) => ends.get(id)).filter((e): e is EdgeEnds => !!e);
   if (members.length < 2) return null;
 
   const fanInX = Math.max(...members.map((e) => e.sx)) + reach; // right of the rightmost source edge
   const fanOutX = Math.min(...members.map((e) => e.tx)) - reach; // left of the leftmost dest edge
   if (fanOutX <= fanInX) return null; // columns (nearly) overlap — skip (members route normally)
-  const fanInY = members.reduce((a, e) => a + e.sy, 0) / members.length;
-  const fanOutY = members.reduce((a, e) => a + e.ty, 0) / members.length;
+  // The spine lands ON member rows, never at the raw mean — a fractional Y between rows
+  // (or exactly some OTHER cable's row) reads as a trunk pointing at a port it isn't
+  // connected to. The fan-out anchors at the target side's centroid row; the fan-in then
+  // anchors at the source row NEAREST THE FAN-OUT — members gather TOWARD where the trunk
+  // is headed. Anchoring fan-in at its own centroid instead lets a multi-device bundle
+  // (source rows hundreds of px apart) start the spine at the far row, so one member rides
+  // the gather comb 300px down while the spine climbs straight back up alongside it — a
+  // thick hairpin that reads as a knot.
+  const nearestTo = (target: number, ys: number[]) =>
+    ys.reduce((best, y) => (Math.abs(y - target) < Math.abs(best - target) ? y : best), ys[0]);
+  const fanOutY = nearestTo(members.reduce((a, e) => a + e.ty, 0) / members.length, members.map((e) => e.ty));
+  const fanInY = nearestTo(fanOutY, members.map((e) => e.sy));
 
   // The spine routes through the SAME machinery as ordinary cables: spatially pruned box
   // avoidance, the comfort (don't-hug) penalty, and — via `cross` — the soft crossing
@@ -123,7 +145,21 @@ export function collapsedTrunkWaypoints(
     perEdge.set(id, [{ x: fanInX, y: e.sy }, ...spineCore, { x: fanOutX, y: e.ty }]);
   }
   const mid = spineCore[Math.floor(spineCore.length / 2)];
-  return { perEdge, badge: { x: (fanInX + fanOutX) / 2, y: mid.y } };
+
+  const ctxAdd: Pt[][] = [
+    spineCore,
+    [
+      { x: fanInX, y: Math.min(...members.map((e) => e.sy)) },
+      { x: fanInX, y: Math.max(...members.map((e) => e.sy)) },
+    ],
+    [
+      { x: fanOutX, y: Math.min(...members.map((e) => e.ty)) },
+      { x: fanOutX, y: Math.max(...members.map((e) => e.ty)) },
+    ],
+    ...members.map((e): Pt[] => [{ x: e.sx, y: e.sy }, { x: fanInX, y: e.sy }]),
+    ...members.map((e): Pt[] => [{ x: fanOutX, y: e.ty }, { x: e.tx, y: e.ty }]),
+  ];
+  return { perEdge, badge: { x: (fanInX + fanOutX) / 2, y: mid.y }, spine: spineCore, ctxAdd };
 }
 
 /**
@@ -139,8 +175,8 @@ export function collapseTrunks(
   ends: Map<string, EdgeEnds>,
   obstacles: Rect[],
   otherPolylines: Pt[][],
-): Map<string, { perEdge: Map<string, Pt[]>; badge: Pt }> {
-  const out = new Map<string, { perEdge: Map<string, Pt[]>; badge: Pt }>();
+): Map<string, CollapsedTrunk> {
+  const out = new Map<string, CollapsedTrunk>();
   const collapsed = trunks.filter((t) => t.collapsed);
   if (!collapsed.length) return out;
   const ctx = crossContextOf(otherPolylines);
@@ -154,11 +190,12 @@ export function collapseTrunks(
     const w = collapsedTrunkWaypoints(t, ends, obstacles, FAN_REACH + k * FAN_STAGGER, ctx);
     if (!w) continue;
     out.set(t.id, w);
-    for (const pts of w.perEdge.values()) {
-      const add = crossContextOf([pts]);
-      ctx.h.push(...add.h);
-      ctx.v.push(...add.v);
-    }
+    // The bundle joins the context ONCE (spine + combs + stubs) — feeding every member's
+    // full path would multiply the crossing penalty by the member count and make the next
+    // spine serpentine around phantom copies instead of crossing once where it must.
+    const add = crossContextOf(w.ctxAdd);
+    ctx.h.push(...add.h);
+    ctx.v.push(...add.v);
   }
   return out;
 }

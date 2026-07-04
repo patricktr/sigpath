@@ -123,12 +123,15 @@ function towards(corner: Pt, toward: Pt, r: number): Pt {
 }
 
 /** The straight run `start`→`end`, bumping UP over each hop on it (only a horizontal run carries
- *  hops). Hops within `HOP_RADIUS` of either end are skipped so a bump never collides a corner. */
+ *  hops). Hops within `HOP_RADIUS` of either end are skipped so a bump never collides a corner,
+ *  and a run too short to carry a legible bump (e.g. a trunk fan stub threading a neighboring
+ *  comb) draws plain — a 12px arc wedged between two rounded corners reads as a knot, not a hop. */
 function runWithHops(start: Pt, end: Pt, hops: Hop[]): string {
   if (Math.abs(start.y - end.y) > 0.5 || hops.length === 0) return ` L ${end.x},${end.y}`;
   const y = start.y;
   const lo = Math.min(start.x, end.x);
   const hi = Math.max(start.x, end.x);
+  if (hi - lo < HOP_RADIUS * 4) return ` L ${end.x},${end.y}`;
   const dir = end.x >= start.x ? 1 : -1;
   const onRun = hops
     .filter((h) => Math.abs(h.y - y) <= 1.5 && h.x - lo > HOP_RADIUS && hi - h.x > HOP_RADIUS)
