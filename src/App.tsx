@@ -50,6 +50,7 @@ import {
   deviceTitle,
   gradeScaleForConnector,
   gradesForScale,
+  groupForConnector,
   inputPorts,
   outputPorts,
   VIDEO_FORMATS,
@@ -59,7 +60,7 @@ import { pickRouter } from "./flow/router";
 import { collectObstacleRects } from "./flow/router/newRouter";
 import { measuredPortAnchors } from "./flow/router/anchors";
 import { planMakeRoom } from "./flow/makeRoom";
-import { detectTrunkCandidates, collapsedTrunkWaypoints } from "./flow/trunks";
+import { detectTrunkCandidates, collapsedTrunkWaypoints, trunkId } from "./flow/trunks";
 import type { TrunkCandidate } from "./flow/trunks";
 import type { Pt } from "./flow/obstacleRoute";
 import { EdgeMarqueeSelect } from "./flow/EdgeMarqueeSelect";
@@ -857,6 +858,34 @@ function AppInner() {
     (id: string) => setDismissedTrunks((s) => new Set(s).add(id)),
     [],
   );
+  // Manual bundling (p2-trunkcontext): turn the current cable multi-selection into a trunk.
+  // Mixed signal kinds are allowed (an explicit selection outranks the auto-offer's
+  // same-family rule) — the badge then reads "N× mixed" instead of borrowing one kind.
+  const handleBundleSelection = useCallback(
+    (cableIds: string[], kinds: SignalKind[]) => {
+      const ids = [...cableIds].sort();
+      setActiveTrunks((ts) => [
+        ...ts,
+        {
+          id: trunkId(ids),
+          memberConnectionIds: ids,
+          collapsed: true,
+          signalKind: kinds[0] ?? "av",
+          ...(kinds.length > 1 ? { label: `${ids.length}× mixed` } : {}),
+        },
+      ]);
+      setStatus(`Bundled ${ids.length} cables into a trunk`);
+    },
+    [setActiveTrunks],
+  );
+  // Dissolve a bundle — members stay real cables and route individually again.
+  const handleUnbundle = useCallback(
+    (id: string) => {
+      setActiveTrunks((ts) => ts.filter((t) => t.id !== id));
+      setStatus("Unbundled — cables route individually again");
+    },
+    [setActiveTrunks],
+  );
 
   const focusIssue = useCallback(
     (issue: ValidationIssue) => {
@@ -1070,6 +1099,78 @@ function AppInner() {
       : null;
   }, [selection.cables, validation.issues]);
 
+  // The bundle the current cable selection represents (p2-trunkcontext). Clicking a
+  // COLLAPSED spine selects one member — that reads as "I selected the bundle", so any
+  // selection wholly inside a collapsed trunk counts. An expanded trunk only counts when
+  // every member is selected (a lone member is deliberately just a cable).
+  const selectedTrunk = useMemo(() => {
+    if (!selection.cables.length) return null;
+    const t = activeTrunks.find((tr) => {
+      const m = new Set(tr.memberConnectionIds);
+      return selection.cables.every((c) => m.has(c.id));
+    });
+    if (!t) return null;
+    return t.collapsed || selection.cables.length === t.memberConnectionIds.length ? t : null;
+  }, [selection.cables, activeTrunks]);
+
+  // Bulk cable editing (p2-trunkcontext): the target set (the whole bundle when one is
+  // selected, else the multi-selection), each field's common-or-mixed value, and the shared
+  // grade scale (grade/signal controls only make sense when every run rates on one scale).
+  const bulkCables = useMemo(() => {
+    const ids = selectedTrunk
+      ? selectedTrunk.memberConnectionIds
+      : selection.cables.length > 1
+        ? selection.cables.map((c) => c.id)
+        : null;
+    if (!ids) return null;
+    const byEdge = new Map(edges.map((e) => [e.id, e]));
+    const byNode = new Map(nodes.map((n) => [n.id, n]));
+    const members = ids.map((id) => byEdge.get(id)).filter((e): e is CableEdgeType => !!e);
+    if (!members.length) return null;
+    const scales = members.map((e) => {
+      const sp = nodePorts(byNode.get(e.source)).find((p) => p.id === e.sourceHandle);
+      return gradeScaleForConnector(sp?.connector);
+    });
+    const gradeScale = scales.every((s) => s === scales[0]) ? scales[0] : undefined;
+    const common = <T,>(get: (e: CableEdgeType) => T | undefined) => {
+      const first = get(members[0]);
+      return members.every((e) => get(e) === first)
+        ? { mixed: false, value: first }
+        : { mixed: true, value: undefined };
+    };
+    return {
+      ids,
+      gradeScale,
+      length: common((e) => e.data?.lengthMeters),
+      note: common((e) => e.data?.note),
+      cableGrade: common((e) => e.data?.cableGrade),
+      signalGrade: common((e) => e.data?.signalGrade),
+    };
+  }, [selectedTrunk, selection.cables, edges, nodes]);
+
+  // Can the current multi-selection become a bundle? Any ≥2 standard output→input runs
+  // not already in a trunk qualify (the automatic offer needs ≥4 alike; an explicit
+  // selection is the user saying "these belong together", so the bar is lower and mixed
+  // signal kinds are allowed — the badge just says "mixed").
+  const bundleEligible = useMemo(() => {
+    if (selectedTrunk || selection.cables.length < 2) return null;
+    const inTrunk = new Set(activeTrunks.flatMap((t) => t.memberConnectionIds));
+    const byNode = new Map(nodes.map((n) => [n.id, n]));
+    const kinds = new Set(
+      selection.cables.map((e) => {
+        const sp = nodePorts(byNode.get(e.source)).find((p) => p.id === e.sourceHandle);
+        return groupForConnector(sp?.connector);
+      }),
+    );
+    for (const e of selection.cables) {
+      if (inTrunk.has(e.id)) return null;
+      const sp = nodePorts(byNode.get(e.source)).find((p) => p.id === e.sourceHandle);
+      const tp = nodePorts(byNode.get(e.target)).find((p) => p.id === e.targetHandle);
+      if (sp?.direction !== "output" || tp?.direction !== "input") return null; // spine geometry needs L→R runs
+    }
+    return { kinds: [...kinds] };
+  }, [selectedTrunk, selection.cables, activeTrunks, nodes]);
+
   const deviceTotal = useMemo(() => nodes.filter((n) => n.type === "device").length, [nodes]);
 
   const railDevices = useMemo(
@@ -1193,26 +1294,26 @@ function AppInner() {
     [setEdges],
   );
 
-  // Set a cable's run length in meters (undefined clears it). Snapshot on focus.
+  // Set run length in meters on one or many cables (undefined clears it). Snapshot on focus.
   const setCableLength = useCallback(
-    (edgeId: string, lengthMeters: number | undefined) => {
+    (edgeIds: string[], lengthMeters: number | undefined) => {
+      const ids = new Set(edgeIds);
       setEdges((eds) =>
         eds.map((e) =>
-          e.id === edgeId
-            ? { ...e, data: { ...(e.data ?? { cableTypeId: "" }), lengthMeters } }
-            : e,
+          ids.has(e.id) ? { ...e, data: { ...(e.data ?? { cableTypeId: "" }), lengthMeters } } : e,
         ),
       );
     },
     [setEdges],
   );
 
-  // Set a cable's free-text schedule note (empty clears it). Snapshot on focus.
+  // Set the free-text schedule note on one or many cables (empty clears it). Snapshot on focus.
   const setCableNote = useCallback(
-    (edgeId: string, note: string) => {
+    (edgeIds: string[], note: string) => {
+      const ids = new Set(edgeIds);
       setEdges((eds) =>
         eds.map((e) =>
-          e.id === edgeId
+          ids.has(e.id)
             ? { ...e, data: { ...(e.data ?? { cableTypeId: "" }), note: note || undefined } }
             : e,
         ),
@@ -1283,27 +1384,29 @@ function AppInner() {
     [setEdges, takeSnapshot],
   );
 
-  // Set the cable's supported bandwidth rating on this run (undefined clears it).
+  // Set the supported bandwidth rating on one or many runs (undefined clears it).
   // Discrete select change → snapshot up front so it's a single undo step.
   const setCableGrade = useCallback(
-    (edgeId: string, cableGrade: string | undefined) => {
+    (edgeIds: string[], cableGrade: string | undefined) => {
       takeSnapshot();
+      const ids = new Set(edgeIds);
       setEdges((eds) =>
         eds.map((e) =>
-          e.id === edgeId ? { ...e, data: { ...(e.data ?? { cableTypeId: "" }), cableGrade } } : e,
+          ids.has(e.id) ? { ...e, data: { ...(e.data ?? { cableTypeId: "" }), cableGrade } } : e,
         ),
       );
     },
     [setEdges, takeSnapshot],
   );
 
-  // Override the signal grade this run carries (undefined = follow the show format).
+  // Override the signal grade one or many runs carry (undefined = follow the show format).
   const setSignalGrade = useCallback(
-    (edgeId: string, signalGrade: string | undefined) => {
+    (edgeIds: string[], signalGrade: string | undefined) => {
       takeSnapshot();
+      const ids = new Set(edgeIds);
       setEdges((eds) =>
         eds.map((e) =>
-          e.id === edgeId ? { ...e, data: { ...(e.data ?? { cableTypeId: "" }), signalGrade } } : e,
+          ids.has(e.id) ? { ...e, data: { ...(e.data ?? { cableTypeId: "" }), signalGrade } } : e,
         ),
       );
     },
@@ -2166,10 +2269,33 @@ function AppInner() {
           {contextKind === "edge" && (
             <>
               <span className="contextbar__title">
-                {selection.cables.length} cable{selection.cables.length === 1 ? "" : "s"} selected
+                {selectedTrunk
+                  ? `Bundle · ${selectedTrunk.label ?? `${selectedTrunk.memberConnectionIds.length}× ${selectedTrunk.signalKind}`}`
+                  : `${selection.cables.length} cable${selection.cables.length === 1 ? "" : "s"} selected`}
               </span>
               <span className="contextbar__sep" />
-              {selectedCable && (
+              {selectedTrunk && (
+                <>
+                  <button
+                    type="button"
+                    className="contextbar__btn"
+                    onClick={() => handleToggleTrunk(selectedTrunk.id)}
+                    title={selectedTrunk.collapsed ? "Fan the members back out" : "Fold the members onto one spine"}
+                  >
+                    {selectedTrunk.collapsed ? "▸ Expand" : "▾ Collapse"}
+                  </button>
+                  <button
+                    type="button"
+                    className="contextbar__btn"
+                    onClick={() => handleUnbundle(selectedTrunk.id)}
+                    title="Dissolve the bundle — the cables stay and route individually"
+                  >
+                    ⋔ Unbundle
+                  </button>
+                  <span className="contextbar__sep" />
+                </>
+              )}
+              {selectedCable && !selectedTrunk && (
                 <>
                   <label
                     className="contextbar__title"
@@ -2201,7 +2327,7 @@ function AppInner() {
                       onFocus={() => takeSnapshot()}
                       onChange={(e) =>
                         setCableLength(
-                          selectedCable.edge.id,
+                          [selectedCable.edge.id],
                           e.target.value === ""
                             ? undefined
                             : toMeters(Math.round(Number(e.target.value) * 10) / 10, distanceUnit),
@@ -2220,13 +2346,14 @@ function AppInner() {
                       value={selectedCable.edge.data?.note ?? ""}
                       placeholder="e.g. service loop"
                       onFocus={() => takeSnapshot()}
-                      onChange={(e) => setCableNote(selectedCable.edge.id, e.target.value)}
+                      onChange={(e) => setCableNote([selectedCable.edge.id], e.target.value)}
                       style={{ width: 150 }}
                     />
                   </label>
                 </>
               )}
               {selectedCable &&
+                !selectedTrunk &&
                 (selectedCable.comboOptions ? (
                   <label
                     className="contextbar__title"
@@ -2253,7 +2380,7 @@ function AppInner() {
                     <strong style={{ fontWeight: 600 }}>{selectedCable.label}</strong>
                   </span>
                 ))}
-              {selectedCable && selectedCable.gradeScale && (
+              {selectedCable && !selectedTrunk && selectedCable.gradeScale && (
                 <>
                   <label
                     className="contextbar__title"
@@ -2263,7 +2390,7 @@ function AppInner() {
                     <select
                       value={selectedCable.edge.data?.cableGrade ?? ""}
                       onChange={(e) =>
-                        setCableGrade(selectedCable.edge.id, e.target.value || undefined)
+                        setCableGrade([selectedCable.edge.id], e.target.value || undefined)
                       }
                       title="The cable's supported bandwidth rating"
                     >
@@ -2283,7 +2410,7 @@ function AppInner() {
                     <select
                       value={selectedCable.edge.data?.signalGrade ?? ""}
                       onChange={(e) =>
-                        setSignalGrade(selectedCable.edge.id, e.target.value || undefined)
+                        setSignalGrade([selectedCable.edge.id], e.target.value || undefined)
                       }
                       title="Override the grade this run carries (default: the show format)"
                     >
@@ -2297,7 +2424,123 @@ function AppInner() {
                   </label>
                 </>
               )}
-              {selectedConverterEdgeId && (
+              {bulkCables && (
+                <>
+                  <label
+                    className="contextbar__title"
+                    style={{ display: "inline-flex", alignItems: "center", gap: 6, fontWeight: 400 }}
+                  >
+                    Length
+                    <input
+                      type="number"
+                      min={0}
+                      step="0.1"
+                      value={
+                        !bulkCables.length.mixed && bulkCables.length.value != null
+                          ? fromMeters(bulkCables.length.value, distanceUnit)
+                          : ""
+                      }
+                      placeholder={bulkCables.length.mixed ? "mixed" : ""}
+                      onFocus={() => takeSnapshot()}
+                      onChange={(e) =>
+                        setCableLength(
+                          bulkCables.ids,
+                          e.target.value === ""
+                            ? undefined
+                            : toMeters(Math.round(Number(e.target.value) * 10) / 10, distanceUnit),
+                        )
+                      }
+                      style={{ width: 60 }}
+                    />
+                    {distanceSuffix(distanceUnit)}
+                  </label>
+                  <label
+                    className="contextbar__title"
+                    style={{ display: "inline-flex", alignItems: "center", gap: 6, fontWeight: 400 }}
+                  >
+                    Note
+                    <input
+                      value={!bulkCables.note.mixed ? bulkCables.note.value ?? "" : ""}
+                      placeholder={bulkCables.note.mixed ? "mixed" : "e.g. service loop"}
+                      onFocus={() => takeSnapshot()}
+                      onChange={(e) => setCableNote(bulkCables.ids, e.target.value)}
+                      style={{ width: 150 }}
+                    />
+                  </label>
+                  {bulkCables.gradeScale && (
+                    <>
+                      <label
+                        className="contextbar__title"
+                        style={{ display: "inline-flex", alignItems: "center", gap: 6, fontWeight: 400 }}
+                      >
+                        Cable grade
+                        <select
+                          value={bulkCables.cableGrade.mixed ? "__mixed__" : bulkCables.cableGrade.value ?? ""}
+                          onChange={(e) => {
+                            if (e.target.value === "__mixed__") return;
+                            setCableGrade(bulkCables.ids, e.target.value || undefined);
+                          }}
+                          title="The cables' supported bandwidth rating (applies to all)"
+                        >
+                          {bulkCables.cableGrade.mixed && (
+                            <option value="__mixed__" disabled>
+                              — mixed —
+                            </option>
+                          )}
+                          <option value="">— any —</option>
+                          {gradesForScale(bulkCables.gradeScale).map((t) => (
+                            <option key={t.id} value={t.id}>
+                              {t.label}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                      <label
+                        className="contextbar__title"
+                        style={{ display: "inline-flex", alignItems: "center", gap: 6, fontWeight: 400 }}
+                      >
+                        Signal
+                        <select
+                          value={bulkCables.signalGrade.mixed ? "__mixed__" : bulkCables.signalGrade.value ?? ""}
+                          onChange={(e) => {
+                            if (e.target.value === "__mixed__") return;
+                            setSignalGrade(bulkCables.ids, e.target.value || undefined);
+                          }}
+                          title="Override the grade these runs carry (applies to all; default: the show format)"
+                        >
+                          {bulkCables.signalGrade.mixed && (
+                            <option value="__mixed__" disabled>
+                              — mixed —
+                            </option>
+                          )}
+                          <option value="">show default</option>
+                          {gradesForScale(bulkCables.gradeScale).map((t) => (
+                            <option key={t.id} value={t.id}>
+                              {t.label}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                    </>
+                  )}
+                </>
+              )}
+              {bundleEligible && (
+                <button
+                  type="button"
+                  className="contextbar__btn"
+                  onClick={() =>
+                    handleBundleSelection(
+                      selection.cables.map((c) => c.id),
+                      bundleEligible.kinds,
+                    )
+                  }
+                  title="Bundle the selected cables into a collapsible trunk"
+                >
+                  ⧉ Bundle
+                </button>
+              )}
+              {selectedConverterEdgeId && !selectedTrunk && (
                 <button
                   type="button"
                   className="contextbar__btn"
@@ -2306,7 +2549,7 @@ function AppInner() {
                   ＋ Add converter
                 </button>
               )}
-              {selection.cables.length === 1 && jogInfoRef.current.has(selection.cables[0].id) && (
+              {selection.cables.length === 1 && !selectedTrunk && jogInfoRef.current.has(selection.cables[0].id) && (
                 <span
                   className="contextbar__title"
                   style={{ display: "inline-flex", alignItems: "center", gap: 4, fontWeight: 400 }}
@@ -2342,9 +2585,11 @@ function AppInner() {
                   )}
                 </span>
               )}
-              <button type="button" className="contextbar__btn" onClick={deleteSelection}>
-                Delete
-              </button>
+              {!selectedTrunk && (
+                <button type="button" className="contextbar__btn" onClick={deleteSelection}>
+                  Delete
+                </button>
+              )}
             </>
           )}
           {contextKind === "note" && activeNote && (
