@@ -179,6 +179,26 @@
   gap: 3px;
   height: auto;
 }
+/* Long boundary-port names (an embedded tab injects "Device · Port") are single
+   unwrappable ~400px items that blow the bank out sideways — rotate the labels
+   vertical (reading upward, jack staying at the bottom edge) so each port becomes
+   a narrow column, like a patch-panel strip. */
+.device-node__io--vertical {
+  flex-wrap: nowrap;
+  align-items: flex-end;
+  gap: 0 10px;
+  padding: 10px 16px 9px;
+}
+.device-node__io--vertical .port--io {
+  justify-content: flex-end;
+}
+.device-node__io--vertical .port__label {
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  max-height: 300px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 .port__io-anchor {
   position: relative;
   width: 8px;

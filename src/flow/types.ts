@@ -80,6 +80,16 @@ export function nodePorts(n: SigNode | undefined | null): Port[] {
   return isPortBearing(n) ? n.data.model.ports : [];
 }
 
+/**
+ * Should a bottom (bidirectional) port bank rotate its labels vertical? Horizontal labels
+ * wrap fine for ordinary port names, but an embedded tab's boundary ports carry
+ * "Device · Port" names — single unwrappable ~400px items that blow the bank out sideways.
+ * One long name flips the whole bank so it reads as one consistent strip.
+ */
+export function ioBankVertical(ports: Port[]): boolean {
+  return ports.some((p) => p.name.length > 24);
+}
+
 export type CableEdgeData = {
   cableTypeId: CableTypeId;
   number?: string;

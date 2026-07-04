@@ -1,6 +1,7 @@
 import { useContext, type MouseEvent, type PointerEvent } from "react";
 import { Handle, Position, type NodeProps } from "@xyflow/react";
 import { cableColor, inputPorts, outputPorts, bidirectionalPorts, deviceTitle } from "../schema";
+import { ioBankVertical } from "./types";
 import type { DeviceNodeType } from "./types";
 import { BulkPatchContext } from "./bulkPatch";
 import { SignalFilterContext, portFaded } from "./signalFilterContext";
@@ -92,12 +93,14 @@ export function DeviceNode({ id, data }: NodeProps<DeviceNodeType>) {
       )}
 
       {bidi.length > 0 && (
-        <div className="device-node__io">
+        <div className={ioBankVertical(bidi) ? "device-node__io device-node__io--vertical" : "device-node__io"}>
           {bidi.map((port) => {
             const ord = ordinal(port.id);
             return (
               <div className={portCls("port port--io", port.id)} key={port.id} {...bulkPort(port.id)}>
-                <span className="port__label">{port.name}</span>
+                <span className="port__label" title={port.name}>
+                  {port.name}
+                </span>
                 {ord != null && <span className="port__ordinal port__ordinal--io">{ord}</span>}
                 <span className="port__io-anchor">
                   {/* One physical jack, both ways: overlapping target + source handles. */}

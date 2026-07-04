@@ -1,6 +1,7 @@
 import { createContext, useContext } from "react";
 import { Handle, Position, type NodeProps } from "@xyflow/react";
 import { cableColor, inputPorts, outputPorts, bidirectionalPorts, deviceTitle } from "../schema";
+import { ioBankVertical } from "./types";
 import type { BlockNodeType } from "./types";
 import { SignalFilterContext, portFaded } from "./signalFilterContext";
 import "./DeviceNode.css";
@@ -114,10 +115,12 @@ export function BlockNode({ id, data }: NodeProps<BlockNodeType>) {
       )}
 
       {bidi.length > 0 && (
-        <div className="device-node__io">
+        <div className={ioBankVertical(bidi) ? "device-node__io device-node__io--vertical" : "device-node__io"}>
           {bidi.map((port) => (
             <div className={portCls("port port--io", port.id)} key={port.id}>
-              <span className="port__label">{port.name}</span>
+              <span className="port__label" title={port.name}>
+                {port.name}
+              </span>
               <span className="port__io-anchor">
                 {/* One jack, both ways: overlapping target + source handles. */}
                 <Handle
