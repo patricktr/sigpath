@@ -379,6 +379,30 @@
   font-weight: 700;
   color: var(--text);
 }
+/* Editable instance name (blocks): reads like the heading until you interact with it. */
+.inspector__name--edit {
+  width: 100%;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 5px;
+  padding: 2px 6px;
+  margin-left: -7px;
+  font: inherit;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+}
+.inspector__name--edit:hover {
+  border-color: var(--panel-border);
+}
+.inspector__name--edit:focus {
+  border-color: #3b82f6;
+  outline: none;
+}
+.inspector__name--edit::placeholder {
+  color: var(--text);
+  opacity: 0.55;
+}
 .inspector__sub {
   font-family: var(--font-mono);
   font-size: 11px;

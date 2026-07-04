@@ -100,8 +100,46 @@ await page.locator(".tab__name", { hasText: "Main" }).click();
 await page.waitForTimeout(400);
 check(`embedded block follows the rename (got "${await headerText()}")`, (await headerText()) === "Stage Left");
 
+// Custom instance naming: select the block, rename it in the Inspector, and confirm the
+// custom label wins in the header — including over a subsequent tab rename — until cleared.
+await page.evaluate(() => {
+  const el = document.querySelector(".react-flow__node-block");
+  const o = { bubbles: true, view: window, button: 0 };
+  for (const t of ["mousedown", "mouseup", "click"]) el.dispatchEvent(new MouseEvent(t, o));
+});
+await page.waitForSelector(".inspector__name--edit", { timeout: 5000 });
+check(
+  "inspector rename input shows the tab name as placeholder",
+  (await page.locator(".inspector__name--edit").getAttribute("placeholder")) === "Stage Left",
+);
+await page.locator(".inspector__name--edit").fill("FOH copy");
+await page.waitForTimeout(300);
+check(`custom label shows in the header (got "${await headerText()}")`, (await headerText()) === "FOH copy");
+if (process.env.SHOT_DIR) {
+  await page.screenshot({ path: join(process.env.SHOT_DIR, "shot-block-rename.png") });
+}
+
+await page.locator(".tab__name", { hasText: "Stage Left" }).dblclick();
+await page.waitForSelector(".tab__edit", { timeout: 5000 });
+await page.locator(".tab__edit").fill("Stage Right");
+await page.keyboard.press("Enter");
+await page.waitForTimeout(300);
+await page.locator(".tab__name", { hasText: "Main" }).click();
+await page.waitForTimeout(400);
+check(`custom label survives a tab rename (got "${await headerText()}")`, (await headerText()) === "FOH copy");
+
+await page.evaluate(() => {
+  const el = document.querySelector(".react-flow__node-block");
+  const o = { bubbles: true, view: window, button: 0 };
+  for (const t of ["mousedown", "mouseup", "click"]) el.dispatchEvent(new MouseEvent(t, o));
+});
+await page.waitForSelector(".inspector__name--edit", { timeout: 5000 });
+await page.locator(".inspector__name--edit").fill("");
+await page.waitForTimeout(300);
+check(`clearing the label reverts to mirroring the tab (got "${await headerText()}")`, (await headerText()) === "Stage Right");
+
 await browser.close();
 await server.close();
 rmSync(SCRATCH, { force: true });
-console.log(process.exitCode ? "\n✗ FAILURES" : "\n✓ tab rename propagates to embedded blocks");
+console.log(process.exitCode ? "\n✗ FAILURES" : "\n✓ tab rename + custom instance naming verified");
 process.exit(process.exitCode ?? 0);

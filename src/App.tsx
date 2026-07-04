@@ -1251,6 +1251,20 @@ function AppInner() {
     [setNodes],
   );
 
+  // Name a block instance (p2-zonetab follow-up): a custom label overriding the mirrored
+  // tab name in its header — two embeds of one room can read "FOH copy" / "Monitor copy".
+  // Empty reverts to mirroring. Snapshot comes from the input's onFocus (one undo per burst).
+  const setBlockLabel = useCallback(
+    (nodeId: string, label: string) => {
+      setNodes((nds) =>
+        nds.map((n) =>
+          n.id === nodeId && n.type === "block" ? { ...n, data: { ...n.data, label: label || undefined } } : n,
+        ),
+      );
+    },
+    [setNodes],
+  );
+
   // Open the editor on the single selected device.
   const editSelectedDevice = useCallback(() => {
     if (!inspectorDevice) return;
@@ -2818,6 +2832,8 @@ function AppInner() {
           signalPins={inspectorDevice?.data.signalPins}
           onSetPin={setSignalPin}
           onEditInterface={inspectorBlock ? () => setCurateTabId(inspectorBlock.data.refDiagramId) : undefined}
+          onRenameInstance={inspectorBlock ? (label) => setBlockLabel(inspectorBlock.id, label) : undefined}
+          onRenameFocus={takeSnapshot}
         />
       </div>
 

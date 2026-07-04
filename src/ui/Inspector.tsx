@@ -11,6 +11,8 @@ export function Inspector({
   signalPins,
   onSetPin,
   onEditInterface,
+  onRenameInstance,
+  onRenameFocus,
 }: {
   model: DeviceModel | null;
   label?: string;
@@ -23,6 +25,11 @@ export function Inspector({
   /** When set, the selected node is a nested-tab block — show an action to curate the
    *  referenced tab's published interface (p2-zonetab Phase C). */
   onEditInterface?: () => void;
+  /** When set, the instance's display name is editable here — a custom label overriding the
+   *  mirrored tab name (empty reverts to mirroring). Blocks only, today. */
+  onRenameInstance?: (label: string) => void;
+  /** Snapshot hook for the rename input (one undo step per edit burst, like the cable ID). */
+  onRenameFocus?: () => void;
 }) {
   if (!model) {
     return (
@@ -36,7 +43,19 @@ export function Inspector({
   return (
     <aside className="inspector">
       <div className="inspector__label">Inspector</div>
-      <div className="inspector__name">{deviceTitle(model, label)}</div>
+      {onRenameInstance ? (
+        <input
+          className="inspector__name inspector__name--edit"
+          value={label ?? ""}
+          placeholder={deviceTitle(model)}
+          onFocus={onRenameFocus}
+          onChange={(e) => onRenameInstance(e.target.value)}
+          title="Name this instance — leave empty to follow the tab name"
+          aria-label="Instance name"
+        />
+      ) : (
+        <div className="inspector__name">{deviceTitle(model, label)}</div>
+      )}
       <div className="inspector__sub">
         {model.manufacturer ?? "—"} · {model.type ?? model.category}
       </div>
