@@ -60,7 +60,7 @@ import { pickRouter } from "./flow/router";
 import { collectObstacleRects } from "./flow/router/newRouter";
 import { measuredPortAnchors } from "./flow/router/anchors";
 import { planMakeRoom } from "./flow/makeRoom";
-import { detectTrunkCandidates, collapsedTrunkWaypoints, trunkId } from "./flow/trunks";
+import { detectTrunkCandidates, collapseTrunks, trunkId } from "./flow/trunks";
 import type { TrunkCandidate } from "./flow/trunks";
 import type { Pt } from "./flow/obstacleRoute";
 import { EdgeMarqueeSelect } from "./flow/EdgeMarqueeSelect";
@@ -689,12 +689,39 @@ function AppInner() {
       };
     }
 
-    // Collapsed trunks: replace each member's path with a shared, box-avoided spine + fan stubs,
-    // and place a count badge; expanded trunks keep normal member paths + a re-collapse badge.
+    // Every edge's base polyline from the router (pre-trunk) — the geometry the spine pass
+    // must not blindly cross, built exactly like the final map below.
+    const basePolyline = (e: CableEdgeType): Pt[] | null => {
+      const en = ends.get(e.id);
+      if (!en) return null;
+      const sHoriz = en.sourceSide === "L" || en.sourceSide === "R";
+      const tHoriz = en.targetSide === "L" || en.targetSide === "R";
+      const wp = waypoints.get(e.id);
+      if (wp && wp.length) {
+        const pts: Pt[] = [{ x: en.sx, y: en.sy }, ...wp.map((p) => ({ ...p })), { x: en.tx, y: en.ty }];
+        if (sHoriz) pts[1].y = en.sy;
+        else pts[1].x = en.sx;
+        if (tHoriz) pts[pts.length - 2].y = en.ty;
+        else pts[pts.length - 2].x = en.tx;
+        return pts;
+      }
+      return smoothStepPolyline(en.sx, en.sy, sHoriz, en.tx, en.ty, tHoriz);
+    };
+
+    // Collapsed trunks: replace each member's path with a shared spine + fan stubs, and place
+    // a count badge; expanded trunks keep normal member paths + a re-collapse badge. Spines
+    // route through the same discipline as cables (pruned box avoidance, comfort, crossing
+    // penalty vs everything already drawn), sequentially so bundles also avoid each other.
     const obstacles = collectObstacleRects(nodes).map((r) => r.rect);
     const trunkOverride = new Map<string, Pt[]>();
     const trunkBadges: { id: string; collapsed: boolean; label: string; x: number; y: number }[] = [];
     const trunkIds = new Set(activeTrunks.map((t) => t.id));
+    const collapsedMemberIds = new Set(activeTrunks.filter((t) => t.collapsed).flatMap((t) => t.memberConnectionIds));
+    const nonMemberPolylines = edges
+      .filter((e) => !collapsedMemberIds.has(e.id))
+      .map(basePolyline)
+      .filter((p): p is Pt[] => !!p);
+    const folded = collapseTrunks(activeTrunks, ends, obstacles, nonMemberPolylines);
     const anchor = (ids: string[]) => {
       const es = ids.map((id) => ends.get(id)).filter((e): e is NonNullable<typeof e> => !!e);
       const n = es.length || 1;
@@ -706,7 +733,7 @@ function AppInner() {
     for (const t of activeTrunks) {
       const label = t.label ?? `${t.memberConnectionIds.length}× ${t.signalKind}`;
       if (t.collapsed) {
-        const w = collapsedTrunkWaypoints(t, ends, obstacles);
+        const w = folded.get(t.id);
         if (w) {
           for (const [id, pts] of w.perEdge) trunkOverride.set(id, pts);
           trunkBadges.push({ id: t.id, collapsed: true, label, x: w.badge.x, y: w.badge.y });

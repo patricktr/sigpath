@@ -132,6 +132,47 @@ await page.waitForTimeout(400);
 t = await barText(page);
 check("after Unbundle the bar is plain cable context", !t.includes("Bundle ·") && t.includes("cable"));
 
+// 6. TWO co-located bundles must not overlap: their fan verticals stagger apart and each
+// spine routes with the crossing context (bundle A = m1+m2, bundle B = m3+m4).
+const makeBundle = async (a, b) => {
+  await page.mouse.click(400, 900);
+  await page.waitForTimeout(200);
+  await clickEdge(page, a, false);
+  await page.waitForTimeout(150);
+  await page.keyboard.down("Meta");
+  await clickEdge(page, b, true);
+  await page.keyboard.up("Meta");
+  await page.waitForTimeout(250);
+  await page.locator(".contextbar").getByRole("button", { name: "⧉ Bundle" }).click();
+  await page.waitForTimeout(400);
+};
+await makeBundle("m1", "m2");
+await makeBundle("m3", "m4");
+const fanX = await page.evaluate(() => {
+  // First vertical segment x of each member's drawn path = its bundle's fan-in line.
+  const firstVerticalX = (id) => {
+    const d = document.querySelector(`.react-flow__edge[data-id="${id}"] .react-flow__edge-path`)?.getAttribute("d") ?? "";
+    const pts = [];
+    for (const m of d.matchAll(/([MLQA])([^MLQA]*)/g)) {
+      const nums = (m[2].match(/-?\d*\.?\d+/g) ?? []).map(Number);
+      if ((m[1] === "M" || m[1] === "L") && nums.length >= 2) pts.push({ x: nums[0], y: nums[1] });
+      else if (m[1] === "Q" && nums.length >= 4) pts.push({ x: nums[0], y: nums[1] }, { x: nums[2], y: nums[3] });
+      else if (m[1] === "A" && nums.length >= 7) pts.push({ x: nums[5], y: nums[6] });
+    }
+    for (let i = 1; i < pts.length; i++) {
+      if (Math.abs(pts[i].x - pts[i - 1].x) < 0.75 && Math.abs(pts[i].y - pts[i - 1].y) > 4) return pts[i].x;
+    }
+    return null;
+  };
+  return { a: firstVerticalX("m1"), b: firstVerticalX("m3") };
+});
+check(
+  `co-located bundles stagger their fan lines (A@${Math.round(fanX.a ?? -1)} vs B@${Math.round(fanX.b ?? -1)})`,
+  fanX.a != null && fanX.b != null && Math.abs(fanX.a - fanX.b) >= 8,
+);
+check("four members draw bundle stripes", (await page.locator(".cable-bundle-stripe").count()) === 4);
+await page.screenshot({ path: join(SHOT, "shot-two-bundles.png") });
+
 await browser.close();
 await server.close();
 console.log(process.exitCode ? "\n✗ FAILURES" : "\n✓ bundle context bar verified end-to-end");

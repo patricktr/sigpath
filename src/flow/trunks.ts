@@ -1,7 +1,8 @@
 import type { CableEdgeType, SigNode } from "./types";
 import { nodePorts } from "./types";
 import type { Pt, Rect } from "./obstacleRoute";
-import { routeOrthogonal } from "./router/orthogonalRoute";
+import { crossContextOf, routeOrthogonalPruned } from "./router/orthogonalRoute";
+import type { CrossContext } from "./router/orthogonalRoute";
 import type { EdgeEnds } from "./router/types";
 import { deriveColumns } from "./makeRoom";
 import { groupForConnector } from "../schema";
@@ -82,27 +83,36 @@ export function detectTrunkCandidates(nodes: SigNode[], edges: CableEdgeType[], 
  * plus the spine's midpoint for the count badge. Members keep their own ports (CableEdge stitches
  * them), so the bundle stays fully traceable.
  */
+/** Default distance the fan points sit clear of the column edges — at the edge itself the
+ *  per-member fan stubs draw on top of the device border (invisible, so the used ports look
+ *  disconnected) and the cable-ID badges slide half-under the node. */
+const FAN_REACH = 32;
+/** Extra reach per co-located bundle, so two bundles sharing a column pair don't put their
+ *  fan verticals on the same line. */
+const FAN_STAGGER = 16;
+
 export function collapsedTrunkWaypoints(
   trunk: Pick<Trunk, "memberConnectionIds">,
   ends: Map<string, EdgeEnds>,
   obstacles: Rect[],
+  reach: number = FAN_REACH,
+  cross?: CrossContext,
 ): { perEdge: Map<string, Pt[]>; badge: Pt } | null {
   const members = trunk.memberConnectionIds.map((id) => ends.get(id)).filter((e): e is EdgeEnds => !!e);
   if (members.length < 2) return null;
 
-  // Fan points sit FAN_REACH clear of the column edges — at the edge itself the per-member
-  // fan stubs draw on top of the device border (invisible, so the used ports look
-  // disconnected) and the cable-ID badges slide half-under the node.
-  const FAN_REACH = 32;
-  const fanInX = Math.max(...members.map((e) => e.sx)) + FAN_REACH; // right of the rightmost source edge
-  const fanOutX = Math.min(...members.map((e) => e.tx)) - FAN_REACH; // left of the leftmost dest edge
+  const fanInX = Math.max(...members.map((e) => e.sx)) + reach; // right of the rightmost source edge
+  const fanOutX = Math.min(...members.map((e) => e.tx)) - reach; // left of the leftmost dest edge
   if (fanOutX <= fanInX) return null; // columns (nearly) overlap — skip (members route normally)
   const fanInY = members.reduce((a, e) => a + e.sy, 0) / members.length;
   const fanOutY = members.reduce((a, e) => a + e.ty, 0) / members.length;
 
-  // The spine itself avoids boxes (exclude the bundle's own endpoint devices via empty ownRects —
-  // the fan points already sit at the column edges, clear of the devices).
-  const spine = routeOrthogonal({ x: fanInX, y: fanInY, dir: "+x" }, { x: fanOutX, y: fanOutY, dir: "-x" }, obstacles, []) ?? [];
+  // The spine routes through the SAME machinery as ordinary cables: spatially pruned box
+  // avoidance, the comfort (don't-hug) penalty, and — via `cross` — the soft crossing
+  // penalty against everything already on the canvas (cables and earlier spines alike).
+  // Endpoint devices need no ownRects exclusion: the fan points sit clear of the columns.
+  const spine =
+    routeOrthogonalPruned({ x: fanInX, y: fanInY, dir: "+x" }, { x: fanOutX, y: fanOutY, dir: "-x" }, obstacles, [], undefined, cross) ?? [];
   const spineCore: Pt[] = [{ x: fanInX, y: fanInY }, ...spine, { x: fanOutX, y: fanOutY }];
 
   const perEdge = new Map<string, Pt[]>();
@@ -114,4 +124,41 @@ export function collapsedTrunkWaypoints(
   }
   const mid = spineCore[Math.floor(spineCore.length / 2)];
   return { perEdge, badge: { x: (fanInX + fanOutX) / 2, y: mid.y } };
+}
+
+/**
+ * Fold ALL collapsed trunks in one pass, with the same routing discipline as cables:
+ * each spine is routed against a crossing context seeded with every non-member cable's
+ * polyline, and each finished bundle joins the context — so spines avoid crossing cables
+ * and each other where a clean line exists. Co-located bundles (same column pair, hence
+ * the same base fan Xs) stagger their fan reach so their fan verticals fan out as separate
+ * lines instead of overlapping. Deterministic: trunks process in id order.
+ */
+export function collapseTrunks(
+  trunks: Trunk[],
+  ends: Map<string, EdgeEnds>,
+  obstacles: Rect[],
+  otherPolylines: Pt[][],
+): Map<string, { perEdge: Map<string, Pt[]>; badge: Pt }> {
+  const out = new Map<string, { perEdge: Map<string, Pt[]>; badge: Pt }>();
+  const collapsed = trunks.filter((t) => t.collapsed);
+  if (!collapsed.length) return out;
+  const ctx = crossContextOf(otherPolylines);
+  const bucketCount = new Map<string, number>();
+  for (const t of [...collapsed].sort((a, b) => (a.id < b.id ? -1 : 1))) {
+    const members = t.memberConnectionIds.map((id) => ends.get(id)).filter((e): e is EdgeEnds => !!e);
+    if (members.length < 2) continue;
+    const key = `${Math.round(Math.max(...members.map((e) => e.sx)))}|${Math.round(Math.min(...members.map((e) => e.tx)))}`;
+    const k = bucketCount.get(key) ?? 0;
+    bucketCount.set(key, k + 1);
+    const w = collapsedTrunkWaypoints(t, ends, obstacles, FAN_REACH + k * FAN_STAGGER, ctx);
+    if (!w) continue;
+    out.set(t.id, w);
+    for (const pts of w.perEdge.values()) {
+      const add = crossContextOf([pts]);
+      ctx.h.push(...add.h);
+      ctx.v.push(...add.v);
+    }
+  }
+  return out;
 }
