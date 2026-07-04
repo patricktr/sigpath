@@ -101,6 +101,21 @@ t = await barText(page);
 check("bar flips to Bundle context", t.includes("Bundle ·"));
 check("Unbundle available", t.includes("Unbundle"));
 check("Expand toggle available (created collapsed)", t.includes("Expand"));
+check("collapsed members draw the zebra bundle stripe", (await page.locator(".cable-bundle-stripe").count()) === 2);
+// Member ID badges must sit fully clear of the device boxes (they used to render
+// half-under the node when the fan point sat exactly at the device edge).
+check(
+  "member ID badges clear the device boxes",
+  await page.evaluate(() => {
+    const boxes = [...document.querySelectorAll(".react-flow__node-device")].map((el) => el.getBoundingClientRect());
+    return [...document.querySelectorAll(".cable-id-label")].every((el) => {
+      const b = el.getBoundingClientRect();
+      return !boxes.some(
+        (r) => b.left < r.right - 1 && r.left < b.right - 1 && b.top < r.bottom - 1 && r.top < b.bottom - 1,
+      );
+    });
+  }),
+);
 await page.screenshot({ path: join(SHOT, "shot-bundle-bar.png") });
 
 // 4. click empty pane to clear, then re-click a member of the collapsed bundle

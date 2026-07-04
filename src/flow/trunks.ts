@@ -90,9 +90,13 @@ export function collapsedTrunkWaypoints(
   const members = trunk.memberConnectionIds.map((id) => ends.get(id)).filter((e): e is EdgeEnds => !!e);
   if (members.length < 2) return null;
 
-  const fanInX = Math.max(...members.map((e) => e.sx)); // rightmost source-output edge
-  const fanOutX = Math.min(...members.map((e) => e.tx)); // leftmost dest-input edge
-  if (fanOutX <= fanInX) return null; // columns overlap — skip (members route normally)
+  // Fan points sit FAN_REACH clear of the column edges — at the edge itself the per-member
+  // fan stubs draw on top of the device border (invisible, so the used ports look
+  // disconnected) and the cable-ID badges slide half-under the node.
+  const FAN_REACH = 32;
+  const fanInX = Math.max(...members.map((e) => e.sx)) + FAN_REACH; // right of the rightmost source edge
+  const fanOutX = Math.min(...members.map((e) => e.tx)) - FAN_REACH; // left of the leftmost dest edge
+  if (fanOutX <= fanInX) return null; // columns (nearly) overlap — skip (members route normally)
   const fanInY = members.reduce((a, e) => a + e.sy, 0) / members.length;
   const fanOutY = members.reduce((a, e) => a + e.ty, 0) / members.length;
 

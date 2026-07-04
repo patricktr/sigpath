@@ -84,7 +84,14 @@ export function CableEdge({
 
   const gradient = data?.gradient;
   const gradientId = `cablegrad-${id}`;
-  const edgeStyle = gradient ? { ...style, stroke: `url(#${gradientId})` } : style;
+  const bundle = data?.trunkBundle;
+  let edgeStyle = gradient ? { ...style, stroke: `url(#${gradientId})` } : style;
+  if (bundle) {
+    // A collapsed-trunk member: all members overlap on one spine, so draw it heavier —
+    // the canvas-colored dash overlay below turns the fat line into a striped bundle.
+    const base = typeof edgeStyle?.strokeWidth === "number" ? edgeStyle.strokeWidth : 2;
+    edgeStyle = { ...edgeStyle, strokeWidth: base + 3 };
+  }
   const number = data?.number;
 
   // The cable ID rides near BOTH ports (just OUTSIDE each, along its exit stub), not at
@@ -100,7 +107,10 @@ export function CableEdge({
     pts.length > 1
       ? Math.abs(pts[pts.length - 1].x - pts[pts.length - 2].x) + Math.abs(pts[pts.length - 1].y - pts[pts.length - 2].y)
       : 0;
-  const insetFor = (run: number) => Math.min(34, Math.max(14, run - 26));
+  // Floor 30: a badge is ~54px wide, so anything closer straddles the device border and
+  // renders half-hidden under the node (nodes sit above edge labels). Better to overhang
+  // the first bend on a cramped run than to disappear under the box.
+  const insetFor = (run: number) => Math.min(34, Math.max(30, run - 26));
   const place = (x: number, y: number, pos: Position, run: number) => {
     switch (pos) {
       case Position.Left:
@@ -135,6 +145,7 @@ export function CableEdge({
         </defs>
       )}
       <BaseEdge id={id} path={path} markerEnd={markerEnd} style={edgeStyle} />
+      {bundle && <path d={path} className="cable-bundle-stripe" />}
       {number && (
         <EdgeLabelRenderer>
           <div

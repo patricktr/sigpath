@@ -753,6 +753,7 @@ function AppInner() {
       // Empty/absent = a clean straight run — CableEdge falls back to its smooth-step default.
       const wp = trunkOverride.get(e.id) ?? waypoints.get(e.id);
       if (wp && wp.length) data = { ...(data ?? { cableTypeId: "" }), waypoints: wp };
+      if (trunkOverride.has(e.id)) data = { ...(data ?? { cableTypeId: "" }), trunkBundle: true };
       return { ...e, style, animated, data };
     });
 
