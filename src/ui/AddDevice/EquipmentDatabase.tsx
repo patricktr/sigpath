@@ -1,10 +1,11 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { deviceTitle } from "../../schema";
 import type { DeviceModel } from "../../schema";
 import {
   compareModels,
   ioSummary,
   matchesQuery,
+  modelOnly,
   sourceBadge,
   typeLabel,
   type SortKey,
@@ -41,6 +42,15 @@ export function EquipmentDatabase({
   const [fType, setFType] = useState(ALL);
   const [fMfr, setFMfr] = useState(ALL);
   const [fSource, setFSource] = useState(ALL);
+  // Keyboard flow: the search bar owns focus from the moment the database opens, ↑/↓ walk
+  // the (filtered, sorted) rows, ↵ places the highlighted device — type-and-go, no mouse.
+  const [active, setActive] = useState(0);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const rowsRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    inputRef.current?.focus();
+  }, []);
 
   const types = useMemo(
     () => [ALL, ...Array.from(new Set(catalog.map(typeLabel))).sort()],
@@ -71,6 +81,31 @@ export function EquipmentDatabase({
   };
   const caret = (key: SortKey) => (key === sortKey ? (sortDir === 1 ? " ↑" : " ↓") : "");
 
+  // Any change to what's listed restarts the highlight at the top…
+  useEffect(() => {
+    setActive(0);
+  }, [q, fType, fMfr, fSource, sortKey, sortDir]);
+  // …and the highlighted row stays scrolled into view as ↑/↓ move it.
+  useEffect(() => {
+    rowsRef.current?.querySelector(".adv-db__row--active")?.scrollIntoView({ block: "nearest" });
+  }, [active]);
+
+  // On the search input only — the facet selects need their own arrow keys.
+  const onSearchKeyDown = (e: React.KeyboardEvent) => {
+    if (rows.length === 0) return;
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      setActive((i) => (i + 1) % rows.length);
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      setActive((i) => (i - 1 + rows.length) % rows.length);
+    } else if (e.key === "Enter") {
+      e.preventDefault();
+      const m = rows[active];
+      if (m) onPlace(m);
+    }
+  };
+
   return (
     <div className="adv-db" role="dialog" aria-label="Equipment database">
       <div className="adv-db__head">
@@ -81,9 +116,11 @@ export function EquipmentDatabase({
         <div className="adv-db__search">
           <SearchIcon size={15} />
           <input
+            ref={inputRef}
             className="adv-db__searchinput"
             value={q}
             onChange={(e) => setQ(e.target.value)}
+            onKeyDown={onSearchKeyDown}
             placeholder="Search…"
           />
         </div>
@@ -131,17 +168,24 @@ export function EquipmentDatabase({
         <span />
       </div>
 
-      <div className="adv-db__rows">
+      <div className="adv-db__rows" ref={rowsRef}>
         {rows.length === 0 ? (
           <div className="adv-emptynote">No devices match those filters.</div>
         ) : (
-          rows.map((m) => {
+          rows.map((m, i) => {
             const badge = sourceBadge(m.source);
             return (
-              <div key={m.id} className="adv-grid adv-db__row">
+              <div
+                key={m.id}
+                className={i === active ? "adv-grid adv-db__row adv-db__row--active" : "adv-grid adv-db__row"}
+                // mouseMOVE, not mouseenter: re-filtering re-renders rows under a stationary
+                // cursor and Chromium then fires enter events — which would steal the
+                // keyboard highlight on every keystroke. Real movement only.
+                onMouseMove={() => active !== i && setActive(i)}
+              >
                 <StarButton on={favs.has(m.id)} onToggle={() => onToggleFav(m.id)} />
                 <span className="adv-cell-model" title={deviceTitle(m)}>
-                  {deviceTitle(m)}
+                  {modelOnly(m)}
                 </span>
                 <span className="adv-cell-muted">{m.manufacturer ?? "—"}</span>
                 <span>
@@ -180,6 +224,9 @@ export function EquipmentDatabase({
       <div className="adv-db__footer">
         <span>
           Showing {rows.length} of {catalog.length}
+          <span className="adv-hint" style={{ marginLeft: 14 }}>
+            ↑↓ navigate &nbsp; ↵ add to canvas
+          </span>
         </span>
         <button type="button" className="adv-new" onClick={onCreate}>
           ＋ Create a new device

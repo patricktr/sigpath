@@ -32,6 +32,17 @@ export function typeLabel(model: DeviceModel): string {
   return model.type ?? model.category;
 }
 
+/** The bare model name for the database's Model column — the Manufacturer column already
+ *  says who makes it. Defensively strips a redundant manufacturer prefix should a catalog
+ *  entry bake it into the model string. */
+export function modelOnly(m: DeviceModel): string {
+  const mfr = m.manufacturer;
+  if (mfr && m.model.toLowerCase().startsWith(mfr.toLowerCase() + " ")) {
+    return m.model.slice(mfr.length + 1);
+  }
+  return m.model;
+}
+
 /** e.g. "4 in · 2 out · 8 I/O" — pure inputs, pure outputs, then bidirectional. */
 export function ioSummary(model: DeviceModel): string {
   const inN = model.ports.filter((p) => p.direction === "input").length;

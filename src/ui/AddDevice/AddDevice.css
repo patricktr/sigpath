@@ -309,7 +309,8 @@
   border-bottom: 1px solid #f5f7fa;
   font-size: 13px;
 }
-.adv-db__row:hover {
+.adv-db__row:hover,
+.adv-db__row--active {
   background: #f8fafc;
 }
 .adv-cell-model {
@@ -954,7 +955,8 @@
 }
 [data-theme="dark"] .adv-row--active,
 [data-theme="dark"] .adv-row:hover,
-[data-theme="dark"] .adv-db__row:hover {
+[data-theme="dark"] .adv-db__row:hover,
+[data-theme="dark"] .adv-db__row--active {
   background: #1b263d;
 }
 [data-theme="dark"] .adv-palette__footer,
