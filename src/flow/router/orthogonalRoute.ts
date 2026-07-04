@@ -134,6 +134,29 @@ export function routeOrthogonal(
   const maxX = Math.max(...xsRaw);
   const minY = Math.min(...ysRaw);
   const maxY = Math.max(...ysRaw);
+  // Candidate lines BESIDE existing cables: box corners alone leave open space lineless, so
+  // the crossing penalty can price a staircase crossing but has no grid line in the clear
+  // gap next to it — the route "goes out of its way to cross". A slot CROSS_LANE off each
+  // context segment inside the search area gives A* the zero-crossing option. Capped so a
+  // dense canvas can't explode the grid.
+  const CROSS_LANE = 16;
+  const MAX_CTX_LINES = 60;
+  if (cross) {
+    let added = 0;
+    for (const s of cross.v) {
+      if (added >= MAX_CTX_LINES) break;
+      if (s.pos < minX || s.pos > maxX || s.hi < minY || s.lo > maxY) continue;
+      xsRaw.push(Math.max(minX, s.pos - CROSS_LANE), Math.min(maxX, s.pos + CROSS_LANE));
+      added++;
+    }
+    added = 0;
+    for (const s of cross.h) {
+      if (added >= MAX_CTX_LINES) break;
+      if (s.pos < minY || s.pos > maxY || s.hi < minX || s.lo > maxX) continue;
+      ysRaw.push(Math.max(minY, s.pos - CROSS_LANE), Math.min(maxY, s.pos + CROSS_LANE));
+      added++;
+    }
+  }
   xsRaw.push(minX - PAD, maxX + PAD);
   ysRaw.push(minY - PAD, maxY + PAD);
 
