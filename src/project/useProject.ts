@@ -182,9 +182,30 @@ export function useProject(initial: EditorDiagram[], opts: Options) {
   const renameDiagram = useCallback(
     (id: string, name: string) => {
       takeSnapshot();
-      setDiagrams((ds) => ds.map((d) => (d.id === id ? { ...d, name } : d)));
+      // A block is a REFERENCE — its header mirrors the tab name, so renaming the tab
+      // renames every embed too (in every diagram's stored nodes AND the live canvas).
+      // An instance's custom data.label, when set, still wins in the header.
+      const renameRefs = (nodes: SigNode[]): { nodes: SigNode[]; hit: boolean } => {
+        let hit = false;
+        const next = nodes.map((n) => {
+          if (n.type !== "block" || n.data.refDiagramId !== id) return n;
+          hit = true;
+          return { ...n, data: { ...n.data, model: { ...n.data.model, model: name } } };
+        });
+        return { nodes: hit ? next : nodes, hit };
+      };
+      const cur = synced();
+      setDiagrams(
+        cur.map((d) => {
+          const base = d.id === id ? { ...d, name } : d;
+          const r = renameRefs(base.nodes);
+          return r.hit ? { ...base, nodes: r.nodes } : base;
+        }),
+      );
+      const live = renameRefs(nodesRef.current);
+      if (live.hit) setNodes(live.nodes);
     },
-    [takeSnapshot],
+    [takeSnapshot, synced, setNodes, nodesRef],
   );
 
   /** Update the active diagram's cable trunks (p2-trunk) — an undoable, persisted edit. The
