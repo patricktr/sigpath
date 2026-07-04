@@ -73,10 +73,19 @@
 }
 
 .curate__meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
   padding: 8px 16px;
   color: var(--text-faint);
   font-size: 11px;
   border-bottom: 1px solid var(--panel-border);
+}
+.curate__bulk {
+  display: inline-flex;
+  gap: 6px;
+  flex-shrink: 0;
 }
 
 .curate__empty {

@@ -138,8 +138,28 @@ await page.locator(".inspector__name--edit").fill("");
 await page.waitForTimeout(300);
 check(`clearing the label reverts to mirroring the tab (got "${await headerText()}")`, (await headerText()) === "Stage Right");
 
+// Bulk hide/show in the published-interface panel (block still selected from above).
+await page.locator(".inspector__interface").click();
+await page.waitForSelector(".curate", { timeout: 5000 });
+const metaText = () => page.evaluate(() => document.querySelector(".curate__meta")?.textContent ?? "");
+check("curate panel opens showing all ports", (await metaText()).includes("2 of 2 ports shown"));
+await page.locator(".curate__bulk button", { hasText: "Hide all" }).click();
+await page.waitForTimeout(300);
+check("Hide all hides every unwired port", (await metaText()).includes("0 of 2 ports shown"));
+check(
+  "Hide all disables itself once nothing is hideable",
+  await page.locator(".curate__bulk button", { hasText: "Hide all" }).isDisabled(),
+);
+await page.locator(".curate__bulk button", { hasText: "Show all" }).click();
+await page.waitForTimeout(300);
+check("Show all restores every port", (await metaText()).includes("2 of 2 ports shown"));
+check(
+  "Show all disables itself once nothing is hidden",
+  await page.locator(".curate__bulk button", { hasText: "Show all" }).isDisabled(),
+);
+
 await browser.close();
 await server.close();
 rmSync(SCRATCH, { force: true });
-console.log(process.exitCode ? "\n✗ FAILURES" : "\n✓ tab rename + custom instance naming verified");
+console.log(process.exitCode ? "\n✗ FAILURES" : "\n✓ tab rename + instance naming + bulk hide/show verified");
 process.exit(process.exitCode ?? 0);

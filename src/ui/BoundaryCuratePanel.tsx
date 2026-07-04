@@ -62,6 +62,13 @@ export function BoundaryCuratePanel({
   };
 
   const visibleCount = ports.filter((p) => !p.hidden).length;
+  const hiddenCount = ports.length - visibleCount;
+  // Bulk toggles — each a single onChange, so one undo step. Wired ports are exempt from
+  // "Hide all" for the same reason their row toggle is disabled (hiding would orphan a run).
+  const hideableCount = ports.filter((p) => !p.hidden && !wiredPortIds.has(p.id)).length;
+  const hideAll = () =>
+    onChange(ports.map((p) => (!p.hidden && !wiredPortIds.has(p.id) ? { ...p, hidden: true } : p)));
+  const showAll = () => onChange(ports.map((p) => (p.hidden ? { ...p, hidden: false } : p)));
 
   return (
     <div className="curate-scrim" onMouseDown={onClose}>
@@ -88,11 +95,39 @@ export function BoundaryCuratePanel({
           </div>
         </header>
         <div className="curate__meta">
-          {referencedBy > 0
-            ? `Embedded as a block in ${referencedBy} ${referencedBy === 1 ? "place" : "places"}`
-            : "Not embedded yet"}
-          {" · "}
-          {visibleCount} of {ports.length} ports shown
+          <span>
+            {referencedBy > 0
+              ? `Embedded as a block in ${referencedBy} ${referencedBy === 1 ? "place" : "places"}`
+              : "Not embedded yet"}
+            {" · "}
+            {visibleCount} of {ports.length} ports shown
+          </span>
+          {ports.length > 0 && (
+            <span className="curate__bulk">
+              <button
+                type="button"
+                className="curate__eye"
+                onClick={hideAll}
+                disabled={hideableCount === 0}
+                title={
+                  hideableCount === 0
+                    ? "Nothing left to hide (wired ports stay shown)"
+                    : "Hide every port a cable isn't wired to"
+                }
+              >
+                Hide all
+              </button>
+              <button
+                type="button"
+                className="curate__eye"
+                onClick={showAll}
+                disabled={hiddenCount === 0}
+                title="Show every hidden port"
+              >
+                Show all
+              </button>
+            </span>
+          )}
         </div>
 
         {ports.length === 0 ? (
