@@ -174,6 +174,24 @@ check(
   fanX.a != null && fanX.b != null && Math.abs(fanX.a - fanX.b) >= 8,
 );
 check("each of the two bundles draws exactly one striped spine", (await page.locator(".cable-bundle-stripe").count()) === 2);
+// Overlay pills (2 badges + the remaining "Bundle 4×?" offer chip share this corridor) must
+// never cover each other — the de-overlap pass stacks colliding pills vertically.
+const pillOverlaps = await page.evaluate(() => {
+  const rects = [...document.querySelectorAll(".trunk-chip")].map((el) => el.getBoundingClientRect());
+  let n = 0;
+  for (let i = 0; i < rects.length; i++) {
+    for (let j = i + 1; j < rects.length; j++) {
+      const a = rects[i];
+      const b = rects[j];
+      if (a.left < b.right - 2 && b.left < a.right - 2 && a.top < b.bottom - 2 && b.top < a.bottom - 2) n++;
+    }
+  }
+  return { pills: rects.length, overlaps: n };
+});
+check(
+  `overlay pills never collide (${pillOverlaps.pills} pills, ${pillOverlaps.overlaps} overlaps)`,
+  pillOverlaps.pills >= 3 && pillOverlaps.overlaps === 0,
+);
 await page.screenshot({ path: join(SHOT, "shot-two-bundles.png") });
 
 await browser.close();

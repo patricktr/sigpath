@@ -753,6 +753,54 @@ function AppInner() {
       (c) => !trunkIds.has(c.id) && !dismissedTrunks.has(c.id),
     );
 
+    // Overlay pills (trunk badges + bundle-offer chips) anchor at corridor midpoints, and
+    // two corridors — or a badge and an offer — can share one. Stack colliding pills
+    // vertically so they never cover each other. Footprints are estimated in flow units
+    // (the ViewportPortal renders them 1:1), so the layout is zoom-independent.
+    {
+      type Pill = { x: number; y: number; w: number; h: number; move: (dy: number) => void };
+      const pills: Pill[] = [
+        ...trunkBadges.map((b): Pill => ({
+          x: b.x,
+          y: b.y,
+          w: b.label.length * 7.5 + 44,
+          h: 30,
+          move: (dy) => {
+            b.y += dy;
+          },
+        })),
+        ...candidates.map((c): Pill => {
+          const label = `Bundle ${c.memberConnectionIds.length}× ${c.signalKind}?`;
+          return {
+            x: c.corridorX,
+            y: c.anchorY,
+            w: label.length * 7.5 + 150,
+            h: 34,
+            move: (dy) => {
+              c.anchorY += dy;
+            },
+          };
+        }),
+      ];
+      pills.sort((p, q) => p.y - q.y || p.x - q.x);
+      const placed: Pill[] = [];
+      for (const p of pills) {
+        for (let i = 0, guard = 0; i < placed.length && guard < 24; i++) {
+          const q = placed[i];
+          const overlapX = Math.abs(p.x - q.x) < (p.w + q.w) / 2 + 8;
+          const overlapY = Math.abs(p.y - q.y) < (p.h + q.h) / 2 + 6;
+          if (overlapX && overlapY) {
+            const dy = q.y + (q.h + p.h) / 2 + 8 - p.y;
+            p.y += dy;
+            p.move(dy);
+            i = -1; // re-check against everything from the new spot
+            guard++;
+          }
+        }
+        placed.push(p);
+      }
+    }
+
     const styled: CableEdgeType[] = edges.map((e) => {
       let style: CSSProperties;
       let animated = e.animated;
