@@ -33,6 +33,7 @@ const CHECK = args.includes("--check");
 const BOXCHECK = args.includes("--boxcheck");
 const MAKEROOM = args.includes("--makeroom");
 const TRUNK = args.includes("--trunk");
+const ARRANGE = args.includes("--arrange");
 const ROUTER = (args.find((a) => a.startsWith("--router=")) ?? "--router=legacy").split("=")[1];
 
 const SELFTEST = args.includes("--selftest");
@@ -45,6 +46,8 @@ const metricsMod = await server.ssrLoadModule("/src/flow/routeMetrics.ts");
 const { metricsFromResult, polylinesFromResult, boxInteriorHits, routeCrossings, totalCrossings, totalOverlaps, bendCount } = metricsMod;
 const { planMakeRoom } = await server.ssrLoadModule("/src/flow/makeRoom.ts");
 const { detectTrunkCandidates, collapsedTrunkWaypoints } = await server.ssrLoadModule("/src/flow/trunks.ts");
+const { arrangeDiagram } = await server.ssrLoadModule("/src/flow/arrange.ts");
+const { isPortBearing } = await server.ssrLoadModule("/src/flow/types.ts");
 
 // Table-driven unit tests for the canonical crossing/overlap/bend counters — the keystone of
 // the gate (design §3.4 / P1). Hand-built polylines with known answers.
@@ -215,6 +218,81 @@ if (TRUNK) {
   const pass = mc.length === 1 && mc[0].memberConnectionIds.length === 4 && !!collapsedTrunkWaypoints(mc[0], r.ends, collectObstacleRects(diagrams[0].nodes).map((x) => x.rect));
   console.log(pass ? `\n✓ trunk detection finds the 4-cable matrix bundle and collapses it` : `\n✗ trunk detection failed`);
   process.exit(pass ? 0 : 1);
+}
+
+// Auto-arrange gate (p2-autoarrangezones): every mode on every fixture must yield a layout
+// with (a) zero node overlaps, (b) zone members inside their re-fitted zone, (c) NO routing
+// give-ups, (d) zero box-interior hits — and "flow" must not route WORSE than the hand
+// layout on crossings (informational for the other modes, which optimize different things).
+if (ARRANGE) {
+  const rectsOverlap = (a, b) => a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h;
+  const sizeOf = (n) => ({
+    w: n.measured?.width ?? (typeof n.width === "number" ? n.width : 168),
+    h: n.measured?.height ?? (typeof n.height === "number" ? n.height : 96),
+  });
+  let failures = 0;
+  for (const f of fixtures) {
+    const { diagrams } = fromDocument(parseDocument(readFileSync(join(FIX_DIR, f), "utf8")));
+    for (const d of diagrams) {
+      if (!d.edges.length) continue;
+      const handMetrics = metricsFromResult(router.route({ nodes: d.nodes, edges: d.edges }));
+      for (const mode of ["flow", "zones", "hub", "grid"]) {
+        const arranged = arrangeDiagram(d.nodes, d.edges, mode);
+        const bearing = arranged.filter((n) => isPortBearing(n));
+        const issues = [];
+        for (let i = 0; i < bearing.length; i++) {
+          for (let j = i + 1; j < bearing.length; j++) {
+            const a = { ...bearing[i].position, ...sizeOf(bearing[i]) };
+            const b = { ...bearing[j].position, ...sizeOf(bearing[j]) };
+            if (rectsOverlap(a, b)) issues.push(`overlap ${bearing[i].id}/${bearing[j].id}`);
+          }
+        }
+        if (mode !== "grid") {
+          for (const z of arranged.filter((n) => n.type === "zone")) {
+            const zr = { ...z.position, w: z.width ?? 300, h: z.height ?? 200 };
+            for (const m of bearing) {
+              const c = { x: m.position.x + sizeOf(m).w / 2, y: m.position.y + sizeOf(m).h / 2 };
+              const inOld = d.nodes.some((n) => n.id === z.id) &&
+                (() => {
+                  const oz = d.nodes.find((n) => n.id === z.id);
+                  const on = d.nodes.find((n) => n.id === m.id);
+                  const ozr = { x: oz.position.x, y: oz.position.y, w: oz.width ?? 300, h: oz.height ?? 200 };
+                  const oc = { x: on.position.x + sizeOf(on).w / 2, y: on.position.y + sizeOf(on).h / 2 };
+                  return oc.x >= ozr.x && oc.x <= ozr.x + ozr.w && oc.y >= ozr.y && oc.y <= ozr.y + ozr.h;
+                })();
+              const inNew = c.x >= zr.x && c.x <= zr.x + zr.w && c.y >= zr.y && c.y <= zr.y + zr.h;
+              if (inOld && !inNew) issues.push(`zone ${z.id} lost member ${m.id}`);
+            }
+          }
+        }
+        const result = router.route({ nodes: arranged, edges: d.edges });
+        if (result.giveUps?.length) issues.push(`${result.giveUps.length} routing give-up(s)`);
+        const cores = collectObstacleRects(arranged)
+          .map((r) => ({ x: r.rect.x + BOXCHECK_INSET, y: r.rect.y + BOXCHECK_INSET, w: r.rect.w - 2 * BOXCHECK_INSET, h: r.rect.h - 2 * BOXCHECK_INSET }))
+          .filter((r) => r.w > 0 && r.h > 0);
+        for (const { id, pts } of polylinesFromResult(result)) {
+          if (boxInteriorHits(pts, cores) > 0) issues.push(`box hit on ${id}`);
+        }
+        const m = metricsFromResult(result);
+        if (mode === "flow" && m.crossings > handMetrics.crossings) {
+          issues.push(`flow crossings ${m.crossings} > hand layout ${handMetrics.crossings}`);
+        }
+        const tag = `${f}/${d.name} [${mode}]`;
+        if (issues.length) {
+          console.error(`  ✗ ${tag}: ${issues.slice(0, 5).join("; ")}${issues.length > 5 ? ` (+${issues.length - 5})` : ""}`);
+          failures += issues.length;
+        } else {
+          console.log(`  ✓ ${tag}: crossings ${m.crossings} (hand ${handMetrics.crossings}), bends ${m.bends}`);
+        }
+      }
+    }
+  }
+  if (failures) {
+    console.error(`\n✗ ${failures} arrange violation(s)`);
+    process.exit(1);
+  }
+  console.log(`\n✓ arrange gate: clean layouts in every mode`);
+  process.exit(0);
 }
 
 if (WRITE) {

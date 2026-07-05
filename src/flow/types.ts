@@ -1,5 +1,5 @@
 import type { Node, Edge } from "@xyflow/react";
-import type { DeviceModel, CableTypeId, GradeId, BoundaryPort, Port, Trunk, InstallStatus } from "../schema";
+import type { DeviceModel, CableTypeId, GradeId, BoundaryPort, Port, Trunk, InstallStatus, SavedLayout } from "../schema";
 import type { Pt } from "./obstacleRoute";
 import type { Hop } from "./cableHops";
 
@@ -141,4 +141,6 @@ export type EditorDiagram = {
   /** Install checklist: received/installed count per device model id (p3-cableschedule).
    *  Diagram-level like `trunks`; off the undo stack. Absent ⇒ nothing received yet. */
   bomProgress?: Record<string, number>;
+  /** Named, user-saved canvas layouts (p2-autoarrangezones). Diagram-level like `trunks`. */
+  layouts?: SavedLayout[];
 };

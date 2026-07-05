@@ -16,10 +16,11 @@ import type { SignalKind } from "./signals";
  * added the optional `Diagram.trunks` (collapsible cable bundles, p2-trunk). v7 (2026-07-01)
  * added install-checklist state (p3-cableschedule): the optional `Connection.install` status
  * and the optional `Diagram.bomProgress` received-counts map. v8 (2026-07-01) added the optional
- * `Project.bomRules` (spare/overage policy, p3-bomrules). All additive, so an older file loads
- * unchanged — a missing field reads as absent.
+ * `Project.bomRules` (spare/overage policy, p3-bomrules). v9 (2026-07-05) added the optional
+ * `Diagram.layouts` — named, user-saved canvas layouts (p2-autoarrangezones). All additive, so
+ * an older file loads unchanged — a missing field reads as absent.
  */
-export const SIGPATH_SCHEMA_VERSION = 8;
+export const SIGPATH_SCHEMA_VERSION = 9;
 
 /** A labeled, colored region grouping devices (stage, rack, control room). */
 export type Zone = {
@@ -62,6 +63,23 @@ export type Diagram = {
   /** Install checklist: received/installed count per device model id (p3-cableschedule).
    *  Absent ⇒ nothing received yet. */
   bomProgress?: Record<string, number>;
+  /** Named, user-saved canvas layouts (p2-autoarrangezones). Absent ⇒ none. */
+  layouts?: SavedLayout[];
+};
+
+/**
+ * A named snapshot of where everything sits on the canvas (p2-autoarrangezones): node
+ * positions, zone sizes (zones resize when arranged), and manual cable jogs. Applying a
+ * layout only moves what it knows about — nodes added after the layout was saved stay put.
+ */
+export type SavedLayout = {
+  id: string;
+  name: string;
+  positions: Record<string, { x: number; y: number }>;
+  /** Zone rect sizes captured with the layout. */
+  zoneSizes?: Record<string, { w: number; h: number }>;
+  /** Manual lane nudges (Connection.jogOffset) captured with the layout. */
+  jogs?: Record<string, number>;
 };
 
 /**

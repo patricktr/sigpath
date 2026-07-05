@@ -126,6 +126,7 @@ export function editorToDiagram(d: EditorDiagram): Diagram {
     ...(d.boundary ? { boundary: d.boundary } : {}),
     ...(d.trunks?.length ? { trunks: d.trunks } : {}),
     ...(d.bomProgress && Object.keys(d.bomProgress).length ? { bomProgress: d.bomProgress } : {}),
+    ...(d.layouts?.length ? { layouts: d.layouts } : {}),
   };
 }
 
@@ -204,6 +205,7 @@ function diagramToEditor(d: Diagram, boundaryById: BoundaryLookup): EditorDiagra
     ...(d.boundary ? { boundary: d.boundary } : {}),
     ...(d.trunks ? { trunks: d.trunks } : {}),
     ...(d.bomProgress ? { bomProgress: d.bomProgress } : {}),
+    ...(d.layouts ? { layouts: d.layouts } : {}),
   };
 }
 

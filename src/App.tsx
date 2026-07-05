@@ -27,7 +27,9 @@ import { autoBoundaryName, hasBoundaryDrift, planBoundaryRefresh } from "./flow/
 import { deriveBoundary, flatten, wiredBoundaryPortIds } from "./flow/nesting";
 import { nodesInZone } from "./flow/zoneMembership";
 import { CableEdge } from "./flow/CableEdge";
-import { arrangeLeftToRight } from "./flow/autoLayout";
+import { arrangeDiagram } from "./flow/arrange";
+import type { ArrangeMode } from "./flow/arrange";
+import { ArrangeMenu } from "./ui/ArrangeMenu";
 import { bulkClick, EMPTY_BULK, sourceOrdinal, bulkStatus, BulkPatchContext } from "./flow/bulkPatch";
 import type { BulkState, BulkPortRef, BulkPatchActions } from "./flow/bulkPatch";
 import { isPortBearing, nodePorts } from "./flow/types";
@@ -183,6 +185,7 @@ function AppInner() {
     addDiagram,
     renameDiagram,
     setActiveTrunks,
+    setActiveLayouts,
     setActiveBomProgress,
     reorderDiagrams,
     deleteDiagram,
@@ -533,12 +536,34 @@ function AppInner() {
     setStatus("Added note");
   }, [setNodes, takeSnapshot]);
 
-  const handleArrange = useCallback(() => {
-    takeSnapshot();
-    setNodes((nds) => arrangeLeftToRight(nds, edgesRef.current));
-    window.setTimeout(() => rf.current?.fitView({ duration: 400, padding: 0.2 }), 50);
-    setStatus("Arranged left-to-right");
-  }, [setNodes, takeSnapshot]);
+  // Arrange (p2-autoarrangezones): four one-shot modes; the toolbar button and the native
+  // menu item both re-run the last-used mode (persisted). "Around a hub" uses the single
+  // selected device as the hub when there is one, else auto-detects the busiest device.
+  const [arrangeMode, setArrangeMode] = useState<ArrangeMode>(() => {
+    const stored = localStorage.getItem("sigpath.arrangeMode");
+    return stored === "flow" || stored === "zones" || stored === "hub" || stored === "grid" ? stored : "flow";
+  });
+  const handleArrangeMode = useCallback(
+    (mode: ArrangeMode) => {
+      takeSnapshot();
+      const selected = nodesRef.current.filter((n) => n.selected && isPortBearing(n));
+      const hubId = mode === "hub" && selected.length === 1 ? selected[0].id : undefined;
+      setNodes((nds) => arrangeDiagram(nds, edgesRef.current, mode, { hubId }));
+      setArrangeMode(mode);
+      try {
+        localStorage.setItem("sigpath.arrangeMode", mode);
+      } catch {
+        /* private mode etc. */
+      }
+      window.setTimeout(() => rf.current?.fitView({ duration: 400, padding: 0.2 }), 50);
+      const label = { flow: "left-to-right by signal flow", zones: "by zone", hub: "around the hub", grid: "as a compact grid" }[mode];
+      setStatus(`Arranged ${label}`);
+    },
+    [setNodes, takeSnapshot],
+  );
+  const arrangeModeRef = useRef(arrangeMode);
+  arrangeModeRef.current = arrangeMode;
+  const handleArrange = useCallback(() => handleArrangeMode(arrangeModeRef.current), [handleArrangeMode]);
 
   // Make room / Tidy: widen congested routing channels by nudging device columns apart, then
   // let the router reroute. Opt-in, crossing-guarded, and a single undo step — never silent.
@@ -657,6 +682,77 @@ function AppInner() {
     [diagrams, activeId],
   );
   const [dismissedTrunks, setDismissedTrunks] = useState<Set<string>>(new Set());
+
+  // Saved layouts (p2-autoarrangezones): named position snapshots per diagram, persisted.
+  const activeLayouts = useMemo(
+    () => diagrams.find((d) => d.id === activeId)?.layouts ?? [],
+    [diagrams, activeId],
+  );
+  const handleSaveLayout = useCallback(
+    (rawName: string) => {
+      const positions: Record<string, { x: number; y: number }> = {};
+      const zoneSizes: Record<string, { w: number; h: number }> = {};
+      for (const n of nodesRef.current) {
+        positions[n.id] = { x: n.position.x, y: n.position.y };
+        if (n.type === "zone") {
+          zoneSizes[n.id] = {
+            w: n.measured?.width ?? (typeof n.width === "number" ? n.width : 300),
+            h: n.measured?.height ?? (typeof n.height === "number" ? n.height : 200),
+          };
+        }
+      }
+      const jogs: Record<string, number> = {};
+      for (const e of edgesRef.current) if (e.data?.jogOffset != null) jogs[e.id] = e.data.jogOffset;
+      setActiveLayouts((ls) => {
+        const name = rawName.trim() || `Layout ${ls.length + 1}`;
+        return [
+          ...ls,
+          {
+            id: crypto.randomUUID(),
+            name,
+            positions,
+            ...(Object.keys(zoneSizes).length ? { zoneSizes } : {}),
+            ...(Object.keys(jogs).length ? { jogs } : {}),
+          },
+        ];
+      });
+      setStatus(`Saved layout “${rawName.trim() || "Layout"}”`);
+    },
+    [setActiveLayouts],
+  );
+  const handleApplyLayout = useCallback(
+    (id: string) => {
+      const layout = activeLayouts.find((l) => l.id === id);
+      if (!layout) return;
+      takeSnapshot();
+      setNodes((nds) =>
+        nds.map((n) => {
+          let next = n;
+          const p = layout.positions[n.id];
+          if (p) next = { ...next, position: { ...p } };
+          const z = layout.zoneSizes?.[n.id];
+          if (z && n.type === "zone") {
+            next = { ...next, width: z.w, height: z.h, style: { ...next.style, width: z.w, height: z.h } };
+          }
+          return next;
+        }),
+      );
+      setEdges((eds) =>
+        eds.map((e) => {
+          const jog = layout.jogs?.[e.id];
+          if (jog === e.data?.jogOffset) return e;
+          return { ...e, data: { ...(e.data ?? { cableTypeId: "" }), jogOffset: jog } };
+        }),
+      );
+      window.setTimeout(() => rf.current?.fitView({ duration: 400, padding: 0.2 }), 50);
+      setStatus(`Applied layout “${layout.name}”`);
+    },
+    [activeLayouts, setNodes, setEdges, takeSnapshot],
+  );
+  const handleDeleteLayout = useCallback(
+    (id: string) => setActiveLayouts((ls) => ls.filter((l) => l.id !== id)),
+    [setActiveLayouts],
+  );
 
   // Routing + validation styling + trunk collapse, in one pass. The router (P0 lossless lift →
   // P3 general router) gives interior waypoints, jog info, and endpoints; we then overlay
@@ -2327,6 +2423,14 @@ function AppInner() {
         >
           Revisions
         </button>
+        <ArrangeMenu
+          lastMode={arrangeMode}
+          layouts={activeLayouts}
+          onArrange={handleArrangeMode}
+          onApplyLayout={handleApplyLayout}
+          onSaveLayout={handleSaveLayout}
+          onDeleteLayout={handleDeleteLayout}
+        />
         <button
           type="button"
           className="tbtn"

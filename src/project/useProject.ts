@@ -8,7 +8,7 @@ import { boundaryHash, planBoundaryRefresh } from "../flow/boundaryDrift";
 import { emptyEditorDiagram, fromDocument, synthesizeBlockModel, toDocument } from "../io/serialize";
 import { pruneRevisions, snapshotHash } from "./revisions";
 import { SIGPATH_SCHEMA_VERSION, DEFAULT_BOM_RULES } from "../schema";
-import type { BomRules, BoundaryPort, Build, Revision, RevisionSnapshot, SigpathDocument, SignalProfile, Trunk } from "../schema";
+import type { BomRules, BoundaryPort, Build, Revision, RevisionSnapshot, SavedLayout, SigpathDocument, SignalProfile, Trunk } from "../schema";
 import { loadDefaultBomRules } from "../library/userPrefs";
 
 type Options = {
@@ -206,6 +206,16 @@ export function useProject(initial: EditorDiagram[], opts: Options) {
       if (live.hit) setNodes(live.nodes);
     },
     [takeSnapshot, synced, setNodes, nodesRef],
+  );
+
+  /** Update the active diagram's saved layouts (p2-autoarrangezones) — an undoable,
+   *  persisted edit, exactly like trunks. */
+  const setActiveLayouts = useCallback(
+    (updater: (layouts: SavedLayout[]) => SavedLayout[]) => {
+      takeSnapshot();
+      setDiagrams((ds) => ds.map((d) => (d.id === activeId ? { ...d, layouts: updater(d.layouts ?? []) } : d)));
+    },
+    [takeSnapshot, activeId],
   );
 
   /** Update the active diagram's cable trunks (p2-trunk) — an undoable, persisted edit. The
@@ -577,6 +587,7 @@ export function useProject(initial: EditorDiagram[], opts: Options) {
     addDiagram,
     renameDiagram,
     setActiveTrunks,
+    setActiveLayouts,
     setActiveBomProgress,
     reorderDiagrams,
     deleteDiagram,
