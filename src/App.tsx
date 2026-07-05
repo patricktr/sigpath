@@ -78,6 +78,7 @@ import {
   confirmDeleteDiagram,
   confirmPromoteZone,
   confirmRefreshBoundary,
+  confirmSuspiciousSave,
   saveText,
   saveBinary,
 } from "./io/files";
@@ -1898,6 +1899,24 @@ function AppInner() {
     [driftedTabIds, handleRefreshBoundary, deep],
   );
 
+  // Data-loss tripwire (the test4.sigpath incident): a save that would write an EMPTY
+  // project while its embedded revision history says it used to contain gear is almost
+  // certainly leaked/corrupted state, not intent — confirm before letting it overwrite
+  // anything. Runs BEFORE captureRevision so cancelling doesn't pollute the history.
+  const confirmNotSuspicious = useCallback(async (): Promise<boolean> => {
+    const probe = getDocument();
+    const live = probe.project.diagrams.reduce((s, d) => s + (d.devices?.length ?? 0), 0);
+    if (live > 0) return true;
+    const fromHistory = Math.max(
+      0,
+      ...(probe.project.revisions ?? []).map((r) =>
+        r.snapshot.diagrams.reduce((s: number, d) => s + (d.devices?.length ?? 0), 0),
+      ),
+    );
+    if (fromHistory === 0) return true; // genuinely fresh project — save freely
+    return confirmSuspiciousSave(fromHistory);
+  }, [getDocument]);
+
   const handleSave = useCallback(async (): Promise<boolean> => {
     try {
       let path = currentPath;
@@ -1905,6 +1924,7 @@ function AppInner() {
         path = await promptSavePath(`${projectName}.sigpath`);
         if (!path) return false; // cancelled
       }
+      if (!(await confirmNotSuspicious())) return false;
       captureRevision(); // record a save point before serializing
       await writeTextToPath(path, JSON.stringify(getDocument(), null, 2));
       setCurrentPath(path);
@@ -1916,13 +1936,14 @@ function AppInner() {
       setStatus(`Save failed: ${String(err)}`);
       return false;
     }
-  }, [currentPath, projectName, getDocument, setProjectName, captureRevision]);
+  }, [currentPath, projectName, getDocument, setProjectName, captureRevision, confirmNotSuspicious]);
 
   // Save As always prompts for a fresh path (File ▸ Save As).
   const handleSaveAs = useCallback(async (): Promise<boolean> => {
     try {
       const path = await promptSavePath(`${projectName}.sigpath`);
       if (!path) return false;
+      if (!(await confirmNotSuspicious())) return false;
       captureRevision(); // record a save point before serializing
       await writeTextToPath(path, JSON.stringify(getDocument(), null, 2));
       setCurrentPath(path);
@@ -1934,7 +1955,7 @@ function AppInner() {
       setStatus(`Save failed: ${String(err)}`);
       return false;
     }
-  }, [projectName, getDocument, setProjectName, captureRevision]);
+  }, [projectName, getDocument, setProjectName, captureRevision, confirmNotSuspicious]);
 
   const handleOpen = useCallback(async () => {
     try {

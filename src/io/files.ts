@@ -36,6 +36,16 @@ export async function readTextFromPath(path: string): Promise<string> {
   return await invoke<string>("read_file", { path });
 }
 
+/** Confirm before writing an EMPTY project whose embedded revision history says it used to
+ *  contain gear — the signature of state-leak corruption (an "empty" file carrying another
+ *  project's snapshots). Returns true to proceed with the save. */
+export async function confirmSuspiciousSave(historyDevices: number): Promise<boolean> {
+  return await confirm(
+    `This project is empty, but its saved history contains ${historyDevices} device${historyDevices === 1 ? "" : "s"}. Saving now writes the empty state over it. Save anyway?`,
+    { title: "Save empty project?", kind: "warning", okLabel: "Save empty", cancelLabel: "Cancel" },
+  );
+}
+
 /** Base filename without extension, e.g. "/a/b/Studio A.sigpath" -> "Studio A". */
 export function fileStem(path: string): string {
   const base = path.split(/[\\/]/).pop() ?? path;
