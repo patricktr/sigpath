@@ -1713,19 +1713,67 @@ function AppInner() {
     [edgeEndsFlow, setEdges],
   );
 
+  // Clone a device set plus every cable running BETWEEN those devices (the wires a
+  // shift-drag box fully contains): fresh ids, endpoints re-pointed at the clones, cable
+  // IDs re-issued (next free per prefix) so labels stay unique. Derived render fields
+  // (waypoints/hops/gradient/trunk marks) are dropped — the router re-derives them.
+  const cloneFragment = useCallback(
+    (devices: SigNode[], cables: CableEdgeType[], numberAgainst: CableEdgeType[], offset = 28) => {
+      const idMap = new Map(devices.map((d) => [d.id, crypto.randomUUID()]));
+      const nodes: SigNode[] = devices.map((n) => ({
+        ...n,
+        id: idMap.get(n.id)!,
+        position: { x: n.position.x + offset, y: n.position.y + offset },
+        selected: false,
+      }));
+      let working = numberAgainst;
+      const edges: CableEdgeType[] = cables.map((e) => {
+        const data = { ...(e.data ?? { cableTypeId: "" }) };
+        delete data.waypoints;
+        delete data.hops;
+        delete data.gradient;
+        delete data.trunkBundle;
+        delete data.trunkSpine;
+        if (data.number) {
+          const m = /^([A-Za-z]+)-\d+$/.exec(data.number);
+          const prefix = m ? m[1] : "CBL";
+          data.number = formatCableId(prefix, nextCableNumber(prefix, working));
+        }
+        const clone: CableEdgeType = {
+          ...e,
+          id: `cable-${crypto.randomUUID()}`,
+          source: idMap.get(e.source)!,
+          target: idMap.get(e.target)!,
+          selected: false,
+          data,
+        };
+        working = [...working, clone];
+        return clone;
+      });
+      return { nodes, edges };
+    },
+    [],
+  );
+  /** Cables whose BOTH endpoints sit in the given device-id set — the fragment's wiring. */
+  const cablesWithin = useCallback(
+    (deviceIds: Set<string>): CableEdgeType[] =>
+      edgesRef.current.filter((e) => deviceIds.has(e.source) && deviceIds.has(e.target)),
+    [],
+  );
+
   const duplicateSelection = useCallback(() => {
     const sel = nodesRef.current.filter((n) => n.selected && n.type === "device");
     if (sel.length === 0) return;
     takeSnapshot();
-    const clones: SigNode[] = sel.map((n) => ({
-      ...n,
-      id: crypto.randomUUID(),
-      position: { x: n.position.x + 28, y: n.position.y + 28 },
-      selected: false,
-    }));
+    const contained = cablesWithin(new Set(sel.map((n) => n.id)));
+    const { nodes: clones, edges: cableClones } = cloneFragment(sel, contained, edgesRef.current);
     setNodes((nds) => [...nds.map((n) => ({ ...n, selected: false })), ...clones]);
-    setStatus(`Duplicated ${clones.length} device${clones.length === 1 ? "" : "s"}`);
-  }, [setNodes, takeSnapshot]);
+    if (cableClones.length) setEdges((eds) => [...eds, ...cableClones]);
+    setStatus(
+      `Duplicated ${clones.length} device${clones.length === 1 ? "" : "s"}` +
+        (cableClones.length ? ` + ${cableClones.length} cable${cableClones.length === 1 ? "" : "s"}` : ""),
+    );
+  }, [setNodes, setEdges, takeSnapshot, cloneFragment, cablesWithin]);
 
   // Move-with-zone: dragging a zone carries the nodes inside it (p2-movewithzone). On drag
   // start we capture the members + their start positions; each drag tick re-applies the
@@ -2104,9 +2152,10 @@ function AppInner() {
     })();
   }, []);
 
-  // Copy/paste of selected device nodes. Uses the DOM clipboard events so it
-  // coexists with the Edit menu's text copy/paste: when a text field is focused
-  // we let the default happen; on the canvas we copy/paste devices instead.
+  // Copy/paste of selected devices AND the cables wired between them (a shift-drag box's
+  // fully-contained wires travel with the fragment). Uses the DOM clipboard events so it
+  // coexists with the Edit menu's text copy/paste: when a text field is focused we let the
+  // default happen; on the canvas we copy/paste the diagram fragment instead.
   useEffect(() => {
     const isTextTarget = (t: EventTarget | null) => {
       const el = t as HTMLElement | null;
@@ -2117,13 +2166,17 @@ function AppInner() {
       const selected = nodesRef.current.filter((n) => n.selected && n.type === "device");
       if (selected.length === 0) return;
       e.preventDefault();
-      e.clipboardData?.setData("text/plain", JSON.stringify({ __sigpath: "devices", nodes: selected }));
+      const cables = cablesWithin(new Set(selected.map((n) => n.id)));
+      e.clipboardData?.setData(
+        "text/plain",
+        JSON.stringify({ __sigpath: "devices", nodes: selected, edges: cables }),
+      );
     };
     const onPaste = (e: ClipboardEvent) => {
       if (isTextTarget(e.target)) return;
       const text = e.clipboardData?.getData("text/plain");
       if (!text) return;
-      let data: { __sigpath?: string; nodes?: SigNode[] };
+      let data: { __sigpath?: string; nodes?: SigNode[]; edges?: CableEdgeType[] };
       try {
         data = JSON.parse(text);
       } catch {
@@ -2132,14 +2185,14 @@ function AppInner() {
       if (data?.__sigpath !== "devices" || !Array.isArray(data.nodes) || data.nodes.length === 0) return;
       e.preventDefault();
       takeSnapshot();
-      const clones: SigNode[] = data.nodes.map((n) => ({
-        ...n,
-        id: crypto.randomUUID(),
-        position: { x: n.position.x + 28, y: n.position.y + 28 },
-        selected: false,
-      }));
+      const cables = Array.isArray(data.edges) ? data.edges : [];
+      const { nodes: clones, edges: cableClones } = cloneFragment(data.nodes, cables, edgesRef.current);
       setNodes((nds) => [...nds, ...clones]);
-      setStatus(`Pasted ${clones.length} device${clones.length === 1 ? "" : "s"}`);
+      if (cableClones.length) setEdges((eds) => [...eds, ...cableClones]);
+      setStatus(
+        `Pasted ${clones.length} device${clones.length === 1 ? "" : "s"}` +
+          (cableClones.length ? ` + ${cableClones.length} cable${cableClones.length === 1 ? "" : "s"}` : ""),
+      );
     };
     document.addEventListener("copy", onCopy);
     document.addEventListener("paste", onPaste);
@@ -2147,7 +2200,7 @@ function AppInner() {
       document.removeEventListener("copy", onCopy);
       document.removeEventListener("paste", onPaste);
     };
-  }, [setNodes, takeSnapshot]);
+  }, [setNodes, setEdges, takeSnapshot, cloneFragment, cablesWithin]);
 
   return (
     <div className="app">
