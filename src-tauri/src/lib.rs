@@ -58,16 +58,28 @@ fn read_file(path: String) -> Result<String, String> {
     fs::read_to_string(&path).map_err(|e| e.to_string())
 }
 
+/// Crash-safe write: a plain `fs::write` that dies mid-way leaves a truncated file — for a
+/// project save that is the user's data. Write to a sibling temp file, then atomically
+/// rename over the target (same directory ⇒ same filesystem ⇒ the rename is atomic).
+fn write_atomic(path: &str, bytes: &[u8]) -> Result<(), String> {
+    let tmp = format!("{path}.tmp-{}", std::process::id());
+    fs::write(&tmp, bytes).map_err(|e| e.to_string())?;
+    fs::rename(&tmp, path).map_err(|e| {
+        let _ = fs::remove_file(&tmp);
+        e.to_string()
+    })
+}
+
 #[tauri::command]
 fn write_file(path: String, contents: String) -> Result<(), String> {
-    fs::write(&path, contents).map_err(|e| e.to_string())
+    write_atomic(&path, contents.as_bytes())
 }
 
 /// Write base64-encoded binary data to a path (used for exporting PNG/JPG/PDF).
 #[tauri::command]
 fn write_file_base64(path: String, data: String) -> Result<(), String> {
     let bytes = STANDARD.decode(data).map_err(|e| e.to_string())?;
-    fs::write(&path, bytes).map_err(|e| e.to_string())
+    write_atomic(&path, &bytes)
 }
 
 #[tauri::command]

@@ -103,6 +103,23 @@ check("Save As carried the revision history + new save point", (a.doc?.project.r
 check("no warning dialog on a healthy save", a.dialogs.length === 0);
 await page.close();
 
+// --- A2. The packed (v10) file it just wrote REOPENS in the app with everything intact -------
+const PACKED = join(ROOT, "scratch-packed.sigpath");
+writeFileSync(PACKED, a.doc ? JSON.stringify(a.doc) : "{}");
+page = await browser.newPage({ viewport: { width: 1500, height: 900 } });
+await page.route("**/*", (r) => (r.request().url().startsWith(`http://localhost:${PORT}`) ? r.continue() : r.abort()));
+await page.addInitScript({ content: stubFor(PACKED, false) });
+await page.goto(`http://localhost:${PORT}/`);
+await page.waitForSelector(".react-flow__node-device", { timeout: 15000 });
+await page.waitForTimeout(800);
+const reopened = await page.evaluate(() => ({
+  devices: document.querySelectorAll(".react-flow__node-device").length,
+  missing: [...document.querySelectorAll(".device-node__name")].filter((e) => e.textContent.includes("Missing model")).length,
+}));
+check(`packed v10 file reopens with all devices (${reopened.devices})`, reopened.devices > 0 && reopened.missing === 0);
+rmSync(PACKED, { force: true });
+await page.close();
+
 // --- B. Corrupt empty-with-history file: Save trips the guard; Cancel writes nothing --------
 page = await browser.newPage({ viewport: { width: 1500, height: 900 } });
 await page.route("**/*", (r) => (r.request().url().startsWith(`http://localhost:${PORT}`) ? r.continue() : r.abort()));

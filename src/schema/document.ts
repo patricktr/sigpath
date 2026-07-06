@@ -17,10 +17,15 @@ import type { SignalKind } from "./signals";
  * added install-checklist state (p3-cableschedule): the optional `Connection.install` status
  * and the optional `Diagram.bomProgress` received-counts map. v8 (2026-07-01) added the optional
  * `Project.bomRules` (spare/overage policy, p3-bomrules). v9 (2026-07-05) added the optional
- * `Diagram.layouts` — named, user-saved canvas layouts (p2-autoarrangezones). All additive, so
- * an older file loads unchanged — a missing field reads as absent.
+ * `Diagram.layouts` — named, user-saved canvas layouts (p2-autoarrangezones). v10 (2026-07-05)
+ * introduced content-addressed packing on the WIRE (p2-revdedup): unique device models pool
+ * into `project.models` (instances carry `modelRef`), revision snapshot diagrams pool into
+ * `project.blobs`, and each revision stores a `manifest` of hash-refs instead of a full
+ * `snapshot`. Packing/unpacking lives entirely in io/serialize.ts (packDocument /
+ * unpackDocument); in-memory shapes stay fully inflated, and v≤9 files (inline models, full
+ * snapshots) still load losslessly.
  */
-export const SIGPATH_SCHEMA_VERSION = 9;
+export const SIGPATH_SCHEMA_VERSION = 10;
 
 /** A labeled, colored region grouping devices (stage, rack, control room). */
 export type Zone = {

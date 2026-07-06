@@ -70,7 +70,7 @@ import { rectHitsPolyline, rectHitsRun } from "./flow/marqueeHit";
 import type { DeviceModel, InstallStatus } from "./schema";
 import type { SignalKind } from "./schema";
 import { useProject } from "./project/useProject";
-import { parseDocument } from "./io/serialize";
+import { documentToText, parseDocument } from "./io/serialize";
 import {
   promptSavePath,
   promptOpenPath,
@@ -2118,7 +2118,7 @@ function AppInner() {
       }
       if (!(await confirmNotSuspicious())) return false;
       captureRevision(); // record a save point before serializing
-      await writeTextToPath(path, JSON.stringify(getDocument(), null, 2));
+      await writeTextToPath(path, documentToText(getDocument()));
       setCurrentPath(path);
       setProjectName(fileStem(path));
       setDirty(false);
@@ -2137,7 +2137,7 @@ function AppInner() {
       if (!path) return false;
       if (!(await confirmNotSuspicious())) return false;
       captureRevision(); // record a save point before serializing
-      await writeTextToPath(path, JSON.stringify(getDocument(), null, 2));
+      await writeTextToPath(path, documentToText(getDocument()));
       setCurrentPath(path);
       setProjectName(fileStem(path));
       setDirty(false);

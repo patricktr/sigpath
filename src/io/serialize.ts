@@ -263,13 +263,161 @@ export function fromDocument(doc: SigpathDocument): {
   };
 }
 
-/** Parse + minimally validate a loaded JSON string into a document. */
+// ---------------------------------------------------------------------------------------
+// Content-addressed packing (p2-revdedup, schema v10) — "git objects, in one file".
+//
+// Measured on real projects, ~75% of file bytes are DeviceModel port lists, embedded once
+// per instance AND re-embedded in every revision snapshot; pretty-printing then doubles
+// everything again. The WIRE format therefore pools content: each unique DeviceModel is
+// stored once in `project.models` (instances carry a `modelRef` hash), each unique revision
+// diagram once in `project.blobs`, and a revision becomes a tiny manifest of hash-refs.
+//
+// The pools exist ONLY in the file: `packDocument` runs at write time, `unpackDocument` at
+// read time, and everything in memory keeps the plain, fully-inflated shapes — no app
+// logic sees a ref. Unpacking is deliberately forgiving: a missing model ref inflates to a
+// clearly-named placeholder and a revision with missing blobs is dropped (with the live
+// project always loading), so a damaged pool can never take the project down with it.
+// ---------------------------------------------------------------------------------------
+
+/** 64-bit FNV-1a over the canonical JSON — the pool key. Not a security boundary; two
+ *  independent 32-bit passes make an accidental intra-file collision vanishingly unlikely. */
+function contentKey(o: unknown): string {
+  const s = JSON.stringify(o);
+  let h1 = 0x811c9dc5;
+  let h2 = 0xcbf29ce4;
+  for (let i = 0; i < s.length; i++) {
+    const c = s.charCodeAt(i);
+    h1 = Math.imul(h1 ^ c, 0x01000193);
+    h2 = Math.imul(h2 ^ c, 0x01000197);
+  }
+  return (h1 >>> 0).toString(16).padStart(8, "0") + (h2 >>> 0).toString(16).padStart(8, "0");
+}
+
+/** What a device inflates to when its pool entry is missing (damaged file) — loads, renders,
+ *  and validates as an obviously-broken device instead of crashing the open. */
+function missingDeviceModel(ref: string | undefined): DeviceModel {
+  return { id: `missing:${ref ?? "?"}`, model: "Missing model", category: "other", source: "builtin", ports: [] };
+}
+
+// Wire-only shapes (the packed file format). In memory these never exist.
+type PackedDevice = Omit<DeviceInstance, "model"> & { model?: DeviceModel; modelRef?: string };
+type PackedDiagram = Omit<Diagram, "devices"> & { devices: PackedDevice[] };
+type PackedRevision = Omit<Revision, "snapshot"> & {
+  snapshot?: Revision["snapshot"];
+  manifest?: { name: string; signalProfile?: Project["signalProfile"]; diagrams: string[] };
+};
+type PackedProject = Omit<Project, "diagrams" | "revisions"> & {
+  diagrams: PackedDiagram[];
+  revisions?: PackedRevision[];
+  models?: Record<string, DeviceModel>;
+  blobs?: Record<string, PackedDiagram>;
+};
+
+/** Pool models + revision blobs into the wire form. Pure; applied only at write time. */
+export function packDocument(doc: SigpathDocument): SigpathDocument {
+  const models: Record<string, DeviceModel> = {};
+  const packDiagram = (d: Diagram): PackedDiagram => ({
+    ...d,
+    devices: d.devices.map((dev) => {
+      const { model, ...rest } = dev;
+      const key = contentKey(model);
+      if (!models[key]) models[key] = model;
+      return { ...rest, modelRef: key };
+    }),
+  });
+  const diagrams = doc.project.diagrams.map(packDiagram);
+  const blobs: Record<string, PackedDiagram> = {};
+  const revisions: PackedRevision[] | undefined = doc.project.revisions?.map((r) => {
+    const hashes = r.snapshot.diagrams.map((d) => {
+      const packed = packDiagram(d);
+      const key = contentKey(packed);
+      if (!blobs[key]) blobs[key] = packed;
+      return key;
+    });
+    return {
+      id: r.id,
+      at: r.at,
+      ...(r.label ? { label: r.label } : {}),
+      hash: r.hash,
+      manifest: {
+        name: r.snapshot.name,
+        ...(r.snapshot.signalProfile ? { signalProfile: r.snapshot.signalProfile } : {}),
+        diagrams: hashes,
+      },
+    };
+  });
+  const project: PackedProject = {
+    ...doc.project,
+    diagrams,
+    ...(revisions?.length ? { revisions } : {}),
+    ...(Object.keys(models).length ? { models } : {}),
+    ...(Object.keys(blobs).length ? { blobs } : {}),
+  };
+  if (!revisions?.length) delete project.revisions;
+  return { schemaVersion: SIGPATH_SCHEMA_VERSION, project: project as unknown as Project };
+}
+
+/** Inflate a packed document back to plain shapes. Identity for v≤9 files (no pools). */
+export function unpackDocument(doc: SigpathDocument): SigpathDocument {
+  const p = doc.project as unknown as PackedProject;
+  if (!p) return doc;
+  const models = p.models ?? {};
+  const blobs = p.blobs ?? {};
+  const inflateDiagram = (d: PackedDiagram): Diagram => ({
+    ...d,
+    devices: (d.devices ?? []).map((dev) => {
+      if (dev.model) {
+        const { modelRef: _drop, ...rest } = dev;
+        return { ...rest, model: dev.model } as DeviceInstance;
+      }
+      const { modelRef, ...rest } = dev;
+      return { ...rest, model: models[modelRef ?? ""] ?? missingDeviceModel(modelRef) } as DeviceInstance;
+    }),
+  });
+  const diagrams = (p.diagrams ?? []).map(inflateDiagram);
+  const revisions: Revision[] = (p.revisions ?? []).flatMap((r): Revision[] => {
+    if (r.snapshot) {
+      return [{ ...r, snapshot: { ...r.snapshot, diagrams: r.snapshot.diagrams.map((d) => inflateDiagram(d as PackedDiagram)) } } as Revision];
+    }
+    const m = r.manifest;
+    if (!m) return [];
+    const resolved = m.diagrams.map((h) => blobs[h]).filter((d): d is PackedDiagram => !!d);
+    if (resolved.length !== m.diagrams.length) return []; // damaged pool — drop the revision, keep loading
+    return [
+      {
+        id: r.id,
+        at: r.at,
+        ...(r.label ? { label: r.label } : {}),
+        hash: r.hash,
+        snapshot: {
+          name: m.name,
+          ...(m.signalProfile ? { signalProfile: m.signalProfile } : {}),
+          diagrams: resolved.map(inflateDiagram),
+        },
+      } as Revision,
+    ];
+  });
+  const { models: _models, blobs: _blobs, revisions: _packed, ...rest } = p;
+  return {
+    ...doc,
+    project: { ...rest, diagrams, ...(revisions.length ? { revisions } : {}) } as unknown as Project,
+  };
+}
+
+/** The canonical file text: packed pools, compact JSON (pretty-printing measured at 55% of
+ *  file bytes on real projects). Still plain JSON — `jq .` prettifies it for inspection. */
+export function documentToText(doc: SigpathDocument): string {
+  return JSON.stringify(packDocument(doc));
+}
+
+/** Parse + minimally validate a loaded JSON string into a document, inflating any
+ *  content-addressed pools (v10) back to plain shapes. v≤9 files pass through unchanged. */
 export function parseDocument(json: string): SigpathDocument {
   const data = JSON.parse(json) as SigpathDocument;
   if (!data || typeof data !== "object" || !data.project) {
     throw new Error("Not a valid sigpath document");
   }
-  return data;
+  return unpackDocument(data);
 }
 
 /**
