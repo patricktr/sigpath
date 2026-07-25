@@ -66,6 +66,11 @@ export const CONNECTORS: Record<ConnectorId, ConnectorDef> = {
   banana: { id: "banana", label: "Banana / binding post", color: "#4d7c0f", group: "audio" },
   "ts-6.35": { id: "ts-6.35", label: 'TS 1/4"', color: "#22c55e", group: "audio", family: "TRS" },
   aes3: { id: "aes3", label: "AES3 (XLR)", color: "#15803d", group: "audio", family: "XLR" },
+  // 4-pin XLR carrying intercom headset audio (mic + earpiece on one shell) — the
+  // standard beltpack/headset jack. Deliberately no `family`: like xlr5, the pin
+  // count means it does not passively adapt to a 3-pin XLR. Distinct from
+  // "xlr4-dc", which is 4-pin XLR *DC power*.
+  xlr4: { id: "xlr4", label: "XLR-4 (headset)", color: "#059669", group: "audio" },
   "usb-b": { id: "usb-b", label: "USB-B", color: "#f9a8d4", group: "data", family: "USB" },
   "usb-micro": { id: "usb-micro", label: "USB Micro-B", color: "#f5a3c7", group: "data", family: "USB" },
   ethercon: { id: "ethercon", label: "etherCON", color: "#0891b2", group: "network", family: "RJ45" },
@@ -102,7 +107,10 @@ const CONNECTOR_ALIASES: Record<string, string[]> = {
   "iec-c5": ["cloverleaf", "clover leaf", "mickey mouse", "c5", "c6", "laptop"],
   powercon: ["nac3", "locking power"],
   "dc-barrel": ["barrel", "wall wart", "power brick", "psu"],
-  "xlr4-dc": ["4-pin xlr", "xlr4", "battery", "dc"],
+  // "xlr4"/"4-pin xlr" now belong to the audio connector below — keep this one to
+  // the power-specific terms so the picker doesn't shadow the real xlr4 id.
+  "xlr4-dc": ["4-pin xlr dc", "battery", "dc"],
+  xlr4: ["headset", "intercom", "beltpack", "4-pin xlr", "xlr4m"],
   "euroblock-dc": ["phoenix", "terminal block", "captive screw", "dc"],
   xlr3: ["mic", "balanced", "3-pin xlr"],
   xlr5: ["dmx", "dmx512", "lighting"],
