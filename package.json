@@ -40,6 +40,8 @@
   },
   "pnpm": {
     "overrides": {
+      "@vitest/mocker@4": "^4.1.11",
+      "browserslist@4": "^4.28.7",
       "esbuild": "^0.28.1",
       "postcss": "^8.5.18"
     }
