@@ -1,0 +1,30 @@
+version: 2
+updates:
+  - package-ecosystem: "npm"
+    directories:
+      - "/"
+    # One grouped PR a month for minor and patch bumps, merged automatically
+    # once Vercel builds it green (.github/workflows/dependabot-merge.yml).
+    schedule:
+      interval: "monthly"
+    # Skip releases younger than a week: most malicious npm publishes are caught
+    # and pulled within days. Applies to version updates only.
+    cooldown:
+      default-days: 7
+    open-pull-requests-limit: 3
+    groups:
+      minor-and-patch:
+        applies-to: version-updates
+        patterns: ["*"]
+        update-types: ["minor", "patch"]
+      # Never merged automatically: a monthly list of the majors available,
+      # for review by hand.
+      majors:
+        applies-to: version-updates
+        patterns: ["*"]
+        update-types: ["major"]
+      # Security fixes arrive as soon as an advisory lands, whatever the
+      # schedule and cooldown say, and merge automatically once green.
+      security:
+        applies-to: security-updates
+        patterns: ["*"]
